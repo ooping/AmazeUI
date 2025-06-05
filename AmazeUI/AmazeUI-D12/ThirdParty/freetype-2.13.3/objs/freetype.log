@@ -1,0 +1,58 @@
+﻿  autofit.c
+  ftbase.c
+  ftbbox.c
+  ftbdf.c
+  ftbitmap.c
+  ftcid.c
+  ftfstype.c
+  ftgasp.c
+  ftglyph.c
+  ftgxval.c
+  ftinit.c
+  ftmm.c
+C:\Users\OOPING\Documents\WorkSpace_SOFT\UIWare\AmazeUI\AmazeUI-D12\ThirdParty\freetype-2.13.3\src\autofit\afblue.c(1,1): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+C:\Users\OOPING\Documents\WorkSpace_SOFT\UIWare\AmazeUI\AmazeUI-D12\ThirdParty\freetype-2.13.3\src\autofit\afscript.h(1,1): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+C:\Users\OOPING\Documents\WorkSpace_SOFT\UIWare\AmazeUI\AmazeUI-D12\ThirdParty\freetype-2.13.3\src\autofit\afblue.c(255,1): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+C:\Users\OOPING\Documents\WorkSpace_SOFT\UIWare\AmazeUI\AmazeUI-D12\ThirdParty\freetype-2.13.3\src\autofit\afscript.h(1,1): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+C:\Users\OOPING\Documents\WorkSpace_SOFT\UIWare\AmazeUI\AmazeUI-D12\ThirdParty\freetype-2.13.3\src\autofit\afscript.h(1,1): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+C:\Users\OOPING\Documents\WorkSpace_SOFT\UIWare\AmazeUI\AmazeUI-D12\ThirdParty\freetype-2.13.3\src\autofit\afscript.h(1,1): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+C:\Users\OOPING\Documents\WorkSpace_SOFT\UIWare\AmazeUI\AmazeUI-D12\ThirdParty\freetype-2.13.3\src\autofit\afscript.h(1,1): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+C:\Users\OOPING\Documents\WorkSpace_SOFT\UIWare\AmazeUI\AmazeUI-D12\ThirdParty\freetype-2.13.3\src\autofit\afscript.h(1,1): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+  ftotval.c
+  ftpatent.c
+  ftpfr.c
+  ftstroke.c
+  ftsynth.c
+  fttype1.c
+  ftwinfnt.c
+  bdf.c
+  ftcache.c
+  cff.c
+  type1cid.c
+  dlgwrap.c
+  ftgzip.c
+  ftlzw.c
+  pcf.c
+  pfr.c
+  psaux.c
+  pshinter.c
+  psmodule.c
+  raster.c
+  sfnt.c
+  smooth.c
+  sdf.c
+  svg.c
+  truetype.c
+C:\Users\OOPING\Documents\WorkSpace_SOFT\UIWare\AmazeUI\AmazeUI-D12\ThirdParty\freetype-2.13.3\src\sfnt\sfdriver.c(1036,36): warning C4244: “函数”: 从“__int64”转换到“const unsigned int”，可能丢失数据
+  type1.c
+  type42.c
+C:\Users\OOPING\Documents\WorkSpace_SOFT\UIWare\AmazeUI\AmazeUI-D12\ThirdParty\freetype-2.13.3\src\sfnt\ttload.c(1,1): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+  winfnt.c
+C:\Users\OOPING\Documents\WorkSpace_SOFT\UIWare\AmazeUI\AmazeUI-D12\ThirdParty\freetype-2.13.3\src\type42\t42parse.c(878,62): warning C4244: “=”: 从“__int64”转换到“FT_Int”，可能丢失数据
+C:\Users\OOPING\Documents\WorkSpace_SOFT\UIWare\AmazeUI\AmazeUI-D12\ThirdParty\freetype-2.13.3\src\truetype\ttobjs.c(954,1): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+C:\Users\OOPING\Documents\WorkSpace_SOFT\UIWare\AmazeUI\AmazeUI-D12\ThirdParty\freetype-2.13.3\src\type1\t1load.c(1780,64): warning C4244: “=”: 从“__int64”转换到“FT_Int”，可能丢失数据
+C:\Users\OOPING\Documents\WorkSpace_SOFT\UIWare\AmazeUI\AmazeUI-D12\ThirdParty\freetype-2.13.3\src\type1\t1load.c(1953,36): warning C4244: “=”: 从“__int64”转换到“FT_Int”，可能丢失数据
+  ftdebug.c
+  ftsystem.c
+    正在创建库 ..\..\..\objs\x64\Release\freetype.lib 和对象 ..\..\..\objs\x64\Release\freetype.exp
+  freetype.vcxproj -> C:\Users\OOPING\Documents\WorkSpace_SOFT\UIWare\AmazeUI\AmazeUI-D12\ThirdParty\freetype-2.13.3\objs\x64\Release\freetype.dll
