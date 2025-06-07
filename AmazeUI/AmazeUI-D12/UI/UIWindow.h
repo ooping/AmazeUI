@@ -89,8 +89,6 @@ protected:
 	UIContainer* p_UIContainer;					// pointer to self container
 	UIContainer* p_parentUIContainer;			// pointer to parent container
 
-	bool _isPopup;
-
 	DirectX::XMMATRIX _transformMatrix;
 	// 3D map to screen position, maybe is not rect
 };

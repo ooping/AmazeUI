@@ -13,7 +13,6 @@ UIWindowBase::UIWindowBase() {
 	//_isRecvTabKey = false;
 	_isFocus = false;
 	_isTransmissionMsg = false;
-	_isPopup = false;
 
 	_layoutLever = 1;
 	_z = 0;
@@ -63,8 +62,6 @@ bool UIWindowBase::CreateWin(UIWindowBase* pParent, const RECT& relativeRect, in
 }
 
 bool UIWindowBase::CreateWinPopup(UIWindowBase* pParent, const RECT& relativeRect, int layoutFlag, bool isShow, bool isOnHeap) {
-	_isPopup = true;
-	
 	p_parentUIContainer = pParent->GetUIContainer();
 
 	_isShow = isShow;
