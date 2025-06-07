@@ -45,14 +45,14 @@
     <OutDir>..\Bins</OutDir>
     <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);C:\WorkSpace_SOFT\UIWare\AmazeUI\AmazeUI-D12\ThirdParty\freetype-2.13.3\include;</IncludePath>
     <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);C:\WorkSpace_SOFT\UIWare\AmazeUI\AmazeUI-D12\ThirdParty\freetype-2.13.3\objs;</LibraryPath>
-    <TargetName>VOA_PD_8</TargetName>
+    <TargetName>Demo - Controls</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>..\Bins</OutDir>
     <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);C:\WorkSpace_SOFT\UIWare\AmazeUI\AmazeUI-D12\ThirdParty\freetype-2.13.3\include;</IncludePath>
     <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);C:\WorkSpace_SOFT\UIWare\AmazeUI\AmazeUI-D12\ThirdParty\freetype-2.13.3\objs;</LibraryPath>
-    <TargetName>VOA_PD_8</TargetName>
+    <TargetName>Demo - Controls</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
