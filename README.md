@@ -34,7 +34,7 @@ AmazeUI is a C++ UI framework for Windows desktop applications, built on DirectX
    ```bash
    git clone https://github.com/ooping/AmazeUI.git
    ```
-2. Open the solution file `AmazeUI.sln` in Visual Studio.
+2. Open the solution file `DirectXTK12_Demo.sln` in Visual Studio.
 3. Build and run the project.
 
 ### Example Usage
@@ -51,7 +51,10 @@ int main() {
 
 If you like this project, you can support its development by donating:
 - [Donate via PayPal](https://www.paypal.com/paypalme/ooping)
-- Donate via Alipay:
+- Donate via Alipay or WeChat Pay:
+
+| <img src="https://github.com/user-attachments/assets/72ef1af3-d035-4dd8-8e91-3fcde638be6c" alt="Alipay QR Code" width="300" style="margin-right: 20px;"> | <img src="https://github.com/user-attachments/assets/57325080-fe6b-4c0f-b106-6fd2960c6a44" alt="WeChat QR Code" width="300"> |
+|:--:|:--:|
 
 
 ## Contributing
