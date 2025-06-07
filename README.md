@@ -37,15 +37,10 @@ AmazeUI is a C++ UI framework for Windows desktop applications, built on DirectX
 2. Open the solution file `DirectXTK12_Demo.sln` in Visual Studio.
 3. Build and run the project.
 
-### Example Usage
-```cpp
-#include "AmazeUI.h"
-
-int main() {
-    UIWin32APP::GetSingletonInstance()->Instance(hInstance, L"My App", 800, 600);
-    return 0;
-}
-```
+### Demos
+- **2D Demo**: Demonstrates 2D rendering capabilities, including shapes, images, and animations.
+- **3D Demo**: Showcases 3D rendering features, such as models, transformations, and lighting.
+- **Controls Demo**: Highlights various UI controls, including buttons, sliders, and text inputs.
 
 ## Support the Project
 

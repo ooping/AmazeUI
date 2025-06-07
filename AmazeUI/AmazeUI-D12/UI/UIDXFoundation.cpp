@@ -716,153 +716,39 @@ LONG UIDXFoundation::GetOutputHeight() const {
 }
 
 #pragma region Frame Render
-void UIDXFoundation::RenderAnimate() {
-    // static int flag = 0;
-    // if (flag == 0) {
-    //     flag = 1;
-    //     UISetCaretPos(50, 50);
-	// 	UIShowCaret(0.1, 20, 150, Colors::Red);
-    // }
-}
-
-void UIDXFoundation::Render2D() {
-
-    Draw2DPoint(XMFLOAT2(0, 0), 0.3, Colors::Blue, 1);
-    Draw2DPoint(XMFLOAT2(1, 1), 0.5, Colors::Red, 1);
-    Draw2DPoint(XMFLOAT2(2, 2), 0.5, Colors::Red, 1);
-    Draw2DPoint(XMFLOAT2(3, 3), 0.5, Colors::Red, 1);
-    Draw2DPoint(XMFLOAT2(4, 4), 0.5, Colors::Red, 1);
-    Draw2DPoint(XMFLOAT2(5, 5), 0.5, Colors::Red, 1);
-
-    vector<XMFLOAT2> points = {
-        XMFLOAT2(0, 6),
-        XMFLOAT2(1, 6),
-        XMFLOAT2(2, 6),
-        XMFLOAT2(3, 6),
-        XMFLOAT2(4, 6),
-        XMFLOAT2(5, 6)
-    };  
-    Draw2DPoints(points, 0.5, Colors::Blue, 1);
-
-    Draw2DLine(XMFLOAT2(0, 7), XMFLOAT2(5, 7), 0.5, Colors::Red, 1);
-    Draw2DLine(XMFLOAT2(6, 0), XMFLOAT2(6, 5), 0.5, Colors::Green, 1);
-
-    //Draw2DRectSolid(XMFLOAT2(0, 8), XMFLOAT2(5, 9), 0.5, Colors::Blue, 255);
-    Draw2DRectOutline(XMFLOAT2(0, 8), XMFLOAT2(5, 10), 0.5, Colors::Blue, 1);
-
-
-
-
-    Draw2DImage(L"C:\\cat.png", UIColor::Invalid, NULL_RECT, XMFLOAT2(0, 12), XMFLOAT2(5, 13), 0.5, 255);
-
-
-    //Draw2DPoint(XMFLOAT2(300, 5), 0.5, Colors::Red, 1);
-
-
-    // UIPoint(300, 5, 0.5)(Colors::Red);
-
-    // vector<POINT> points = {
-    //     POINT{310, 6},
-    //     POINT{320, 7},
-    //     POINT{330, 8},
-    //     POINT{340, 9},
-    // };
-    // UIPoints(points, 0.5)(Colors::Blue);
-
-    //UILine(10, 10, 200, 10, 0.2)(Colors::Blue);
-    // UILine(10, 10, 200, 200, 0.5)(Colors::Blue);
-    // UILine(10, 10, 10, 200, 0.2)(Colors::Blue);
-
-    // // load image from dll
-
-    // UIImage(L"C:\\GUIResource.dll", 80003, UIColor(255, 0, 255, 0), 0.3)(NULL_RECT, RECT{ 100, 75, 0, 0 });
-    // UIImage(L"C:\\cat.png", UIColor::Invalid, 0.5)(NULL_RECT, RECT{ 100, 100, 0, 0 });
-    // UIImage(L"C:\\checkbox_nor.bmp", UIColor(255, 0, 255, 0), 0.5)(NULL_RECT, RECT{ 100, 500, 300, 800 });
- 
-    // //Draw2DRect(XMFLOAT2(500, 10), XMFLOAT2(600, 200), Colors::Pink, 0.5, 100);
-    // //Draw2DRect(XMFLOAT2(700, 10), XMFLOAT2(800, 200), Colors::Aquamarine, 0.5);
-    // {
-    //     UIScreenClipRectGuard clipRect(RECT{ 450, 50, 550, 150 });
-    //     UIRect(RECT{ 500, 10, 600, 200 }, 0.5)(Colors::Pink, 100);
-    // }
-    // UIRect(RECT{ 700, 10, 800, 200 }, 0.3)(Colors::Red);
-    // //UIRect(RECT{ 700, 10, 800, 200 }, 0.4)(Colors::Blue, 200);
-    // // UILine(700, 10, 800, 200, 0.5)(Colors::Blue);
-    // // UILine(700, 10, 700, 200, 0.3)(Colors::Blue);
-    // // UILine(700, 10, 800, 10, 0.2)(Colors::Red);
-    // // UILine(800, 10, 800, 200, 0.3)(Colors::Blue);
-    // // UILine(700, 200, 800, 200, 0.2)(Colors::Red);
-    
-    
-    // // Draw2DText(L"DirectXTK Simple UIDXFoundation", XMFLOAT2(100, 10), Colors::Black, 0.5, 18);
-    // // Draw2DText(L"AmazeUI\n *?@&%$#", RECT{ 700, 10, 800, 200 }, 0x04, Colors::Blue, 0.5, 18);
-    // //UIFont(0.5, 14)(L"DirectXTK Simple UIDXFoundation", POINT{100, 10});
-    // UIFont(0.1, 14)(L"VAIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII", RECT{ 700, 10, 800, 200 }, Colors::Blue);
-
-    // UIRect(RECT{ 100, 10, 500, 200 }, 0.3)(Colors::Red);
-    // //Draw2DTextFT(L"DirectXTK Simple UIDXFoundation", XMFLOAT2(100, 10), 0.3, Colors::Black, 24);
-    // Draw2DTextFT(L"���� DirectXTK Simple UIDXFoundation", RECT{ 100, 10, 500, 200 }, 0x04, 0.3, Colors::Black, 24);
-
-    // UISlicedImage(L"C:\\GUIResource.dll", IDB_BUTTON1_NORMAL, UIColor(255, 0, 255, 0), 3, 3, 3, 3, 0.5)(RECT{ 850, 50, 1050, 100 });
-    // UIImage(L"C:\\GUIResource.dll", IDB_BUTTON1_NORMAL, UIColor(255, 0, 255, 0), 0.5)(RECT{ 850, 130, 1050, 180 });
-}
 
 void UIDXFoundation::Render3D() {
-    // 3D test
-     //XMFLOAT3 worldPos1 = UICameraUI::GetSingletonInstance()->ConvertScreen2DTo3D(XMFLOAT3(100, 100, 0.01f));
-     //XMFLOAT3 worldPos2 = UICameraUI::GetSingletonInstance()->ConvertScreen2DTo3D(XMFLOAT3(100, 100, 0.5f));
-     //XMFLOAT3 worldPos3 = UICameraUI::GetSingletonInstance()->ConvertScreen2DTo3D(XMFLOAT3(100, 100, 1.0f));
-
-     //XMFLOAT3 screenPos11 = UICameraUI::GetSingletonInstance()->Convert3DToScreen2D(worldPos1);
-     //XMFLOAT3 screenPos22 = UICameraUI::GetSingletonInstance()->Convert3DToScreen2D(worldPos2);
-     //XMFLOAT3 screenPos33 = UICameraUI::GetSingletonInstance()->Convert3DToScreen2D(worldPos3);
-
-    //Draw2DRectOutline(XMFLOAT2(400, 100), XMFLOAT2(1000, 300), 0.9, Colors::Red);
-    //Draw3DRectOutline(XMFLOAT2(400, 100), XMFLOAT2(1000, 300), 0.5, Colors::Black);
-    //Draw3DRectSolid(XMFLOAT2(400, 100), XMFLOAT2(1000, 300), 1.0, Colors::Red, Colors::Blue, Colors::Green, Colors::Yellow, 255);
-
-
-    // Draw3DRectOutline(XMFLOAT2(100, 10), XMFLOAT2(500, 200), 0.5, Colors::Red);
-    // RECT rc = RECT{ 100, 10, 500, 200 };
-    // POINT center = GetRectCenter()(rc);
-    // XMMATRIX transform = UIZPlaneTransform::GetTransformMatrix(false, 0, 0, XM_PI/32, true, center.y, XM_PI/32, true, center.x, XM_PI/32, 0.5);
-    // Draw3DTextFT(L"DirectXTK Simple UIDXFoundation", XMFLOAT2(100, 10), 0.3, Colors::Black, 24, transform);
-
-
-
-
-
     {
-        //p_lineEffect3DGame->SetWorld(Matrix::Identity);
+        p_lineEffect3DGame->SetWorld(Matrix::Identity);
 
-        // //Draw procedurally generated dynamic 3D grid
-        // const XMVECTORF32 xaxis = { 20.f, 0.f, 0.f };
-        // const XMVECTORF32 yaxis = { 0.f, 0.f, 20.f };
-        // DrawGrid(xaxis, yaxis, g_XMZero, 20, 20, Colors::Gray);
+        //Draw procedurally generated dynamic 3D grid
+        const XMVECTORF32 xaxis = { 20.f, 0.f, 0.f };
+        const XMVECTORF32 yaxis = { 0.f, 0.f, 20.f };
+        DrawGrid(xaxis, yaxis, g_XMZero, 20, 20, Colors::Gray);
 
         auto commandList = p_deviceResources->GetCommandList();
 
-    static int ii = 0;
-    _world = Matrix::CreateRotationY(float(++ii * XM_PIDIV4));
+        static int ii = 0;
+        _world = Matrix::CreateRotationY(float(++ii * XM_PIDIV4));
 
-    // Draw 3D object
-    // Draw teapot
-    XMMATRIX local = _world * Matrix::CreateTranslation(-2.f, -2.f, 4.f);
-    p_shapeEffectGame->SetWorld(local);
-    p_shapeEffectGame->Apply(commandList);
-    p_shape->Draw(commandList);
+        // Draw 3D object
+        // Draw teapot
+        XMMATRIX local = _world * Matrix::CreateTranslation(-2.f, -2.f, 4.f);
+        p_shapeEffectGame->SetWorld(local);
+        p_shapeEffectGame->Apply(commandList);
+        p_shape->Draw(commandList);
 
-    //Draw model
-        // ID3D12DescriptorHeap* heaps[] = { p_modelResources->Heap(), p_states->Heap() };
-        // commandList->SetDescriptorHeaps(_countof(heaps), heaps);
+        //Draw model
+        ID3D12DescriptorHeap* heaps[] = { p_modelResources->Heap(), p_states->Heap() };
+        commandList->SetDescriptorHeaps(_countof(heaps), heaps);
 
-        // const XMVECTORF32 scale = { 0.01f, 0.01f, 0.01f };
-        // const XMVECTORF32 translate = { 3.f, -2.f, 4.f };
-        // XMVECTOR rotate = Quaternion::CreateFromYawPitchRoll(XM_PI / 2.f, 0.f, -XM_PI / 2.f);
-        // local = _world * XMMatrixTransformation(g_XMZero, Quaternion::Identity, scale, g_XMZero, rotate, translate);
-        // Model::UpdateEffectMatrices(_modelEffectsGame, local, UICameraGame::GetSingletonInstance()->GetViewMatrix(), UICameraGame::GetSingletonInstance()->GetProjectionMatrix());
+        const XMVECTORF32 scale = { 0.01f, 0.01f, 0.01f };
+        const XMVECTORF32 translate = { 3.f, -2.f, 4.f };
+        XMVECTOR rotate = Quaternion::CreateFromYawPitchRoll(XM_PI / 2.f, 0.f, -XM_PI / 2.f);
+        local = _world * XMMatrixTransformation(g_XMZero, Quaternion::Identity, scale, g_XMZero, rotate, translate);
+        Model::UpdateEffectMatrices(_modelEffectsGame, local, UICameraGame::GetSingletonInstance()->GetViewMatrix(), UICameraGame::GetSingletonInstance()->GetProjectionMatrix());
         
-        // p_model->Draw(commandList, _modelEffectsGame.begin());
+        p_model->Draw(commandList, _modelEffectsGame.begin());
     }
 }
 
@@ -877,9 +763,7 @@ void UIDXFoundation::Render() {
     ID3D12DescriptorHeap* heaps[] = { p_resourceDescriptors->Heap(), p_states->Heap() };
     commandList->SetDescriptorHeaps(_countof(heaps), heaps);
 
-    //RenderAnimate();
-    //Render2D();
-    Render3D();
+    //Render3D();
 
     // draw top container
     UIFrame::GetSingletonInstance()->GetTopUIContainer()->Draw();

@@ -1,0 +1,91 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="Demo.cpp" />
+    <ClCompile Include="pch.cpp" />
+    <ClCompile Include="..\..\..\AmazeUI\AmazeUI-D12\UI\UIAnimation.cpp">
+      <Filter>AmazeUI\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\AmazeUI\AmazeUI-D12\UI\UIApplication.cpp">
+      <Filter>AmazeUI\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\AmazeUI\AmazeUI-D12\UI\UIDXFoundation.cpp">
+      <Filter>AmazeUI\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\AmazeUI\AmazeUI-D12\UI\UIElement.cpp">
+      <Filter>AmazeUI\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\AmazeUI\AmazeUI-D12\UI\UIUtility.cpp">
+      <Filter>AmazeUI\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\AmazeUI\AmazeUI-D12\UI\UIWidget.cpp">
+      <Filter>AmazeUI\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\AmazeUI\AmazeUI-D12\UI\UIWindow.cpp">
+      <Filter>AmazeUI\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\AmazeUI\AmazeUI-D12\Core\Common.cpp">
+      <Filter>AmazeUI\Core</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="pch.h" />
+    <ClInclude Include="Demo.h" />
+    <ClInclude Include="..\..\..\AmazeUI\AmazeUI-D12\UI\UIAnimation.h">
+      <Filter>AmazeUI\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\AmazeUI\AmazeUI-D12\UI\UIApplication.h">
+      <Filter>AmazeUI\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\AmazeUI\AmazeUI-D12\UI\UIDXFoundation.h">
+      <Filter>AmazeUI\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\AmazeUI\AmazeUI-D12\UI\UIElement.h">
+      <Filter>AmazeUI\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\AmazeUI\AmazeUI-D12\UI\UIUtility.h">
+      <Filter>AmazeUI\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\AmazeUI\AmazeUI-D12\UI\UIWidget.h">
+      <Filter>AmazeUI\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\AmazeUI\AmazeUI-D12\UI\UIWindow.h">
+      <Filter>AmazeUI\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\AmazeUI\AmazeUI-D12\Core\Common.h">
+      <Filter>AmazeUI\Core</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="resource.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="atg.ico">
+      <Filter>Asserts</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Readme.docx" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Asserts">
+      <UniqueIdentifier>{8aba78b2-4265-49e9-b823-9deb53bf59a6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="AmazeUI">
+      <UniqueIdentifier>{a2cbb441-f1af-4656-8aa3-9c15693f58fa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="AmazeUI\Core">
+      <UniqueIdentifier>{c1a411b0-c168-4c33-bb85-343c929398c8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="AmazeUI\IO">
+      <UniqueIdentifier>{ac665cfa-df77-4a86-a96e-4f2249f5d646}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="AmazeUI\UI">
+      <UniqueIdentifier>{2c4fc038-a38c-42a9-a419-bc99aca35600}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <Manifest Include="settings.manifest" />
+  </ItemGroup>
+</Project>

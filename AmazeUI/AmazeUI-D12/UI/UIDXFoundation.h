@@ -142,9 +142,7 @@ public:
 	void HandleWindowSizeChanged(int width, int height);
 
 	void Render();
-	void Render2D();
 	void Render3D();
-	void RenderAnimate();
 
 	LONG GetOutputWidth() const;
 	LONG GetOutputHeight() const;
