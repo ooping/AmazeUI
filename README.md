@@ -38,9 +38,13 @@ AmazeUI is a C++ UI framework for Windows desktop applications, built on DirectX
 3. Build and run the project.
 
 ### Demos
-- **2D Demo**: Demonstrates 2D rendering capabilities, including shapes, images, and animations.
-- **3D Demo**: Showcases 3D rendering features, such as models, transformations, and lighting.
-- **Controls Demo**: Highlights various UI controls, including buttons, sliders, and text inputs.
+- **DEMO - 2D**: Demonstrates 2D rendering capabilities, including shapes, images, and animations.
+  <img width="1024" alt="69e24a779be683e9aaf904de60d2831" src="https://github.com/user-attachments/assets/8bc4e152-74c1-46bb-a6e5-2a4a954b2612" />
+- **DEMO - 3D**: Showcases 3D rendering features, such as models, transformations, and lighting.
+  <img width="1024" alt="6ba8e79762e8ee66a0c2191b8554cfe" src="https://github.com/user-attachments/assets/a0146fdb-b60d-413b-be12-c0a4250b3fa8" />
+- **DEMO - Controls**: Highlights various UI controls, including buttons, sliders, and text inputs.
+  <img width="1024" alt="68ddeef0985bebe2ab9275d2eb060e8" src="https://github.com/user-attachments/assets/08c968e4-3aca-4b2e-9230-aacff0d868db" />
+
 
 ## Support the Project
 
