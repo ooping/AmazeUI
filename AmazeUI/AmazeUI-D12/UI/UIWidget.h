@@ -5,9 +5,6 @@
 #include "UIAnimation.h"
 
 /*------------------------------------------------------- UIControlBase -------------------------------------------------------*/
-/*
-
-*/
 class UIScrollBar;
 template<class T>
 class UIControlBase : public UIWindowBase {
@@ -92,12 +89,22 @@ public:
 
 	bool CreateControl(UINT id, UIContainer* pUIContainer, const RECT& relativeRect = Shape2D::NULL_RECT, int layoutFlag = UILayoutCalc::NO_ZOOM, bool isShow = true, bool isOnHeap = false) {
 		_id = id;
-		return CreateWin(pUIContainer, relativeRect, layoutFlag, isShow, isOnHeap);
+		return CreateWindowBase(pUIContainer, relativeRect, layoutFlag, isShow, isOnHeap);
 	}
 
 	bool CreateControl(UINT id, UIWindowBase* pParent, const RECT& relativeRect = Shape2D::NULL_RECT, int layoutFlag = UILayoutCalc::NO_ZOOM, bool isShow = true, bool isOnHeap = false) {
 		_id = id;
-		return CreateWin(pParent, relativeRect, layoutFlag, isShow, isOnHeap);
+		return CreateWindowBase(pParent, relativeRect, layoutFlag, isShow, isOnHeap);
+	}
+
+	bool CreateControlOnHeap(UINT id, UIContainer* pUIContainer, const RECT& relativeRect = Shape2D::NULL_RECT, int layoutFlag = UILayoutCalc::NO_ZOOM, bool isShow = true) {
+		_id = id;
+		return CreateWindowBase(pUIContainer, relativeRect, layoutFlag, isShow, true);
+	}
+
+	bool CreateControlOnHeap(UINT id, UIWindowBase* pParent, const RECT& relativeRect = Shape2D::NULL_RECT, int layoutFlag = UILayoutCalc::NO_ZOOM, bool isShow = true) {
+		_id = id;
+		return CreateWindowBase(pParent, relativeRect, layoutFlag, isShow, true);
 	}
 
 	UINT _id;
@@ -171,6 +178,46 @@ protected:
 };
 
 
+/*------------------------------------------------------- EventHelper -------------------------------------------------------*/
+class UIEventHelp {
+public:
+	void SetClickEvent(std::function<void()> callback) {
+		RegisterEvent("click", callback);
+	}
+	bool OnClickEvent() {
+		auto it = _eventMap.find("click");
+		if (it != _eventMap.end()) {
+			it->second();
+			return true;
+		}
+		return false;
+	}
+
+	void SetNotifyEvent(std::function<void()> callback) {
+		RegisterEvent("Notify", callback);
+	}
+	bool OnNotifyEvent() {
+		auto it = _eventMap.find("Notify");
+		if (it != _eventMap.end()) {
+			it->second();
+			return true;
+		}
+		return false;
+	}
+
+protected:
+	std::map<std::string, std::function<void()>> _eventMap; // event map
+
+	// register event
+	void RegisterEvent(const std::string& eventName, std::function<void()> callback) {
+		_eventMap[eventName] = callback;
+	}
+
+	void UnregisterEvent(const std::string& eventName) {
+		_eventMap.erase(eventName);
+	}
+};
+
 
 /*------------------------------------------------------- UILayoutGrid -------------------------------------------------------*/
 /*
@@ -223,13 +270,13 @@ private:
 
 
 
-/*------------------------------------------------------- UILable -------------------------------------------------------*/
-class UILable : public UIControlBase<UILable> {
+/*------------------------------------------------------- UILabel -------------------------------------------------------*/
+class UILabel : public UIControlBase<UILabel> {
 	friend UIControlBase;
 
 public:
-	UILable();
-	~UILable() = default;
+	UILabel();
+	~UILabel() = default;
 
 	void Draw();
 
@@ -255,7 +302,7 @@ public:
 };
 
 /*------------------------------------------------------- UIButton -------------------------------------------------------*/
-class UIButton : public UIControlBase<UIButton>, public UIAnimateEffectHitDrum {
+class UIButton : public UIControlBase<UIButton>, public UIAnimateEffectHitDrum, public UIEventHelp {
 	friend UIControlBase;
 
 public:
@@ -404,7 +451,7 @@ private:
 /*
 	UIComboBox contains UISelectList
 */
-class UIComboBox : public UIControlBase<UIComboBox>, public UIContainerHelp<UIComboBox> {
+class UIComboBox : public UIControlBase<UIComboBox>, public UIContainerHelp<UIComboBox>, public UIEventHelp {
 	friend UIControlBase;
 
 public:

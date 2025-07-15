@@ -22,8 +22,7 @@ unprotected means direct operation, for unprotected direct setting function name
 class UIContainer;
 template<class T> class UIContainerHelp;
 class UITab;
-class UIWindowBase
-{
+class UIWindowBase {
 	friend UIContainer;
 	template<class T> friend class UIContainerHelp;
 	friend UITab;
@@ -33,11 +32,12 @@ public:
 	virtual ~UIWindowBase();
 
 	// create window
-	bool CreateWin(UIContainer* pUIContainer, const RECT& relativeRect=Shape2D::NULL_RECT, int layoutFlag=UILayoutCalc::NO_ZOOM, bool isShow=true, bool isOnHeap=false);
-	bool CreateWin(UIWindowBase* pParent, const RECT& relativeRect=Shape2D::NULL_RECT, int layoutFlag=UILayoutCalc::NO_ZOOM, bool isShow=true, bool isOnHeap=false);
-	bool CreateWinPopup(UIWindowBase* pParent, const RECT& relativeRect=Shape2D::NULL_RECT, int layoutFlag=UILayoutCalc::NO_ZOOM, bool isShow=true, bool isOnHeap=false);
+	bool CreateWindowBase(UIContainer* pUIContainer, const RECT& relativeRect=Shape2D::NULL_RECT, int layoutFlag=UILayoutCalc::NO_ZOOM, bool isShow=true, bool isOnHeap=false);
+	bool CreateWindowBase(UIWindowBase* pParent, const RECT& relativeRect=Shape2D::NULL_RECT, int layoutFlag=UILayoutCalc::NO_ZOOM, bool isShow=true, bool isOnHeap=false);
+	bool CreateWindowBaseOnHeap(UIContainer* pUIContainer, const RECT& relativeRect=Shape2D::NULL_RECT, int layoutFlag=UILayoutCalc::NO_ZOOM, bool isShow=true);
+	bool CreateWindowBaseOnHeap(UIWindowBase* pParent, const RECT& relativeRect=Shape2D::NULL_RECT, int layoutFlag=UILayoutCalc::NO_ZOOM, bool isShow=true);
 	// destroy window
-	bool DestroyWin();
+	bool DestroyWindowBase();
 
 	// message processing
 	virtual bool HandleMessage(UINT message, WPARAM wParam, LPARAM lParam);
@@ -110,11 +110,9 @@ function:
 note: all settings of the container class are unprotected, only safe when called in the message loop, but because the container class is only used in the AmazeUI framework,
 it is a framework internal concept, so the function name is not added with Direct;
 */
-class UIContainer
-{
+class UIContainer {
 	// container element
-	struct UIElement
-	{
+	struct UIElement {
 		UIWindowBase* p_win;					// pointer to sub-window
 		UILayoutCalc _layoutInfo;				// layout mode
 		bool _isOnHeap;							// whether the window memory is on the heap
@@ -168,23 +166,20 @@ private:
 
 // provide support for self Container
 template<class T>
-class UIContainerHelp
-{
+class UIContainerHelp {
 public:
-	UIContainerHelp()
-	{
+	UIContainerHelp() {
 		T* pT = static_cast<T*>(this);
 		pT->p_UIContainer = &_uiContainer;
 		_uiContainer.BindWindow(pT); 
 	}
 
-	// vector container's resize will call the copy constructor
-	UIContainerHelp(UIContainerHelp& obj)
-	{
-		T* pT = static_cast<T*>(this);
-		pT->p_UIContainer = &_uiContainer;
-		_uiContainer.BindWindow(pT);
-	}
+	// // vector container's resize will call the copy constructor
+	// UIContainerHelp(UIContainerHelp& obj) {
+	// 	T* pT = static_cast<T*>(this);
+	// 	pT->p_UIContainer = &_uiContainer;
+	// 	_uiContainer.BindWindow(pT);
+	// }
 
 protected:
 	UIContainer _uiContainer;

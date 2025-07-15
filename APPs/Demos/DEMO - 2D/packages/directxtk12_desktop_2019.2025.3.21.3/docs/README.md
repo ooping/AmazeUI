@@ -62,7 +62,7 @@ These components are designed to work without requiring any content from the leg
 
 ## Documentation
 
-Documentation is available on the [GitHub wiki](https://github.com/Microsoft/DirectXTK12/wiki).
+Documentation is availabel on the [GitHub wiki](https://github.com/Microsoft/DirectXTK12/wiki).
 
 ## Notices
 

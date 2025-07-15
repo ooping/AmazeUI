@@ -66,7 +66,7 @@ void UIWinTop::OnCreate()
 	const RECT clientRC = GetClientRect();
 	string str;
 
-    _2D.CreateWin(&gWinTop, clientRC, UILayoutCalc::SIZE_X | UILayoutCalc::SIZE_Y);
+    _2D.CreateWindowBase(&gWinTop, clientRC, UILayoutCalc::SIZE_X | UILayoutCalc::SIZE_Y);
 }
 
 void UIWinTop::OnDestroy() {
@@ -109,7 +109,7 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
         RECT rc;
         ::GetClientRect(UIFrame::GetSingletonInstance()->GetWindowHandle(), &rc);
 
-        gWinTop.CreateWin(UIFrame::GetSingletonInstance()->GetTopUIContainer(), rc, UILayoutCalc::SIZE_X | UILayoutCalc::SIZE_Y);
+        gWinTop.CreateWindowBase(UIFrame::GetSingletonInstance()->GetTopUIContainer(), rc, UILayoutCalc::SIZE_X | UILayoutCalc::SIZE_Y);
     }, 0);
 
     // initialize UI

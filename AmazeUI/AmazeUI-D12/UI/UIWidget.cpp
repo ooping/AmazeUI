@@ -115,35 +115,35 @@ void UILayoutGrid::CalcGridPos() {
 
 
 
-UILable::UILable() {
+UILabel::UILabel() {
 	_color = Colors::Black;
 	_fontHeight = gDefaultFontSize;
 	_pos = UIFont::HLEFT_VCENTER;
 }
 
-void UILable::Draw() {
+void UILabel::Draw() {
 	XMMATRIX transformMatrix = GetInheritedTransformMatrix();
 	UIFont(_z, _fontHeight)(_text, GetAbusoluteRect(), _color, _pos, transformMatrix);
 }
 
-void UILable::SetText(UIString text, DWORD pos) {
+void UILabel::SetText(UIString text, DWORD pos) {
 	_text = text;
 	_pos = pos;
 }
 
-UIString UILable::GetText() {
+UIString UILabel::GetText() {
 	return _text;
 }
 
-void UILable::SetColor(UIColor& color) {
+void UILabel::SetColor(UIColor& color) {
 	_color = color;
 }
 
-void UILable::SetFontHeight(float h) {
+void UILabel::SetFontHeight(float h) {
 	_fontHeight = h;
 }
 
-void UILable::SetPos(DWORD pos) {
+void UILabel::SetPos(DWORD pos) {
 	_pos = pos;
 }
 
@@ -253,14 +253,16 @@ void UIButton::OnMouseLeave(POINT) {
 
 bool UIButton::OnLButtonDown(POINT) {
 	_isLButtonDown = true;
-
 	UIRefresh();
+
 	return true;
 }
 
 bool UIButton::OnLButtonUp(POINT) { 
 	if (_isLButtonDown) {
-		SendMessageToParent(WM_NOTIFY, (WPARAM)_id, 0);
+		if (!OnClickEvent()) {
+			SendMessageToParent(WM_NOTIFY, (WPARAM)_id, 0);
+		}
 
 		SetDLLID(IDB_BUTTON1_HOT);
 		PlayHitDrumAnimate();
@@ -1047,7 +1049,7 @@ void UIComboBox::SetDropDown(bool flag) {
 
 void UIComboBox::OnCreate() {
 	_dropDownList._id = 0;
-	_dropDownList.CreateWinPopup(this, NULL_RECT, 0, false);
+	_dropDownList.CreateWindowBaseOnHeap(this, NULL_RECT, 0, false);
 }
 
 void UIComboBox::OnKillFocus() {
@@ -1086,7 +1088,9 @@ void UIComboBox::OnNotify(int id, LPARAM param) {
 		UIFrame::GetSingletonInstance()->SetHookWindowForPopup(NULL);
 		_isHover = false;
 
-		SendMessageToParent(WM_NOTIFY, _id, _selectedectIndex);
+		if (!OnNotifyEvent()) {
+			SendMessageToParent(WM_NOTIFY, _id, _selectedectIndex);
+		}
 	}
 
 	UIRefresh();
@@ -1341,20 +1345,20 @@ bool UIGrid::GridCellInfo::DeleteCellControl() {
 		_text = str;
 		
 		// Destroy the edit control
-		pControl->DestroyWin();
+		pControl->DestroyWindowBase();
 		
 	} else if (_controlType==CTRL_CHECKBUTTON) {
 		// Get the control pointer
 		UICheckButton* pControl = (UICheckButton*)_pCtrl;
-		pControl->DestroyWin();
+		pControl->DestroyWindowBase();
 	} else if (_controlType==CTRL_COMBOBOX) {
 		// Get the control pointer
 		UIComboBox* pControl = (UIComboBox*)_pCtrl;
-		pControl->DestroyWin();
+		pControl->DestroyWindowBase();
 	} else if (_controlType==CTRL_BUTTON) {
 		// Get the control pointer
 		UIButton* pControl = (UIButton*)_pCtrl;
-		pControl->DestroyWin();
+		pControl->DestroyWindowBase();
 	}
 
 	_pCtrl = NULL;
@@ -4965,7 +4969,7 @@ void UIImage3D::Draw() {
 	RECT rc = _clientRC;
 	OffsetRect(&rc, _abusolutePoint.x, _abusolutePoint.y);
 	POINT center = GetRectCenter()(rc);
-	XMMATRIX transform = UIZPlaneTransform::GetTransformMatrix(false, 0, 0, 0, true, center.y, offsetY*XM_PI/32, true, center.x, -offsetX*XM_PI/32, _z);
+	XMMATRIX transform = UIZPlaneTransform::GetTransformMatrix(false, 0, 0, 0, true, (float)center.y, offsetY*XM_PI/32, true, (float)center.x, -offsetX*XM_PI/32, _z);
 
 
 	//UIDXFoundation::GetSingletonInstance()->Draw3DRectOutline(XMFLOAT2(rc.left, rc.top), XMFLOAT2(rc.right, rc.bottom), _z, Colors::Red);

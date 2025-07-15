@@ -2812,7 +2812,7 @@ void UIDXFoundation::Draw2DTextFT(const wstring& text, const RECT& rc, int posFl
         
         // calculate position (consider baseline alignment)
         float charX = x + resource._left;
-        float charY = baselineY - resource._top;
+        float charY = (float)(baselineY - resource._top);
         
         // draw character
         Draw2DCharTextureFT(textureIndex, XMFLOAT2(charX, charY), z, 1.0f, 255);
@@ -2902,7 +2902,7 @@ void UIDXFoundation::Draw3DTextFT(const wstring& text, const RECT& rc, int posFl
         
         // calculate position (consider baseline alignment)
         float charX = x + resource._left;
-        float charY = baselineY - resource._top;
+        float charY = (float)(baselineY - resource._top);
         
         // draw character
         Draw3DCharTextureFT(textureIndex, XMFLOAT2(charX, charY), z, 1.0f, 255, transformMatrix);

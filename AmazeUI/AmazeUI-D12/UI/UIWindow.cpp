@@ -26,7 +26,7 @@ UIWindowBase::UIWindowBase() {
 UIWindowBase::~UIWindowBase() {
 }
 
-bool UIWindowBase::CreateWin(UIContainer* pUIContainer, const RECT& relativeRect, int layoutFlag, bool isShow, bool isOnHeap) {
+bool UIWindowBase::CreateWindowBase(UIContainer* pUIContainer, const RECT& relativeRect, int layoutFlag, bool isShow, bool isOnHeap) {
 	// check if the parent container exists
 	if (pUIContainer == NULL) {
 		return false;
@@ -57,32 +57,19 @@ bool UIWindowBase::CreateWin(UIContainer* pUIContainer, const RECT& relativeRect
 	return HandleMessage(WM_CREATE, isOnHeap?1:0, 0);
 }
 
-bool UIWindowBase::CreateWin(UIWindowBase* pParent, const RECT& relativeRect, int layoutFlag, bool isShow, bool isOnHeap) {
-	return CreateWin(pParent->GetUIContainer(), relativeRect, layoutFlag, isShow, isOnHeap);
+bool UIWindowBase::CreateWindowBase(UIWindowBase* pParent, const RECT& relativeRect, int layoutFlag, bool isShow, bool isOnHeap) {
+	return CreateWindowBase(pParent->GetUIContainer(), relativeRect, layoutFlag, isShow, isOnHeap);
 }
 
-bool UIWindowBase::CreateWinPopup(UIWindowBase* pParent, const RECT& relativeRect, int layoutFlag, bool isShow, bool isOnHeap) {
-	p_parentUIContainer = pParent->GetUIContainer();
-
-	_isShow = isShow;
-
-	// size and position information
-	_clientRC = relativeRect;
-	OffsetRect(&_clientRC, -_clientRC.left, -_clientRC.top);
-	//
-	_relativePoint = Shape2D::CreatePoint()(relativeRect.left, relativeRect.top);
-	_abusolutePoint = _relativePoint;
-
-	// hierarchy information
-	_layoutMode = layoutFlag;
-	_layoutLever = p_parentUIContainer->GetBindWinLayoutLever()+1;  // 0 is the top level
-	_z = 0.f;
-	//_z = 1.0f - (_layoutLever>1 ? (_layoutLever-1)*0.05f : 0.0f);	// layoutlever can't > 21
-
-	return HandleMessage(WM_CREATE, isOnHeap?1:0, 0);
+bool UIWindowBase::CreateWindowBaseOnHeap(UIContainer* pUIContainer, const RECT& relativeRect, int layoutFlag, bool isShow) {
+	return CreateWindowBase(pUIContainer, relativeRect, layoutFlag, isShow, true);
 }
 
-bool UIWindowBase::DestroyWin() {
+bool UIWindowBase::CreateWindowBaseOnHeap(UIWindowBase* pParent, const RECT& relativeRect, int layoutFlag, bool isShow) {
+	return CreateWindowBase(pParent, relativeRect, layoutFlag, isShow, true);
+}
+
+bool UIWindowBase::DestroyWindowBase() {
 	return HandleMessage(WM_DESTROY, 0, 0);
 }
 
@@ -217,6 +204,11 @@ UIContainer::UIContainer() {
 }
 
 UIContainer::~UIContainer() {
+	for_each(_winList.begin(), _winList.end(), [](UIElement& elem) {
+		if (elem._isOnHeap && elem.p_win != NULL) {
+			delete elem.p_win;
+		}
+	});
 }
 
 void UIContainer::BindWindow(UIWindowBase *pBindWindow) {

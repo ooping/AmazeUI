@@ -17,14 +17,14 @@ private:
     UITab _tab1;
 
 	UICanvas _canvas000;
-	UILable _lable001;
+	UILabel _labelMSG;
 	UILayoutGrid _layoutGrid000;
 
     UICanvas _canvas100, _canvas101, _canvas102, _canvas103;
 	UICheckButton _checkbut101, _checkbut102, _checkbut103;
 	UIButton _but101, _but102;
 	UIEdit _edit101;
-	UILable _lable101;
+	UILabel _label101;
 	UIImageView _image101;
 	UIComboBox _combo101;
 	UIGrid _grid101;

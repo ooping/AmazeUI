@@ -18,7 +18,7 @@ using namespace Shape2D;
 UIWinTop gWinTop;
 
 void UIWinTop::ShowMsg(const string& msg) {
-	_lable001.SetText(msg);
+	_labelMSG.SetText(msg);
 }
 
 void UIWinTop::OnCreate()
@@ -30,31 +30,31 @@ void UIWinTop::OnCreate()
 	{	// connection config
 		RECT rc = clientRC;
 		rc.top = rc.bottom - 40;
-		_canvas000.CreateWin(this, rc, UILayoutCalc::MOVE_Y);
+		_canvas000.CreateWindowBase(this, rc, UILayoutCalc::MOVE_Y);
 
-		_lable001.CreateControl(0, &_canvas000);
-		_lable001.SetText("Show Message..");
+		_labelMSG.CreateControl(0, &_canvas000);
+		_labelMSG.SetText("Show Message..");
 
 		// 
 		_layoutGrid000.InitPoint(CreatePoint()(20, 0));
 		_layoutGrid000.SetRowColumn(1, 10, 70, 5);
 		//
-		_layoutGrid000.SetCell(0, 0, 0, 8, &_lable001);;
+		_layoutGrid000.SetCell(0, 0, 0, 8, &_labelMSG);;
 		//
 		_layoutGrid000.CalcGridPos();
 	}
 
 	_tab1.CreateControl(0, this, clientRC, UILayoutCalc::SIZE_X | UILayoutCalc::SIZE_Y);
 
-	_canvas100.CreateWin(&_tab1);
-	_canvas200.CreateWin(&_tab1);
+	_canvas100.CreateWindowBase(&_tab1);
+	_canvas200.CreateWindowBase(&_tab1);
 	_tab1.SetCellNum(2);
 	_tab1.SetCell(0, "tab1", &_canvas100);
 	_tab1.SetCell(1, "tab2", &_canvas200);
 
 	{	// module infor
-		_lable101.CreateControl(0, &_canvas100);
-		_lable101.SetText("Lable 1");
+		_label101.CreateControl(0, &_canvas100);
+		_label101.SetText("Lable 1");
 
 		_but101.CreateControl(101, &_canvas100);
 		_but101.SetText("Button 1");
@@ -109,7 +109,7 @@ void UIWinTop::OnCreate()
 		_layoutGrid100.InitPoint(CreatePoint()(20, 20));
 		_layoutGrid100.SetRowColumn(16, 12, 140, 20, 35, 20);
 		//
-		_layoutGrid100.SetCell(0, 0, &_lable101);
+		_layoutGrid100.SetCell(0, 0, &_label101);
 		_layoutGrid100.SetCell(0, 1, &_but101);
 		_layoutGrid100.SetCell(0, 2, &_but102);
 		_layoutGrid100.SetCell(0, 3, &_image101);
@@ -204,7 +204,7 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
         RECT rc;
         ::GetClientRect(UIFrame::GetSingletonInstance()->GetWindowHandle(), &rc);
 
-        gWinTop.CreateWin(UIFrame::GetSingletonInstance()->GetTopUIContainer(), rc, UILayoutCalc::SIZE_X | UILayoutCalc::SIZE_Y);
+        gWinTop.CreateWindowBase(UIFrame::GetSingletonInstance()->GetTopUIContainer(), rc, UILayoutCalc::SIZE_X | UILayoutCalc::SIZE_Y);
     }, 0);
 
     // initialize UI
