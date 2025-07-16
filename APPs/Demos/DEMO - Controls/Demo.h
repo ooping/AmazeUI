@@ -17,7 +17,7 @@ private:
     UITab _tab1;
 
 	UICanvas _canvas000;
-	UILabel _labelMSG;
+	UILabel _label000;
 	UILayoutGrid _layoutGrid000;
 
     UICanvas _canvas100, _canvas101, _canvas102, _canvas103;

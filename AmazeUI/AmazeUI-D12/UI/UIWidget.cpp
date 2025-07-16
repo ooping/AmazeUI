@@ -393,8 +393,11 @@ void UICheckButton::OnMouseLeave(POINT) {
 }
 
 bool UICheckButton::OnLButtonDown(POINT) {
-	_isCheck = !_isCheck ;
-	SendMessageToParent(WM_NOTIFY, (WPARAM)_id, _isCheck?1:0);
+	_isCheck = !_isCheck;
+
+	if (!OnClickEvent()) {
+		SendMessageToParent(WM_NOTIFY, (WPARAM)_id, _isCheck?1:0);
+	}
 
 	// mutex related button	
 	if (_isCheck==true) {
@@ -1049,7 +1052,7 @@ void UIComboBox::SetDropDown(bool flag) {
 
 void UIComboBox::OnCreate() {
 	_dropDownList._id = 0;
-	_dropDownList.CreateWindowBaseOnHeap(this, NULL_RECT, 0, false);
+	_dropDownList.CreateWindowBase(this, NULL_RECT, 0, false);
 }
 
 void UIComboBox::OnKillFocus() {
@@ -2204,8 +2207,7 @@ std::optional<UIString> UIGrid::GetCellText(UINT row, UINT column) {
 		return std::nullopt;
 	}
 
-	if (_cellArray[row][column]._pCtrl==NULL)
-	{
+	if (_cellArray[row][column]._pCtrl==NULL) {
 		return _cellArray[row][column]._text;
 	} else {
 		if (_cellArray[row][column]._controlType==GridCellInfo::CTRL_EDIT) {
@@ -2222,7 +2224,7 @@ std::optional<UIString> UIGrid::GetCellText(UINT row, UINT column) {
 	return std::nullopt;
 }
 
-void UIGrid::SetCellColor(UINT row, UINT column, UIColor& color) {
+void UIGrid::SetCellColor(UINT row, UINT column, const UIColor& color) {
 	if (row>=_rowNum || column>=_columnNum) {
 		return;
 	}

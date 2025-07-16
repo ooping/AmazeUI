@@ -181,9 +181,10 @@ protected:
 /*------------------------------------------------------- EventHelper -------------------------------------------------------*/
 class UIEventHelp {
 public:
-	void SetClickEvent(std::function<void()> callback) {
-		RegisterEvent("click", callback);
-	}
+    void SetClickEvent(std::function<void()> callback) {
+        RegisterEvent("click", callback);
+    }
+
 	bool OnClickEvent() {
 		auto it = _eventMap.find("click");
 		if (it != _eventMap.end()) {
@@ -196,6 +197,7 @@ public:
 	void SetNotifyEvent(std::function<void()> callback) {
 		RegisterEvent("Notify", callback);
 	}
+
 	bool OnNotifyEvent() {
 		auto it = _eventMap.find("Notify");
 		if (it != _eventMap.end()) {
@@ -332,7 +334,7 @@ private:
 /*
 
 */
-class UICheckButton : public UIControlBase<UICheckButton> {
+class UICheckButton : public UIControlBase<UICheckButton>, public UIEventHelp {
 	friend UIControlBase;
 
 public:
@@ -583,7 +585,7 @@ public:
 	// set and get cell string
 	void SetCellText(UINT row, UINT column, UIString text, bool isAutoWidth=false);
 	std::optional<UIString> GetCellText(UINT row, UINT column);
-	void SetCellColor(UINT row, UINT column, UIColor& color);
+	void SetCellColor(UINT row, UINT column, const UIColor& color);
 	void SetCellFontHeight(float h);
 	// add one or more rows
 	void AddRow(std::vector<UIString>& row);						

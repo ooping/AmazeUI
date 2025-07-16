@@ -18,7 +18,7 @@ using namespace Shape2D;
 UIWinTop gWinTop;
 
 void UIWinTop::ShowMsg(const string& msg) {
-	_labelMSG.SetText(msg);
+	_label000.SetText(msg);
 }
 
 void UIWinTop::OnCreate()
@@ -32,14 +32,22 @@ void UIWinTop::OnCreate()
 		rc.top = rc.bottom - 40;
 		_canvas000.CreateWindowBase(this, rc, UILayoutCalc::MOVE_Y);
 
-		_labelMSG.CreateControl(0, &_canvas000);
-		_labelMSG.SetText("Show Message..");
+
+		_label000.CreateControl(0, &_canvas000);
+		_label000.SetText("Show Message..");
+
+		// Test the efficiency of multiple calls of std::unique_ptr<DirectX::PrimitiveBatch<DirectX::VertexPositionTexture>>::DrawIndexed()
+		// for (int i = 0; i < 1000; ++i) {
+		// 	auto *pCtrl = new UILabel();
+		// 	pCtrl->CreateControlOnHeap(0, &_canvas000);
+		// 	pCtrl->SetText(std::format("B"));
+		// }
 
 		// 
 		_layoutGrid000.InitPoint(CreatePoint()(20, 0));
 		_layoutGrid000.SetRowColumn(1, 10, 70, 5);
 		//
-		_layoutGrid000.SetCell(0, 0, 0, 8, &_labelMSG);;
+		_layoutGrid000.SetCell(0, 0, 0, 8, &_label000);
 		//
 		_layoutGrid000.CalcGridPos();
 	}
@@ -143,9 +151,6 @@ void UIWinTop::OnCreate()
 		}
 		_chart201.AddCurve1("Chart 1", xList, yList);
 		_chart201.CalcXYCoordRange();
-	}
-
-	{	
 	}
 }
 
