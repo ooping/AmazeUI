@@ -1560,6 +1560,7 @@ void UIDXFoundation::Draw2DRectSolid(const XMFLOAT2& start, const XMFLOAT2& end,
         {{ ps.x, pe.y, viewZ }, finalColorLB},         // Bottom-left (2)
         {{ pe.x, pe.y, viewZ }, finalColorRB}          // Bottom-right (3)
     };
+    
     // Define indices for two triangles
     uint16_t indices[6] = { 0, 1, 2, 1, 3, 2 };
 
@@ -2248,8 +2249,8 @@ void UIDXFoundation::CreateDeviceDependentResourcesXTK() {
         auto& rt = transparentBlendDesc.RenderTarget[0];
         rt.BlendEnable = TRUE;
         rt.LogicOpEnable = FALSE;
-        //rt.SrcBlend = D3D12_BLEND_SRC_ALPHA;
-        rt.SrcBlend = D3D12_BLEND_ONE;              // Source color unchanged
+        rt.SrcBlend = D3D12_BLEND_SRC_ALPHA;
+        rt.SrcBlend = D3D12_BLEND_SRC_ALPHA;
         rt.DestBlend = D3D12_BLEND_INV_SRC_ALPHA;   // Destination color × (1 - Source Alpha)
         rt.BlendOp = D3D12_BLEND_OP_ADD;
         rt.SrcBlendAlpha = D3D12_BLEND_ONE;
@@ -2257,6 +2258,9 @@ void UIDXFoundation::CreateDeviceDependentResourcesXTK() {
         rt.BlendOpAlpha = D3D12_BLEND_OP_ADD;
         rt.LogicOp = D3D12_LOGIC_OP_NOOP;
         rt.RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+
+        D3D12_BLEND_DESC transparentBlendDescForTexture = transparentBlendDesc;
+        transparentBlendDescForTexture.RenderTarget[0].SrcBlend = D3D12_BLEND_ONE; // Source color unchanged
 
         // create common depth description
         D3D12_DEPTH_STENCIL_DESC depthStencilDesc = {};
@@ -2329,27 +2333,12 @@ void UIDXFoundation::CreateDeviceDependentResourcesXTK() {
                 rtState,
                 D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE);
 
-            pd.blendDesc = transparentBlendDesc;
+            pd.blendDesc = transparentBlendDescForTexture;
             pd.depthStencilDesc = depthStencilDesc;
 
             p_triangleTexturedEffect2DUI = make_unique<BasicEffect>(device, EffectFlags::Texture, pd);
             p_triangleTexturedEffect3DUI = make_unique<BasicEffect>(device, EffectFlags::Texture, pd);
         }
-
-        // {
-        //     EffectPipelineStateDescription pd(
-        //         &VertexPositionTexture::InputLayout,
-        //         CommonStates::AlphaBlend,
-        //         CommonStates::DepthDefault,
-        //         CommonStates::CullNone,
-        //         rtState,
-        //         D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE);
-
-        //     pd.blendDesc = transparentBlendDesc;
-        //     pd.depthStencilDesc = depthStencilDesc;
-
-        //     p_triangleTexturedEffect3DUI = make_unique<BasicEffect>(device, EffectFlags::Texture, pd);
-        // }
 
         {
             EffectPipelineStateDescription pd(
