@@ -18,7 +18,6 @@ private:
 
 	UICanvas _canvas000;
 	UILabel _label000;
-	UILayoutGrid _layoutGrid000;
 
     UICanvas _canvas100, _canvas101, _canvas102, _canvas103;
 	UICheckButton _checkbut101, _checkbut102, _checkbut103;
@@ -30,7 +29,6 @@ private:
 	UIGrid _grid101;
 
 	UIImage3D _image3D101;
-	UILayoutGrid _layoutGrid100;
 
 	UICanvas _canvas200;
 	UIChart _chart201;

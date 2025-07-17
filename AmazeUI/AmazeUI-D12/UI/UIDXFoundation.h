@@ -167,9 +167,10 @@ private:
 	std::unique_ptr<DirectX::BasicEffect>                                   p_lineEffect2D;
 	std::unique_ptr<DirectX::BasicEffect>                                   p_triangleEffect2D;
 	std::unique_ptr<DirectX::BasicEffect>                                   p_triangleEffect3DUI;
+	std::unique_ptr<DirectX::BasicEffect>                                   p_triangleTexturedEffect2DUI;
 	std::unique_ptr<DirectX::BasicEffect>                                   p_triangleTexturedEffect3DUI;
 
-	std::unique_ptr<DirectX::SpriteBatch>                                   p_sprites;
+	//std::unique_ptr<DirectX::SpriteBatch>                                   p_sprites;
     //std::unique_ptr<DirectX::SpriteFont>                                    p_font;
     std::unique_ptr<DirectX::PrimitiveBatch<DirectX::VertexPositionColor>>  p_batch;
 	std::unique_ptr<DirectX::PrimitiveBatch<DirectX::VertexPositionTexture>>  p_batchTexture;

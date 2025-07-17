@@ -44,12 +44,13 @@ void UIWinTop::OnCreate()
 		// }
 
 		// 
-		_layoutGrid000.InitPoint(CreatePoint()(20, 0));
-		_layoutGrid000.SetRowColumn(1, 10, 70, 5);
+		UILayoutGrid layoutGrid1;
+		layoutGrid1.InitPoint(CreatePoint()(20, 0));
+		layoutGrid1.SetRowColumn(1, 10, 70, 5);
 		//
-		_layoutGrid000.SetCell(0, 0, 0, 8, &_label000);
+		layoutGrid1.SetCell(0, 0, 0, 8, &_label000);
 		//
-		_layoutGrid000.CalcGridPos();
+		layoutGrid1.CalcGridPos();
 	}
 
 	_tab1.CreateControl(0, this, clientRC, UILayoutCalc::SIZE_X | UILayoutCalc::SIZE_Y);
@@ -66,8 +67,17 @@ void UIWinTop::OnCreate()
 
 		_but101.CreateControl(101, &_canvas100);
 		_but101.SetText("Button 1");
-		_but102.CreateControl(102, &_canvas100);
-		_but102.SetText("Button 2");
+
+		auto* pBut2 = new UIButton();
+		pBut2->CreateControlOnHeap(0, &_canvas100);
+		pBut2->SetText("Button 2");
+		pBut2->SetClickEvent([this]() {
+			ShowMsg("Button 2");
+			_image101.SetDLLID(IDB_CLOSE);
+			_image101.PlayHitDrumAnimate();
+			});
+		/*_but102.CreateControl(102, &_canvas100);
+		_but102.SetText("Button 2");*/
 
 		_checkbut101.CreateControl(199, &_canvas100);
 		_checkbut101.SetText("CheckButton 1");
@@ -114,27 +124,28 @@ void UIWinTop::OnCreate()
 		_image3D101.CreateControl(0, &_canvas100);
 
 		// ≤ºæ÷º∆À„
-		_layoutGrid100.InitPoint(CreatePoint()(20, 20));
-		_layoutGrid100.SetRowColumn(16, 12, 140, 20, 35, 20);
+		UILayoutGrid layoutGrid1;
+		layoutGrid1.InitPoint(CreatePoint()(20, 20));
+		layoutGrid1.SetRowColumn(16, 12, 140, 20, 35, 20);
 		//
-		_layoutGrid100.SetCell(0, 0, &_label101);
-		_layoutGrid100.SetCell(0, 1, &_but101);
-		_layoutGrid100.SetCell(0, 2, &_but102);
-		_layoutGrid100.SetCell(0, 3, &_image101);
+		layoutGrid1.SetCell(0, 0, &_label101);
+		layoutGrid1.SetCell(0, 1, &_but101);
+		layoutGrid1.SetCell(0, 2, pBut2);
+		layoutGrid1.SetCell(0, 3, &_image101);
 		
-		_layoutGrid100.SetCell(1, 1, &_checkbut101);
-		_layoutGrid100.SetCell(1, 2, &_checkbut102);
-		_layoutGrid100.SetCell(1, 3, &_checkbut103);
+		layoutGrid1.SetCell(1, 1, &_checkbut101);
+		layoutGrid1.SetCell(1, 2, &_checkbut102);
+		layoutGrid1.SetCell(1, 3, &_checkbut103);
 
-		_layoutGrid100.SetCell(2, 1, &_edit101);
-		_layoutGrid100.SetCell(2, 2, &_combo101);
+		layoutGrid1.SetCell(2, 1, &_edit101);
+		layoutGrid1.SetCell(2, 2, &_combo101);
 
 		//
-		_layoutGrid100.SetCell(0, 6, 15, 7, &_grid101);
+		layoutGrid1.SetCell(0, 6, 15, 7, &_grid101);
 		//
-		_layoutGrid100.SetCell(8, 1, 11, 3, &_image3D101);
+		layoutGrid1.SetCell(8, 1, 11, 3, &_image3D101);
 		//
-		_layoutGrid100.CalcGridPos();
+		layoutGrid1.CalcGridPos();
 	}
 
 	{	// calibration config

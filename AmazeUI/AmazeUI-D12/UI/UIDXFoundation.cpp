@@ -1421,7 +1421,6 @@ void UIDXFoundation::Draw2DPoint(const XMFLOAT2& point, float z, const UIColor& 
 
 
 
-
     // only one vertex    (1,1) is on the pixel (0,0)
     // VertexPositionColor vertex = { { point.x, point.y, viewZ }, color.ToXMVECTORF32() };
     
@@ -1437,7 +1436,7 @@ void UIDXFoundation::Draw2DPoints(const vector<XMFLOAT2>& points, float z, const
     if (points.empty()) {
         return;
     }
-    
+
     float viewZ = CalculateViewZByOrtho(z);
 
     vector<XMFLOAT2> pList;
@@ -1583,7 +1582,7 @@ void UIDXFoundation::Draw2DImage(size_t textureIndex,
                             float z, UCHAR alpha) {
     // set color
     XMVECTORF32 color = { 1.0f, 1.0f, 1.0f, alpha / 255.0f };
-    
+
     // get texture resource
     TextureResource& resource = _textureResources[textureIndex];
 
@@ -1601,35 +1600,75 @@ void UIDXFoundation::Draw2DImage(size_t textureIndex,
         dstEnd.y = dstStart.y + (float)(GetRectHeight()(srcRect)) - 1;
     }
 
-    XMFLOAT2 scale(
-        (dstEnd.x - dstStart.x + 1) / (float)(GetRectWidth()(srcRect)),
-        (dstEnd.y - dstStart.y + 1) / (float)(GetRectHeight()(srcRect))
-    );
+    // calculate real rectangle points
+    XMFLOAT2 ps, pe;
+    Calculate2DRectPoints(dstStart, dstEnd, ps, pe);
+
+    // get view space Z value using 2D transform
+    float viewZ = CalculateViewZByOrtho(z);
+
+    // calculate texture coordinates
+    float texLeft = (float)srcRect.left / (float)GetRectWidth()(textureRect);
+    float texTop = (float)srcRect.top / (float)GetRectHeight()(textureRect);
+    float texRight = (float)srcRect.right / (float)GetRectWidth()(textureRect);
+    float texBottom = (float)srcRect.bottom / (float)GetRectHeight()(textureRect);
+
+    // create vertex data
+    VertexPositionTexture vertices[4] = {
+        { {ps.x, ps.y, viewZ}, XMFLOAT2(texLeft, texTop) },      // Top-left
+        { {pe.x, ps.y, viewZ}, XMFLOAT2(texRight, texTop) },     // Top-right
+        { {ps.x, pe.y, viewZ}, XMFLOAT2(texLeft, texBottom) },   // Bottom-left
+        { {pe.x, pe.y, viewZ}, XMFLOAT2(texRight, texBottom) }   // Bottom-right
+    };
+
+    // define index data
+    uint16_t indices[6] = { 0, 1, 2, 1, 3, 2 };
+
+    // get command list
+    auto commandList = p_deviceResources->GetCommandList();
+    // apply texture effect
+    p_triangleTexturedEffect2DUI->SetTexture(resource._gpuDescriptor, p_states->LinearClamp());
+    p_triangleTexturedEffect2DUI->SetColorAndAlpha(color);
+    p_triangleTexturedEffect2DUI->Apply(commandList);
+    //
+    p_batchTexture->Begin(commandList);
+    p_batchTexture->DrawIndexed(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, indices, 6, vertices, 4);
+    p_batchTexture->End();
+
+
+
+
+    // p_sprites use more memory and is slower than PrimitiveBatch!!!
+
+    // XMFLOAT2 scale(
+    //     (dstEnd.x - dstStart.x + 1) / (float)(GetRectWidth()(srcRect)),
+    //     (dstEnd.y - dstStart.y + 1) / (float)(GetRectHeight()(srcRect))
+    // );
     
-    // begin drawing
-    auto comandList = p_deviceResources->GetCommandList();
-    p_sprites->Begin(comandList);
+    // // begin drawing
+    // auto comandList = p_deviceResources->GetCommandList();
+    // p_sprites->Begin(comandList);
     
-    // set render state
-    RenderTargetState rtState(p_deviceResources->GetBackBufferFormat(), p_deviceResources->GetDepthBufferFormat());
-    SpriteBatchPipelineStateDescription pd(rtState);
+    // // set render state
+    // RenderTargetState rtState(p_deviceResources->GetBackBufferFormat(), p_deviceResources->GetDepthBufferFormat());
+    // SpriteBatchPipelineStateDescription pd(rtState);
 
-    p_sprites->SetViewport(p_deviceResources->GetScreenViewport());
+    // p_sprites->SetViewport(p_deviceResources->GetScreenViewport());
 
-    p_sprites->Draw(
-        resource._gpuDescriptor,
-        GetTextureSize(resource._texture.Get()), 
-        dstStart,
-        &srcRect,
-        color,
-        0.0f,  // rotation
-        XMFLOAT2(0, 0),  // origin
-        scale,
-        SpriteEffects_None,
-        z
-    );
+    // p_sprites->Draw(
+    //     resource._gpuDescriptor,
+    //     GetTextureSize(resource._texture.Get()), 
+    //     dstStart,
+    //     &srcRect,
+    //     color,
+    //     0.0f,  // rotation
+    //     XMFLOAT2(0, 0),  // origin
+    //     scale,
+    //     SpriteEffects_None,
+    //     z
+    // );
 
-    p_sprites->End();
+    // p_sprites->End();
 }
 
 void UIDXFoundation::Draw2DImage(const wstring& filePath, const UIColor& colorKey,
@@ -2209,8 +2248,9 @@ void UIDXFoundation::CreateDeviceDependentResourcesXTK() {
         auto& rt = transparentBlendDesc.RenderTarget[0];
         rt.BlendEnable = TRUE;
         rt.LogicOpEnable = FALSE;
-        rt.SrcBlend = D3D12_BLEND_SRC_ALPHA;
-        rt.DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
+        //rt.SrcBlend = D3D12_BLEND_SRC_ALPHA;
+        rt.SrcBlend = D3D12_BLEND_ONE;              // Source color unchanged
+        rt.DestBlend = D3D12_BLEND_INV_SRC_ALPHA;   // Destination color × (1 - Source Alpha)
         rt.BlendOp = D3D12_BLEND_OP_ADD;
         rt.SrcBlendAlpha = D3D12_BLEND_ONE;
         rt.DestBlendAlpha = D3D12_BLEND_INV_SRC_ALPHA;
@@ -2225,13 +2265,13 @@ void UIDXFoundation::CreateDeviceDependentResourcesXTK() {
         depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
         depthStencilDesc.StencilEnable = FALSE;
 
-        {
-            SpriteBatchPipelineStateDescription pd(rtState);
-            pd.blendDesc = transparentBlendDesc;
-            pd.depthStencilDesc = depthStencilDesc;
+        // {
+        //     SpriteBatchPipelineStateDescription pd(rtState);
+        //     pd.blendDesc = transparentBlendDesc;
+        //     pd.depthStencilDesc = depthStencilDesc;
 
-            p_sprites = make_unique<SpriteBatch>(device, resourceUpload, pd);
-        }
+        //     p_sprites = make_unique<SpriteBatch>(device, resourceUpload, pd);
+        // }
 
         {
             EffectPipelineStateDescription pd(
@@ -2292,8 +2332,24 @@ void UIDXFoundation::CreateDeviceDependentResourcesXTK() {
             pd.blendDesc = transparentBlendDesc;
             pd.depthStencilDesc = depthStencilDesc;
 
+            p_triangleTexturedEffect2DUI = make_unique<BasicEffect>(device, EffectFlags::Texture, pd);
             p_triangleTexturedEffect3DUI = make_unique<BasicEffect>(device, EffectFlags::Texture, pd);
         }
+
+        // {
+        //     EffectPipelineStateDescription pd(
+        //         &VertexPositionTexture::InputLayout,
+        //         CommonStates::AlphaBlend,
+        //         CommonStates::DepthDefault,
+        //         CommonStates::CullNone,
+        //         rtState,
+        //         D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE);
+
+        //     pd.blendDesc = transparentBlendDesc;
+        //     pd.depthStencilDesc = depthStencilDesc;
+
+        //     p_triangleTexturedEffect3DUI = make_unique<BasicEffect>(device, EffectFlags::Texture, pd);
+        // }
 
         {
             EffectPipelineStateDescription pd(
@@ -2330,8 +2386,8 @@ void UIDXFoundation::CreateWindowSizeDependentResourcesXTK() {
     auto size = p_deviceResources->_outputSize;
 
     // 2D resources
-    auto viewport = p_deviceResources->GetScreenViewport();
-    p_sprites->SetViewport(viewport);
+    //auto viewport = p_deviceResources->GetScreenViewport();
+    //p_sprites->SetViewport(viewport);
     
     // create 2D orthographic projection matrix
     _orthoMatrix2D = Matrix::CreateOrthographicOffCenter(
@@ -2352,6 +2408,10 @@ void UIDXFoundation::CreateWindowSizeDependentResourcesXTK() {
     p_triangleEffect2D->SetView(Matrix::Identity);
     p_triangleEffect2D->SetWorld(Matrix::Identity);
     p_triangleEffect2D->SetProjection(_orthoMatrix2D);
+
+    p_triangleTexturedEffect2DUI->SetView(Matrix::Identity);
+    p_triangleTexturedEffect2DUI->SetWorld(Matrix::Identity);
+    p_triangleTexturedEffect2DUI->SetProjection(_orthoMatrix2D);
 
     // 3D resources
     UICameraUI::GetSingletonInstance()->SetCameraFor2D(float(size.right), float(size.bottom));
@@ -2386,13 +2446,14 @@ void UIDXFoundation::ResetResources() {
     p_lineEffect3DGame.reset();
     p_lineEffect2D.reset();
     p_triangleEffect2D.reset();
+    p_triangleTexturedEffect2DUI.reset();
     p_pointEffect2D.reset();
     p_triangleEffect3DUI.reset();
     p_triangleTexturedEffect3DUI.reset();
     p_shapeEffectGame.reset();
     _modelEffectsGame.clear();
     p_modelResources.reset();
-    p_sprites.reset();
+    //p_sprites.reset();
     p_resourceDescriptors.reset();
     p_states.reset();
     p_graphicsMemory.reset();
@@ -2657,40 +2718,75 @@ SIZE UIDXFoundation::GetTextSizeFT(const wstring& text, float fontSize) {
 void UIDXFoundation::Draw2DCharTextureFT(size_t textureIndex, XMFLOAT2 position, float z, float scale, UCHAR alpha) {
     position.x = round(position.x);
     //position.y = round(position.y);
-    
+
     // get texture resource
     CharTextureResource& resource = _charTextureResources[textureIndex];
-    
-    // get original texture size 
+
+    // get original texture size
     const RECT textureRect = Get2DTextureRect(resource._texture);
-    
+
     // set color
     XMVECTORF32 color = { 1.0f, 1.0f, 1.0f, alpha / 255.0f };
+
+    // calculate destination rectangle end point
+    XMFLOAT2 dstEnd;
+    dstEnd.x = position.x + (float)(GetRectWidth()(textureRect)) * scale;
+    dstEnd.y = position.y + (float)(GetRectHeight()(textureRect)) * scale;
+
+    // get view space Z value using 2D transform
+    float viewZ = CalculateViewZByOrtho(z);
+
+    // create vertex data
+    VertexPositionTexture vertices[4] = {
+        { {position.x, position.y, viewZ}, XMFLOAT2(0.f, 0.f) },
+        { {dstEnd.x, position.y, viewZ}, XMFLOAT2(1.f, 0.f) },
+        { {position.x, dstEnd.y, viewZ}, XMFLOAT2(0.f, 1.f) },
+        { {dstEnd.x, dstEnd.y, viewZ}, XMFLOAT2(1.f, 1.f) }
+    };
+
+    // define index data
+    uint16_t indices[6] = { 0, 1, 2, 1, 3, 2 };
+
+    // get command list
+    auto commandList = p_deviceResources->GetCommandList();
+    // apply effect
+    p_triangleTexturedEffect2DUI->SetTexture(resource._gpuDescriptor, p_states->LinearClamp());
+    p_triangleTexturedEffect2DUI->SetColorAndAlpha(color);
+    p_triangleTexturedEffect2DUI->Apply(commandList);
+    //
+    p_batchTexture->Begin(commandList);
+    p_batchTexture->DrawIndexed(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, indices, 6, vertices, 4);
+    p_batchTexture->End();
     
-    // begin drawing
-    auto comandList = p_deviceResources->GetCommandList();
-    p_sprites->Begin(comandList);
+
     
-    // set render state
-    RenderTargetState rtState(p_deviceResources->GetBackBufferFormat(), p_deviceResources->GetDepthBufferFormat());
-    SpriteBatchPipelineStateDescription pd(rtState);
 
-    p_sprites->SetViewport(p_deviceResources->GetScreenViewport());
+    // p_sprites use more memory and is slower than PrimitiveBatch!!!
 
-    p_sprites->Draw(
-        resource._gpuDescriptor,
-        GetTextureSize(resource._texture.Get()), 
-        position,
-        &textureRect,
-        color,
-        0.0f,  // rotation
-        XMFLOAT2(0, 0),  // origin
-        scale,
-        SpriteEffects_None,
-        z
-    );
+    // // begin drawing
+    // auto comandList = p_deviceResources->GetCommandList();
+    // p_sprites->Begin(comandList);
+    
+    // // set render state
+    // RenderTargetState rtState(p_deviceResources->GetBackBufferFormat(), p_deviceResources->GetDepthBufferFormat());
+    // SpriteBatchPipelineStateDescription pd(rtState);
 
-    p_sprites->End();
+    // p_sprites->SetViewport(p_deviceResources->GetScreenViewport());
+
+    // p_sprites->Draw(
+    //     resource._gpuDescriptor,
+    //     GetTextureSize(resource._texture.Get()), 
+    //     position,
+    //     &textureRect,
+    //     color,
+    //     0.0f,  // rotation
+    //     XMFLOAT2(0, 0),  // origin
+    //     scale,
+    //     SpriteEffects_None,
+    //     z
+    // );
+
+    // p_sprites->End();
 }
 
 void UIDXFoundation::Draw3DCharTextureFT(size_t textureIndex, DirectX::XMFLOAT2 position, float z, float scale, UCHAR alpha, const DirectX::XMMATRIX& transformMatrix)

@@ -19,11 +19,11 @@ UIPoint::UIPoint(LONG x, LONG y, float z) {
 }
 
 void UIPoint::operator()(const UIColor& color, const DirectX::XMMATRIX& transformMatrix) {
-	//if (!XMMatrixIsIdentity(transformMatrix)) {
+	if (!XMMatrixIsIdentity(transformMatrix)) {
 		UIDXFoundation::GetSingletonInstance()->Draw3DPoint(_point, _z, color, 4, transformMatrix);
-	// } else {
-	// 	UIDXFoundation::GetSingletonInstance()->Draw2DPoint(_point, _z, color);
-	// }
+	} else {
+		UIDXFoundation::GetSingletonInstance()->Draw2DPoint(_point, _z, color);
+	}
 }
 
 UIPoints::UIPoints(const vector<POINT>& points, float z) {
@@ -35,11 +35,11 @@ UIPoints::UIPoints(const vector<POINT>& points, float z) {
 }
 
 void UIPoints::operator()(const UIColor& color, const DirectX::XMMATRIX& transformMatrix) {
-	//if (!XMMatrixIsIdentity(transformMatrix)) {	
+	if (!XMMatrixIsIdentity(transformMatrix)) {	
 		UIDXFoundation::GetSingletonInstance()->Draw3DPoints(_points, _z, color, 4.f, transformMatrix);
-	// } else {
-	// 	UIDXFoundation::GetSingletonInstance()->Draw2DPoints(_points, _z, color);
-	// }
+	} else {
+		UIDXFoundation::GetSingletonInstance()->Draw2DPoints(_points, _z, color);
+	}
 }
 
 UILine::UILine(LONG beginX, LONG beginY, LONG endX, LONG endY, float z, float width) {
@@ -50,11 +50,11 @@ UILine::UILine(LONG beginX, LONG beginY, LONG endX, LONG endY, float z, float wi
 }
 
 void UILine::operator()(const UIColor& color, const DirectX::XMMATRIX& transformMatrix) {
-	//if (!XMMatrixIsIdentity(transformMatrix)) {
+	if (!XMMatrixIsIdentity(transformMatrix)) {
 		UIDXFoundation::GetSingletonInstance()->Draw3DLine(_start, _end, _z, color, _width, transformMatrix);
-	// } else {
-	// 	UIDXFoundation::GetSingletonInstance()->Draw2DLine(_start, _end, _z, color, _width);
-	// }
+	} else {
+		UIDXFoundation::GetSingletonInstance()->Draw2DLine(_start, _end, _z, color, _width);
+	}
 }
 
 UIRect::UIRect(LONG beginX, LONG beginY, LONG endX, LONG endY, float z) {
@@ -70,27 +70,27 @@ UIRect::UIRect(const RECT& rect, float z) {
 }
 
 void UIRect::operator()(const UIColor& color, const DirectX::XMMATRIX& transformMatrix) {
-	//if (!XMMatrixIsIdentity(transformMatrix)) {
+	if (!XMMatrixIsIdentity(transformMatrix)) {
 		UIDXFoundation::GetSingletonInstance()->Draw3DRectOutline(_start, _end, _z, color, 1.f, transformMatrix);
-	// } else {
-	// 	UIDXFoundation::GetSingletonInstance()->Draw2DRectOutline(_start, _end, _z, color);
-	// }
+	} else {
+		UIDXFoundation::GetSingletonInstance()->Draw2DRectOutline(_start, _end, _z, color);
+	}
 }
 
 void UIRect::operator()(const UIColor& color, UCHAR alpha, const DirectX::XMMATRIX& transformMatrix) {
-	//if (!XMMatrixIsIdentity(transformMatrix)) {
+	if (!XMMatrixIsIdentity(transformMatrix)) {
 		UIDXFoundation::GetSingletonInstance()->Draw3DRectSolid(_start, _end, _z, color, alpha, transformMatrix);
-	// } else {
-	// 	UIDXFoundation::GetSingletonInstance()->Draw2DRectSolid(_start, _end, _z, color, alpha);
-	// }
+	} else {
+		UIDXFoundation::GetSingletonInstance()->Draw2DRectSolid(_start, _end, _z, color, alpha);
+	}
 }
 
 void UIRect::operator()(const UIColor& colorLT, const UIColor& colorRT, const UIColor& colorLB, const UIColor& colorRB, UCHAR alpha, const DirectX::XMMATRIX& transformMatrix) {
-	// if (!XMMatrixIsIdentity(transformMatrix)) {
+	if (!XMMatrixIsIdentity(transformMatrix)) {
 		UIDXFoundation::GetSingletonInstance()->Draw3DRectSolid(_start, _end, _z, colorLT, colorRT, colorLB, colorRB, alpha, transformMatrix);
-	// } else {
-	// 	UIDXFoundation::GetSingletonInstance()->Draw2DRectSolid(_start, _end, _z, colorLT, colorRT, colorLB, colorRB, alpha);
-	// }
+	} else {
+		UIDXFoundation::GetSingletonInstance()->Draw2DRectSolid(_start, _end, _z, colorLT, colorRT, colorLB, colorRB, alpha);
+	}
 }
 
 UIImage::UIImage() {
@@ -113,7 +113,7 @@ UIImage::UIImage(std::wstring resDLLPath, UINT id, const UIColor& colorKey, floa
 }
 
 void UIImage::operator()(const RECT& srcRect, const RECT& dstRect, UCHAR alphy, const DirectX::XMMATRIX& transformMatrix) {
-	//if (!XMMatrixIsIdentity(transformMatrix)) {
+	if (!XMMatrixIsIdentity(transformMatrix)) {
 		if (_sourceFlag==1)	{
 			UIDXFoundation::GetSingletonInstance()->Draw3DImage(_path, _colorKey, srcRect,
 														XMFLOAT2{static_cast<float>(dstRect.left), static_cast<float>(dstRect.top)}, 
@@ -125,19 +125,19 @@ void UIImage::operator()(const RECT& srcRect, const RECT& dstRect, UCHAR alphy, 
 														XMFLOAT2{static_cast<float>(dstRect.right), static_cast<float>(dstRect.bottom)}, 
 														_z, alphy, transformMatrix);
 		}
-	// } else {
-	// 	if (_sourceFlag==1)	{
-	// 		UIDXFoundation::GetSingletonInstance()->Draw2DImage(_path, _colorKey, srcRect,
-	// 													XMFLOAT2{static_cast<float>(dstRect.left), static_cast<float>(dstRect.top)}, 
-	// 													XMFLOAT2{static_cast<float>(dstRect.right), static_cast<float>(dstRect.bottom)}, 
-	// 													_z, alphy);
-	// 	} else if (_sourceFlag==2) {
-	// 		UIDXFoundation::GetSingletonInstance()->Draw2DImage(_path, _id, _colorKey, srcRect,
-	// 													XMFLOAT2{static_cast<float>(dstRect.left), static_cast<float>(dstRect.top)}, 
-	// 													XMFLOAT2{static_cast<float>(dstRect.right), static_cast<float>(dstRect.bottom)}, 
-	// 													_z, alphy);
-	// 	}
-	// }
+	} else {
+		if (_sourceFlag==1)	{
+			UIDXFoundation::GetSingletonInstance()->Draw2DImage(_path, _colorKey, srcRect,
+														XMFLOAT2{static_cast<float>(dstRect.left), static_cast<float>(dstRect.top)}, 
+														XMFLOAT2{static_cast<float>(dstRect.right), static_cast<float>(dstRect.bottom)}, 
+														_z, alphy);
+		} else if (_sourceFlag==2) {
+			UIDXFoundation::GetSingletonInstance()->Draw2DImage(_path, _id, _colorKey, srcRect,
+														XMFLOAT2{static_cast<float>(dstRect.left), static_cast<float>(dstRect.top)}, 
+														XMFLOAT2{static_cast<float>(dstRect.right), static_cast<float>(dstRect.bottom)}, 
+														_z, alphy);
+		}
+	}
 }
 
 void UIImage::operator()(const RECT& srcRect, LONG dstBeginX, LONG dstBeginY, UCHAR alphy, const DirectX::XMMATRIX& transformMatrix) {	
@@ -244,19 +244,19 @@ UIFont::UIFont(float z, float fontSize) {
 }
 
 void UIFont::operator()(std::wstring text, const POINT& position, const UIColor& color, const DirectX::XMMATRIX& transformMatrix) {
-	//if (!XMMatrixIsIdentity(transformMatrix)) {
+	if (!XMMatrixIsIdentity(transformMatrix)) {
 		UIDXFoundation::GetSingletonInstance()->Draw3DTextFT(text, XMFLOAT2{(float)position.x, (float)position.y}, _z, color, _fontSize, transformMatrix);
-	// } else {
-	// 	UIDXFoundation::GetSingletonInstance()->Draw2DTextFT(text, XMFLOAT2{(float)position.x, (float)position.y}, _z, color, _fontSize);
-	// }
+	} else {
+		UIDXFoundation::GetSingletonInstance()->Draw2DTextFT(text, XMFLOAT2{(float)position.x, (float)position.y}, _z, color, _fontSize);
+	}
 }
 
 void UIFont::operator()(std::wstring text, const RECT& rc, const UIColor& color, int posFlag, const DirectX::XMMATRIX& transformMatrix) {
-	// if (!XMMatrixIsIdentity(transformMatrix)) {
+	if (!XMMatrixIsIdentity(transformMatrix)) {
 		UIDXFoundation::GetSingletonInstance()->Draw3DTextFT(text, rc, posFlag, _z, color, _fontSize, transformMatrix);
-	// } else {
-	// 	UIDXFoundation::GetSingletonInstance()->Draw2DTextFT(text, rc, posFlag, _z, color, _fontSize);
-	// }
+	} else {
+		UIDXFoundation::GetSingletonInstance()->Draw2DTextFT(text, rc, posFlag, _z, color, _fontSize);
+	}
 }
 
 SIZE UIFont::GetDrawAreaSize(std::wstring text) {
