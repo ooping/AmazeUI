@@ -515,11 +515,11 @@ int UIEdit::GetTextToInt() {
 }
 
 float UIEdit::GetTextToFloat() {
-	return _text.empty() ? 0 : std::stof(_text);
+	return _text.empty() ? 0.0f : std::stof(_text);
 }
 
 double UIEdit::GetTextToDouble() {
-	return _text.empty() ? 0 : std::stod(_text);
+	return _text.empty() ? 0.0 : std::stod(_text);
 }
 
 void UIEdit::EraseSelectArea() {
@@ -918,6 +918,10 @@ size_t UISelectList::GetListCount() {
 	return _list.size();
 }
 
+vector<wstring> UISelectList::GetTextList() {
+	return _list;
+}
+
 void UISelectList::ClearList() {
 	_list.clear();
 
@@ -1025,6 +1029,10 @@ void UIComboBox::ClearList() {
 
 int UIComboBox::GetSelectIndex() {
 	return _selectedectIndex;
+}
+
+vector<std::wstring> UIComboBox::GetTextList() {
+	return _dropDownList.GetTextList();
 }
 
 void UIComboBox::IsDrawBoader(bool flag) {
@@ -2222,6 +2230,36 @@ std::optional<UIString> UIGrid::GetCellText(UINT row, UINT column) {
 		}
 	}
 	return std::nullopt;
+}
+
+std::optional<int> UIGrid::GetCellTextToInt(UINT row, UINT column) {
+	auto textOpt = GetCellText(row, column);
+	if (!textOpt.has_value()) {
+		return std::nullopt;
+	}
+
+	wstring text = (wstring)textOpt.value();
+	return text.empty() ? 0 : std::stoi(text);
+}
+
+std::optional<float> UIGrid::GetCellTextToFloat(UINT row, UINT column) {
+	auto textOpt = GetCellText(row, column);
+	if (!textOpt.has_value()) {
+		return std::nullopt;
+	}
+	
+	wstring text = textOpt.value();
+    return text.empty() ? 0.0f : std::stof(text);
+}
+
+std::optional<double> UIGrid::GetCellTextToDouble(UINT row, UINT column) {
+	auto textOpt = GetCellText(row, column);
+	if (!textOpt.has_value()) {
+		return std::nullopt;
+	}
+	
+	wstring text = textOpt.value();
+    return text.empty() ? 0.0 : std::stod(text);
 }
 
 void UIGrid::SetCellColor(UINT row, UINT column, const UIColor& color) {

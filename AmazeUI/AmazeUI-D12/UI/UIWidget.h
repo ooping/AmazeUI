@@ -436,6 +436,7 @@ public:
 	std::optional<UIString> GetText(int index);
 	void ClearList();
 	size_t GetListCount();
+	std::vector<std::wstring> GetTextList();
 
 private:
 	bool OnMouseMove(POINT pt);
@@ -465,6 +466,7 @@ public:
 	void SetSelectIndex(int index);
 	void ClearList();
 	int GetSelectIndex();
+	std::vector<std::wstring> GetTextList();
 
 	void IsDrawBoader(bool flag);				// whether to draw the border
 
@@ -585,6 +587,9 @@ public:
 	// set and get cell string
 	void SetCellText(UINT row, UINT column, UIString text, bool isAutoWidth=false);
 	std::optional<UIString> GetCellText(UINT row, UINT column);
+	std::optional<int> GetCellTextToInt(UINT row, UINT column);
+	std::optional<float> GetCellTextToFloat(UINT row, UINT column);
+	std::optional<double> GetCellTextToDouble(UINT row, UINT column);
 	void SetCellColor(UINT row, UINT column, const UIColor& color);
 	void SetCellFontHeight(float h);
 	// add one or more rows
