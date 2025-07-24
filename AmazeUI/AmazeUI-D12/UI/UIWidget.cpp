@@ -119,11 +119,18 @@ UILabel::UILabel() {
 	_color = Colors::Black;
 	_fontHeight = gDefaultFontSize;
 	_pos = UIFont::HLEFT_VCENTER;
+	_supportMultiLine = false;
 }
 
 void UILabel::Draw() {
 	XMMATRIX transformMatrix = GetInheritedTransformMatrix();
-	UIFont(_z, _fontHeight)(_text, GetAbusoluteRect(), _color, _pos, transformMatrix);
+
+	if (_supportMultiLine) {
+		UIFont(_z, _fontHeight)(_text, GetAbusoluteRect(), _color, _pos, _lineSpacing, transformMatrix);
+	} else {
+		// single line text
+		UIFont(_z, _fontHeight)(_text, GetAbusoluteRect(), _color, _pos, transformMatrix);
+	}
 }
 
 void UILabel::SetText(UIString text, DWORD pos) {
@@ -145,6 +152,11 @@ void UILabel::SetFontHeight(float h) {
 
 void UILabel::SetPos(DWORD pos) {
 	_pos = pos;
+}
+
+void UILabel::SetSupportMultiLine(bool support, float lineSpacing) {
+	_supportMultiLine = support;
+	_lineSpacing = lineSpacing;
 }
 
 
@@ -308,9 +320,9 @@ void UICheckButton::Draw() {
 
 	// button image   UIColor(255, 0, 255)
 	if (!_isHover) {
-		UIImage(L"GUIResource.dll", checkBoxBMPID, UIColor(255, 0, 255), _z)(GetRectWidth()(_checkRect)/2+x_, GetRectHeight()(_checkRect)/2+y_, 1.5, 255, transformMatrix);
+		UIImage(L"GUIResource.dll", checkBoxBMPID, UIColor(255, 0, 255), _z)(GetRectWidth()(_checkRect)/2+x_, GetRectHeight()(_checkRect)/2+y_, 1.0, 255, transformMatrix);
 	} else {
-		UIImage(L"GUIResource.dll", checkBoxBMPID, UIColor(255, 0, 255), _z)(GetRectWidth()(_checkRect)/2+x_, GetRectHeight()(_checkRect)/2+y_, 1.5, 255, transformMatrix);
+		UIImage(L"GUIResource.dll", checkBoxBMPID, UIColor(255, 0, 255), _z)(GetRectWidth()(_checkRect)/2+x_, GetRectHeight()(_checkRect)/2+y_, 1.0, 255, transformMatrix);
 	}
 
 	// display wstring

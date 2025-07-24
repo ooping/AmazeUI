@@ -287,12 +287,15 @@ public:
 	void SetColor(UIColor& color);
 	void SetFontHeight(float h);
 	void SetPos(DWORD pos);
+	void SetSupportMultiLine(bool support, float lineSpacing=1.2f);
 
 private:
 	std::wstring _text;
 	UIColor _color;
 	float _fontHeight;
 	DWORD _pos;
+	bool _supportMultiLine;
+	float _lineSpacing;
 };
 
 /*------------------------------------------------------- UIImageView -------------------------------------------------------*/

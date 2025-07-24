@@ -235,6 +235,13 @@ public:
 	void Draw3DTextFT(const std::wstring& text, const RECT& rc, int posFlag, float z, const UIColor& color, float fontSize,
 					  const DirectX::XMMATRIX& transformMatrix = DirectX::XMMatrixIdentity());
 	SIZE GetTextSizeFT(const std::wstring& text, float fontSize);
+	// Draw multi-line text
+	void Draw2DTextMultiLineFT(const std::wstring& text, const DirectX::XMFLOAT2& position, float z, const UIColor& color, float fontSize, float lineSpacing = 1.2f);
+	void Draw2DTextMultiLineFT(const std::wstring& text, const RECT& rc, int posFlag, float z, const UIColor& color, float fontSize, float lineSpacing = 1.2f);
+	void Draw3DTextMultiLineFT(const std::wstring& text, const DirectX::XMFLOAT2& position, float z, const UIColor& color, float fontSize, float lineSpacing = 1.2f,
+					  		   const DirectX::XMMATRIX& transformMatrix = DirectX::XMMatrixIdentity());
+	void Draw3DTextMultiLineFT(const std::wstring& text, const RECT& rc, int posFlag, float z, const UIColor& color, float fontSize, float lineSpacing = 1.2f,
+					  		   const DirectX::XMMATRIX& transformMatrix = DirectX::XMMatrixIdentity());
 
 private:
 	void CreateResourcesFT();

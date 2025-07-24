@@ -140,10 +140,13 @@ struct UIFont {
 	UIFont(float z, float fontSize);
 	~UIFont() = default;
 
+	SIZE GetDrawAreaSize(std::wstring str);
+
 	void operator()(std::wstring text, const POINT& postion, const UIColor& color=UIColor::Black, const DirectX::XMMATRIX& transformMatrix=DirectX::XMMatrixIdentity());
 	void operator()(std::wstring text, const RECT& rc, const UIColor& color=UIColor::Black, int posFlag=HLEFT_VCENTER, const DirectX::XMMATRIX& transformMatrix=DirectX::XMMatrixIdentity());
 
-	SIZE GetDrawAreaSize(std::wstring str);
+	void operator()(std::wstring text, const POINT& postion, const UIColor& color, float lineSpacing, const DirectX::XMMATRIX& transformMatrix=DirectX::XMMatrixIdentity());
+	void operator()(std::wstring text, const RECT& rc, const UIColor& color, int posFlag, float lineSpacing, const DirectX::XMMATRIX& transformMatrix=DirectX::XMMatrixIdentity());
 
 	enum FontPos {
 		HLEFT_VTOP = 0,

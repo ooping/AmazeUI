@@ -2996,3 +2996,247 @@ void UIDXFoundation::Draw3DTextFT(const wstring& text, const RECT& rc, int posFl
         x += resource._advance;
     }
 }
+
+void UIDXFoundation::Draw2DTextMultiLineFT(const wstring& text, const XMFLOAT2& position, float z, const UIColor& color, float fontSize, float lineSpacing) {
+    if (text.empty()) {
+        return;
+    }
+
+    FTSizeFont ftSizeFont;
+    GetFTSizeFont(fontSize, ftSizeFont);
+    
+    float lineHeight = ftSizeFont._ftFontHeight * lineSpacing;
+    float x = position.x;
+    float y = position.y;
+    
+    // split text into lines
+    vector<wstring> lines;
+    wstring currentLine;
+    
+    for (size_t i = 0; i < text.length(); i++) {
+        wchar_t ch = text[i];
+        if (ch == L'\n' || ch == L'\r') {
+            lines.push_back(currentLine);
+            currentLine.clear();
+
+            // handle \r\n combination
+            if (ch == L'\r' && i + 1 < text.length() && text[i + 1] == L'\n') {
+                i++; // skip \n
+            }
+        } else {
+            currentLine += ch;
+        }
+    }
+
+    // add the last line
+    if (!currentLine.empty()) {
+        lines.push_back(currentLine);
+    }
+
+    // render each line
+    for (size_t i = 0; i < lines.size(); i++) {
+        const wstring& line = lines[i];
+        if (!line.empty()) {
+            float currentY = y + i * lineHeight;
+            Draw2DTextFT(line, XMFLOAT2(x, currentY), z, color, fontSize);
+        }
+    }
+}
+
+void UIDXFoundation::Draw2DTextMultiLineFT(const wstring& text, const RECT& rc, int posFlag, float z, const UIColor& color, float fontSize, float lineSpacing) {
+    if (text.empty()) {
+        return;
+    }
+
+    FTSizeFont ftSizeFont;
+    GetFTSizeFont(fontSize, ftSizeFont);
+    
+    float lineHeight = ftSizeFont._ftFontHeight * lineSpacing;
+    
+    // 1. split text into lines
+    vector<wstring> lines;
+    wstring currentLine;
+    
+    for (size_t i = 0; i < text.length(); i++) {
+        wchar_t ch = text[i];
+        if (ch == L'\n') {
+            lines.push_back(currentLine);
+            currentLine.clear();
+        } else if (ch == L'\r') {
+            lines.push_back(currentLine);
+            currentLine.clear();
+            // handle \r\n combination
+            if (i + 1 < text.length() && text[i + 1] == L'\n') {
+                i++; // skip \n
+            }
+        } else {
+            currentLine += ch;
+        }
+    }
+
+    // add the last line (if not empty)
+    if (!currentLine.empty()) {
+        lines.push_back(currentLine);
+    }
+    
+    if (lines.empty()) {
+        return;
+    }
+
+    // 2. calculate total text height and starting Y position
+    float totalTextHeight = lines.size() * lineHeight;
+    float startY = static_cast<float>(rc.top);
+
+    // vertical alignment calculation
+    if (posFlag & 0x04) { // center
+        startY = rc.top + (GetRectHeight()(rc) - totalTextHeight) / 2;
+    } else if (posFlag & 0x08) { // bottom
+        startY = rc.bottom - totalTextHeight;
+    }
+
+    // 3. set overall clipping region
+    UIScreenClipRectGuard clipRect(rc);
+
+    // 4. calculate rectangle area for each line and call existing Draw2DTextFT
+    for (size_t i = 0; i < lines.size(); i++) {
+        const wstring& line = lines[i];
+        if (line.empty()) {
+            continue; // skip empty lines
+        }
+
+        // calculate rectangle area for current line
+        float currentY = startY + i * lineHeight;
+        RECT lineRect = {
+            rc.left,
+            static_cast<LONG>(currentY),
+            rc.right,
+            static_cast<LONG>(currentY + lineHeight)
+        };
+
+        // call existing single-line drawing function
+        Draw2DTextFT(line, lineRect, posFlag, z, color, fontSize);
+    }
+}
+
+void UIDXFoundation::Draw3DTextMultiLineFT(const std::wstring& text, const DirectX::XMFLOAT2& position, float z, const UIColor& color, float fontSize, float lineSpacing,
+					  		               const DirectX::XMMATRIX& transformMatrix) {
+    if (text.empty()) {
+        return;
+    }
+
+    FTSizeFont ftSizeFont;
+    GetFTSizeFont(fontSize, ftSizeFont);
+    
+    float lineHeight = ftSizeFont._ftFontHeight * lineSpacing;
+    float x = position.x;
+    float y = position.y;
+    
+    // split text into lines
+    vector<wstring> lines;
+    wstring currentLine;
+    
+    for (size_t i = 0; i < text.length(); i++) {
+        wchar_t ch = text[i];
+        if (ch == L'\n' || ch == L'\r') {
+            lines.push_back(currentLine);
+            currentLine.clear();
+
+            // handle \r\n combination
+            if (ch == L'\r' && i + 1 < text.length() && text[i + 1] == L'\n') {
+                i++; // skip \n
+            }
+        } else {
+            currentLine += ch;
+        }
+    }
+
+    // add the last line
+    if (!currentLine.empty()) {
+        lines.push_back(currentLine);
+    }
+
+    // render each line
+    for (size_t i = 0; i < lines.size(); i++) {
+        const wstring& line = lines[i];
+        if (!line.empty()) {
+            float currentY = y + i * lineHeight;
+            Draw3DTextFT(line, XMFLOAT2(x, currentY), z, color, fontSize, transformMatrix);
+        }
+    }
+}
+
+void UIDXFoundation::Draw3DTextMultiLineFT(const std::wstring& text, const RECT& rc, int posFlag, float z, const UIColor& color, float fontSize, float lineSpacing, 
+					  		               const DirectX::XMMATRIX& transformMatrix) {
+    if (text.empty()) {
+        return;
+    }
+
+    FTSizeFont ftSizeFont;
+    GetFTSizeFont(fontSize, ftSizeFont);
+    
+    float lineHeight = ftSizeFont._ftFontHeight * lineSpacing;
+    
+    // 1. split text into lines
+    vector<wstring> lines;
+    wstring currentLine;
+    
+    for (size_t i = 0; i < text.length(); i++) {
+        wchar_t ch = text[i];
+        if (ch == L'\n') {
+            lines.push_back(currentLine);
+            currentLine.clear();
+        } else if (ch == L'\r') {
+            lines.push_back(currentLine);
+            currentLine.clear();
+            // handle \r\n combination
+            if (i + 1 < text.length() && text[i + 1] == L'\n') {
+                i++; // skip \n
+            }
+        } else {
+            currentLine += ch;
+        }
+    }
+
+    // add the last line (if not empty)
+    if (!currentLine.empty()) {
+        lines.push_back(currentLine);
+    }
+    
+    if (lines.empty()) {
+        return;
+    }
+
+    // 2. calculate total text height and starting Y position
+    float totalTextHeight = lines.size() * lineHeight;
+    float startY = static_cast<float>(rc.top);
+
+    // vertical alignment calculation
+    if (posFlag & 0x04) { // center
+        startY = rc.top + (GetRectHeight()(rc) - totalTextHeight) / 2;
+    } else if (posFlag & 0x08) { // bottom
+        startY = rc.bottom - totalTextHeight;
+    }
+
+    // 3. set overall clipping region (Note: 3D text may not respect 2D clipping perfectly)
+    UIScreenClipRectGuard clipRect(rc);
+
+    // 4. calculate rectangle area for each line and call existing Draw3DTextFT
+    for (size_t i = 0; i < lines.size(); i++) {
+        const wstring& line = lines[i];
+        if (line.empty()) {
+            continue; // skip empty lines
+        }
+
+        // calculate rectangle area for current line
+        float currentY = startY + i * lineHeight;
+        RECT lineRect = {
+            rc.left,
+            static_cast<LONG>(currentY),
+            rc.right,
+            static_cast<LONG>(currentY + lineHeight)
+        };
+
+        // call existing single-line drawing function
+        Draw3DTextFT(line, lineRect, posFlag, z, color, fontSize, transformMatrix);
+    }
+}
