@@ -303,6 +303,21 @@ protected:
         return true;
     }
 
+    bool WaitThreadDone() {
+    std::lock_guard<std::mutex> lock(_threadMutex);
+
+    if (!_threadData) {
+        return false;
+    }
+
+    if (_threadData->_thread.joinable()) {
+        _threadData->_thread.join();
+        return true;
+    }
+
+    return false;
+}
+
 	// Stop thread
     bool StopThread(std::chrono::milliseconds timeout = std::chrono::seconds(5)) {
         std::lock_guard<std::mutex> lock(_threadMutex);
@@ -427,6 +442,22 @@ protected:
         return true;
     }
 
+    bool WaitThreadDone(const std::string& threadName) {
+        std::lock_guard<std::mutex> lock(_threadMutex);
+
+        auto it = _threads.find(threadName);
+        if (it == _threads.end()) {
+            return false;
+        }
+
+        if (it->second->_thread.joinable()) {
+            it->second->_thread.join();
+            return true;
+        }
+
+        return false;
+    }
+
     // Stop specified thread
     bool StopThread(const std::string& threadName, std::chrono::milliseconds timeout = std::chrono::seconds(5)) {
         std::lock_guard<std::mutex> lock(_threadMutex);
@@ -456,21 +487,6 @@ protected:
         return true;
     }
 
-    // Stop all threads
-    void StopAllThreads(std::chrono::milliseconds timeout = std::chrono::seconds(5)) {
-        std::vector<std::string> threadNames;
-        {
-            std::lock_guard<std::mutex> lock(_threadMutex);
-            for (const auto& pair : _threads) {
-                threadNames.push_back(pair.first);
-            }
-        }
-        
-        for (const auto& name : threadNames) {
-            StopThread(name, timeout);
-        }
-    }
-
     // Check if the thread should stop
     bool isThreadShouldStop(const std::string& threadName) const {
         std::lock_guard<std::mutex> lock(_threadMutex);
@@ -488,6 +504,22 @@ protected:
     size_t GetRunningThreadCount() const {
         std::lock_guard<std::mutex> lock(_threadMutex);
         return _threads.size();
+    }
+
+public:
+    // Stop all threads
+    void StopAllThreads(std::chrono::milliseconds timeout = std::chrono::seconds(5)) {
+        std::vector<std::string> threadNames;
+        {
+            std::lock_guard<std::mutex> lock(_threadMutex);
+            for (const auto& pair : _threads) {
+                threadNames.push_back(pair.first);
+            }
+        }
+
+        for (const auto& name : threadNames) {
+            StopThread(name, timeout);
+        }
     }
 
 private:

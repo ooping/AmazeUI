@@ -1,4 +1,3 @@
-
 #include "..\CORE\Common.h"
 
 #pragma once
@@ -64,7 +63,7 @@
 #include "VertexTypes.h"
 
 
-// FreeType 相关头文件
+// FreeType
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #include FT_GLYPH_H
