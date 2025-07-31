@@ -876,7 +876,7 @@ void UISelectList::Draw() {
 	{
 		RECT rc = _clientRC;
 		OffsetRect(&rc, x_, y_);
-		UIRect(rc, _z)(UIColor(246, 250, 252), 200, transformMatrix);
+		UIRect(rc, _z)(UIColor(246, 250, 252), 220, transformMatrix);
 		UIRect(rc, _z)(UIColor::PrimaryBlueLight, transformMatrix);
 	}
 

@@ -48,6 +48,7 @@ public:
 
 	// when call this function, should make sure the parent window is focus, otherwise there are some logic problems
 	void SetWindowFocus();
+	void SetTopZ() { _z = 0.f; }
 
 	// read, unprotected
 	RECT GetClientRect();
@@ -63,8 +64,6 @@ public:
 
 	void SetTransformMatrix(const DirectX::XMMATRIX& transformMatrix);
 	DirectX::XMMATRIX GetInheritedTransformMatrix();
-
-	void SetTopZ() { _z = 0.f; }
 
 protected:
 	// default message processing
