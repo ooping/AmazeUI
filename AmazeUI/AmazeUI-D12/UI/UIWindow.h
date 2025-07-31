@@ -64,6 +64,8 @@ public:
 	void SetTransformMatrix(const DirectX::XMMATRIX& transformMatrix);
 	DirectX::XMMATRIX GetInheritedTransformMatrix();
 
+	void SetTopZ() { _z = 0.f; }
+
 protected:
 	// default message processing
 	bool DefHandleMessage(UINT message, WPARAM wParam, LPARAM lParam);

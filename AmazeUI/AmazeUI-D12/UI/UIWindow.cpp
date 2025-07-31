@@ -785,6 +785,9 @@ UIContainer* UIFrame::GetTopUIContainer() {
 
 void UIFrame::SetHookWindowForPopup(UIWindowBase* pHookWindow) {
 	_pHookWindowForPopup = pHookWindow;
+	if (_pHookWindowForPopup != NULL) {
+		_pHookWindowForPopup->SetTopZ();
+	}
 }
 
 void UIFrame::SetHookWindowForScrollBar(UIWindowBase* pHookWindow) {
