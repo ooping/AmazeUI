@@ -318,7 +318,7 @@ bool UIButton::OnLButtonDown(POINT) {
 
 bool UIButton::OnLButtonUp(POINT) { 
 	if (_isLButtonDown) {
-		if (!OnClickEvent()) {
+		if (!OnClickEvent() && _id!=0) {
 			SendMessageToParent(WM_NOTIFY, (WPARAM)_id, 0);
 		}
 
@@ -460,15 +460,15 @@ void UICheckButton::OnMouseLeave(POINT) {
 bool UICheckButton::OnLButtonDown(POINT) {
 	_isCheck = !_isCheck;
 
-	if (!OnClickEvent()) {
-		SendMessageToParent(WM_NOTIFY, (WPARAM)_id, _isCheck?1:0);
-	}
-
 	// mutex related button	
 	if (_isCheck==true) {
 		for (UINT i = 0; i < _mutexList.size(); ++i) {
 			_mutexList[i]->_isCheck = false;
 		}
+	}
+
+	if (!OnClickEvent() && _id!=0) {
+		SendMessageToParent(WM_NOTIFY, (WPARAM)_id, _isCheck?1:0);
 	}
 
 	UIRefresh();
