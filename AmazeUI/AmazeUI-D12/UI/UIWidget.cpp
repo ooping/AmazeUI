@@ -298,6 +298,7 @@ void UIButton::OnKeyDown(TCHAR nChar) {
 UICheckButton::UICheckButton() {
 	_isHover = false;
 	_isCheck = false;
+	_fontHeight = gDefaultFontSize;
 }
 
 void UICheckButton::Draw() {
@@ -328,7 +329,7 @@ void UICheckButton::Draw() {
 	// display wstring
 	RECT rc = _strRect;
 	OffsetRect(&rc, x_, y_);
-	UIFont fontHelp(_z, gDefaultFontSize);
+	UIFont fontHelp(_z, _fontHeight);
 	fontHelp(_text, rc, UIColor::Black, UIFont::HLEFT_VCENTER, transformMatrix);
 }
 
@@ -342,6 +343,10 @@ void UICheckButton::CalcArea() {
 	_strRect.right = _clientRC.right;
 	_strRect.top = _clientRC.top ;
 	_strRect.bottom = _clientRC.bottom ;
+}
+
+void UICheckButton::SetFontHeight(float h) {
+	_fontHeight = h;
 }
 
 void UICheckButton::SetText(UIString text) {
@@ -507,6 +512,10 @@ void UIEdit::CalcArea() {
 	_drawRectAllow.bottom -= 2;
 
 	_drawRectReal = _drawRectAllow;
+}
+
+void UIEdit::SetFontHeight(float h) {
+	_fontHeight = h;
 }
 
 void UIEdit::SetText(UIString text)
@@ -3049,8 +3058,6 @@ void UIGrid::OnChar(TCHAR nChar) {
 		// create edit control
 		pSelCell->CreateCellControl(&_uiContainer, _firstRowPos, _firstColumnPos);
 		UIEdit* pEdit = (UIEdit*)(pSelCell->_pCtrl);
-		pEdit->SetText(pSelCell->_text);
-		pEdit->SelectAllText();
 
 		// send the trigger character to the edit control
 		UIPostMessage(pEdit, WM_CHAR, nChar, 0);
@@ -4995,12 +5002,12 @@ void UIColorBlock::Draw() {
 }
 
 
-UIImage3D::UIImage3D() {
+UICanvas3D::UICanvas3D() {
 	_isHover = false;
 }
 
 
-void UIImage3D::Draw() {
+void UICanvas3D::Draw() {
 	float offsetX = 0.f;
 	float offsetY = 0.f;
 
@@ -5021,23 +5028,32 @@ void UIImage3D::Draw() {
 	RECT rc = _clientRC;
 	OffsetRect(&rc, _abusolutePoint.x, _abusolutePoint.y);
 	POINT center = GetRectCenter()(rc);
-	XMMATRIX transform = UIZPlaneTransform::GetTransformMatrix(false, 0, 0, 0, true, (float)center.y, offsetY*XM_PI/32, true, (float)center.x, -offsetX*XM_PI/32, _z);
+	XMMATRIX transform = UIZPlaneTransform::GetTransformMatrix(false, 0, 0, 0, true, (float)center.y, offsetY*XM_PI/128, true, (float)center.x, -offsetX*XM_PI/128, _z);
 
+	SetTransformMatrix(transform);
+
+	UIRect(rc, _z+0.1f)(UIColor::Gray95, 255, transform);
+
+	if (p_UIContainer!=NULL) {
+		//RECT rc = _clientRC;
+		//OffsetRect(&rc, _abusolutePoint.x, _abusolutePoint.y);
+		//UIScreenClipRectGuard uiClip(rc);
+
+		p_UIContainer->Draw();
+	}
 
 	//UIDXFoundation::GetSingletonInstance()->Draw3DRectOutline(XMFLOAT2(rc.left, rc.top), XMFLOAT2(rc.right, rc.bottom), _z, Colors::Red);
 
-	wchar_t strFilePath[MAX_PATH] = {};
-    DX::FindMediaFile(strFilePath, MAX_PATH, L"gamepad.dds");
-	UIDXFoundation::GetSingletonInstance()->Draw3DImage(strFilePath, UIColor::Invalid, 
-												   NULL_RECT, XMFLOAT2((float)rc.left, (float)rc.top), XMFLOAT2((float)rc.right, (float)rc.bottom), 
-												   _z, 255, transform);
-
-
-	UIDXFoundation::GetSingletonInstance()->Draw3DTextFT(L"AmazeUI 3D Text", rc, 0x01|0x04, _z-0.1f, Colors::Yellow, 28, transform);
+	// wchar_t strFilePath[MAX_PATH] = {};
+    // DX::FindMediaFile(strFilePath, MAX_PATH, L"gamepad.dds");
+	// UIDXFoundation::GetSingletonInstance()->Draw3DImage(strFilePath, UIColor::Invalid, 
+	// 											   NULL_RECT, XMFLOAT2((float)rc.left, (float)rc.top), XMFLOAT2((float)rc.right, (float)rc.bottom), 
+	// 											   _z, 255, transform);
+	// UIDXFoundation::GetSingletonInstance()->Draw3DTextFT(L"AmazeUI 3D Text", rc, 0x01|0x04, _z-0.1f, Colors::Yellow, 28, transform);
 }
 
 
-bool UIImage3D::OnMouseMove(POINT pt) {
+bool UICanvas3D::OnMouseMove(POINT pt) {
 	_isHover = true;
 
 	if (ComparePoints()(_curMousePos, pt)) {
@@ -5051,7 +5067,7 @@ bool UIImage3D::OnMouseMove(POINT pt) {
 }
 
 
-bool UIImage3D::OnMouseLeave(POINT) {
+bool UICanvas3D::OnMouseLeave(POINT) {
 	_isHover = false;
 	UIRefresh();
 

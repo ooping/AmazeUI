@@ -245,7 +245,7 @@ UIFont::UIFont(float z, float fontSize) {
 
 void UIFont::operator()(std::wstring text, const POINT& position, const UIColor& color, const DirectX::XMMATRIX& transformMatrix) {
 	if (!XMMatrixIsIdentity(transformMatrix)) {
-		UIDXFoundation::GetSingletonInstance()->Draw3DTextFT(text, XMFLOAT2{(float)position.x, (float)position.y}, _z, color, _fontSize, transformMatrix);
+		UIDXFoundation::GetSingletonInstance()->Draw3DTextFT(text, XMFLOAT2{(float)position.x, (float)position.y}, _z-0.09f, color, _fontSize, transformMatrix);
 	} else {
 		UIDXFoundation::GetSingletonInstance()->Draw2DTextFT(text, XMFLOAT2{(float)position.x, (float)position.y}, _z, color, _fontSize);
 	}
@@ -253,7 +253,7 @@ void UIFont::operator()(std::wstring text, const POINT& position, const UIColor&
 
 void UIFont::operator()(std::wstring text, const RECT& rc, const UIColor& color, int posFlag, const DirectX::XMMATRIX& transformMatrix) {
 	if (!XMMatrixIsIdentity(transformMatrix)) {
-		UIDXFoundation::GetSingletonInstance()->Draw3DTextFT(text, rc, posFlag, _z, color, _fontSize, transformMatrix);
+		UIDXFoundation::GetSingletonInstance()->Draw3DTextFT(text, rc, posFlag, _z-0.09f, color, _fontSize, transformMatrix);
 	} else {
 		UIDXFoundation::GetSingletonInstance()->Draw2DTextFT(text, rc, posFlag, _z, color, _fontSize);
 	}
@@ -261,7 +261,7 @@ void UIFont::operator()(std::wstring text, const RECT& rc, const UIColor& color,
 
 void UIFont::operator()(std::wstring text, const POINT& position, const UIColor& color, float lineSpacing, const DirectX::XMMATRIX& transformMatrix) {
 	if (!XMMatrixIsIdentity(transformMatrix)) {
-		UIDXFoundation::GetSingletonInstance()->Draw3DTextMultiLineFT(text, XMFLOAT2{(float)position.x, (float)position.y}, _z, color, _fontSize, lineSpacing, transformMatrix);
+		UIDXFoundation::GetSingletonInstance()->Draw3DTextMultiLineFT(text, XMFLOAT2{(float)position.x, (float)position.y}, _z-0.09f, color, _fontSize, lineSpacing, transformMatrix);
 	} else {
 		UIDXFoundation::GetSingletonInstance()->Draw2DTextMultiLineFT(text, XMFLOAT2{(float)position.x, (float)position.y}, _z, color, _fontSize, lineSpacing);
 	}
@@ -269,7 +269,7 @@ void UIFont::operator()(std::wstring text, const POINT& position, const UIColor&
 
 void UIFont::operator()(std::wstring text, const RECT& rc, const UIColor& color, int posFlag, float lineSpacing, const DirectX::XMMATRIX& transformMatrix) {
 	if (!XMMatrixIsIdentity(transformMatrix)) {
-		UIDXFoundation::GetSingletonInstance()->Draw3DTextMultiLineFT(text, rc, posFlag, _z, color, _fontSize, lineSpacing, transformMatrix);
+		UIDXFoundation::GetSingletonInstance()->Draw3DTextMultiLineFT(text, rc, posFlag, _z-0.09f, color, _fontSize, lineSpacing, transformMatrix);
 	} else {
 		UIDXFoundation::GetSingletonInstance()->Draw2DTextMultiLineFT(text, rc, posFlag, _z, color, _fontSize, lineSpacing);
 	}

@@ -153,7 +153,7 @@ public:
 
 	DirectX::XMMATRIX GetBindWindowInheritedTransformMatrix();
 
-private:
+protected:
 	UIWindowBase* GetMinZChild(const POINT& pt);
 	UIWindowBase* GetFocusOnChild();			// find the sub-window with focus on
 

@@ -347,6 +347,7 @@ public:
 
 	void SetText(UIString text);
 	UIString GetText();
+	void SetFontHeight(float h);
 
 	void SetCheck(bool f);
 	bool GetCheck();
@@ -358,12 +359,14 @@ private:
 	void OnMouseLeave(POINT pt);
 	bool OnLButtonDown(POINT pt);
 
+	float _fontHeight;								// font height
+
 	RECT _checkRect;
 	RECT _strRect;									// display area
 	bool _isHover;									// mouse hover
 	bool _isCheck;
 	std::wstring _text;								// display wstring
-	
+
 	std::vector<UICheckButton*>_mutexList;			// mutex related
 };
 void UISetCheckButtonMutex(std::vector<UICheckButton*>& mutexList);
@@ -386,6 +389,7 @@ public:
 	int GetTextToInt();
 	float GetTextToFloat();
 	double GetTextToDouble();
+	void SetFontHeight(float h);
 
 	void SelectAllText();
 
@@ -983,12 +987,12 @@ public:
 
 
 
-/*------------------------------------------------------- UIImageView -------------------------------------------------------*/
-class UIImage3D : public UIControlBase<UIImage3D> {
+/*------------------------------------------------------- UICanvas3D -------------------------------------------------------*/
+class UICanvas3D : public UIControlBase<UICanvas3D>, public UIContainerHelp<UICanvas3D>, public UIEventHelp{
 	friend UIControlBase;
 
 public:
-	UIImage3D();
+	UICanvas3D();
 
 	void Draw();
 

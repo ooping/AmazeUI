@@ -579,12 +579,13 @@ bool UIContainer::HandleMessagePre(UINT message, WPARAM wParam, LPARAM lParam) {
 }
 
 void UIContainer::Draw() {
-	for (UINT i=0;i<_winList.size();++i) {
+	for (UINT i=0; i<_winList.size(); ++i) {
 		if (_winList[i].p_win->_isShow) {
 			_winList[i].p_win->Draw();
 		}
 	}
 }
+
 
 XMMATRIX UIContainer::GetBindWindowInheritedTransformMatrix() {
 	return _isBindDUI ? _pBindDUIWin->GetInheritedTransformMatrix() : XMMatrixIdentity();
