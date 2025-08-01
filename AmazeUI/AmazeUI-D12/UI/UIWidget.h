@@ -303,7 +303,23 @@ class UIImageView : public UIControlBase<UIImageView>, public UIAnimateEffectHit
 	friend UIControlBase;
 
 public:
+	UIImageView() = default;
+	~UIImageView() = default;
+	
+	void SetDLLPath(std::wstring path = L"GUIResource.dll", const UIColor& colorKey = UIColor::Invalid);
+	void SetDLLID(int id);
+	void SetImagePath(std::wstring path, const UIColor& colorKey = UIColor::Invalid);
+
 	void Draw();
+
+protected:
+	int _loadImageWay;							// 1: _imageID    2: _imagePath
+	int _imageID;
+	std::wstring _dllPath;
+	std::wstring _imagePath;
+	UIColor _colorKey;
+
+	UIImage _image;								// image
 };
 
 /*------------------------------------------------------- UIButton -------------------------------------------------------*/

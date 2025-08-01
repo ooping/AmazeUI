@@ -112,21 +112,11 @@ public:
 	/*--------------------------------- Hit drum effect ---------------------------------*/
 public:
 	void SetHitPower(float v);
-	void SetDLLPath(std::wstring path=L"GUIResource.dll", const UIColor& colorKey=UIColor::Invalid);
-	void SetDLLID(int id);
-	void SetImagePath(std::wstring path, const UIColor& colorKey=UIColor::Invalid);
 
-	void DrawHitDrumAnimate(int centerX, int centerY, float _z, const DirectX::XMMATRIX& transformMatrix=DirectX::XMMatrixIdentity());
-	void DrawHitDrumAnimate(RECT rc, float _z, const DirectX::XMMATRIX& transformMatrix=DirectX::XMMatrixIdentity());
-	void DrawFrameHitDrumAnimate(RECT rc, int corner, float _z, const DirectX::XMMATRIX& transformMatrix=DirectX::XMMatrixIdentity());
+	void DrawHitDrumAnimate(UIImage& image, int centerX, int centerY, float scale, const DirectX::XMMATRIX& transformMatrix=DirectX::XMMatrixIdentity());
+	void DrawHitDrumAnimate(UIImage& image, RECT rc, const DirectX::XMMATRIX& transformMatrix=DirectX::XMMatrixIdentity());
+	void DrawSlicedHitDrumAnimate(UISlicedImage& slicedImage, RECT rc, const DirectX::XMMATRIX& transformMatrix=DirectX::XMMatrixIdentity());
 
 protected:
-	void InitializeCommon();
-
-	int _loadImageWay;							// 1: _imageID    2: _imagePath
-	int _imageID;
-	std::wstring _dllPath;
-	std::wstring _imagePath;
-	UIColor _colorKey;
-	float _hitPower;							// Image magnification coefficient
+	float _hitPower;			// Image magnification coefficient
 };

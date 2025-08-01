@@ -172,14 +172,8 @@ void UIAnimateHelp::PlayAnimate(int maxFrame) {
 	UIRegisterAnimate(this);
 }
 
-void UIAnimateEffectHitDrum::InitializeCommon() {
-	_hitPower = 0.8f;
-}
-
 UIAnimateEffectHitDrum::UIAnimateEffectHitDrum() {
-	_loadImageWay = 0;
-
-	InitializeCommon();
+	_hitPower = 0.8f;
 }
 
 void UIAnimateEffectHitDrum::PlayHitDrumAnimate(int maxFrame) {
@@ -190,73 +184,17 @@ void UIAnimateEffectHitDrum::SetHitPower(float v) {
 	_hitPower=v;
 }
 
-void UIAnimateEffectHitDrum::SetDLLPath(std::wstring path, const UIColor& colorKey) {
-	_dllPath = path;
-	_colorKey = colorKey;
-	_loadImageWay = 1;
+void UIAnimateEffectHitDrum::DrawHitDrumAnimate(UIImage& image, int centerX, int centerY, float scale, const DirectX::XMMATRIX& transformMatrix) {
+	image.operator()(centerX, centerY, scale, 255, transformMatrix);
+	image.operator()(centerX, centerY, scale+_hitPower*_frameIndex/_maxFrame, static_cast<UCHAR>(255-250*_frameIndex/_maxFrame), transformMatrix);
 }
 
-void UIAnimateEffectHitDrum::SetDLLID(int id) {
-	_imageID = id;
+void UIAnimateEffectHitDrum::DrawHitDrumAnimate(UIImage& image, RECT rc, const DirectX::XMMATRIX& transformMatrix) {
+	image.operator()(rc, 1.0f, 255, transformMatrix);
+	image.operator()(rc, 1.0f + _hitPower*_frameIndex/_maxFrame, static_cast<UCHAR>(255-250*_frameIndex/_maxFrame), transformMatrix);
 }
 
-void UIAnimateEffectHitDrum::SetImagePath(std::wstring path, const UIColor& colorKey) {
-	_imagePath = path;
-	_colorKey = colorKey;
-	_loadImageWay = 2;
-}
-
-void UIAnimateEffectHitDrum::DrawHitDrumAnimate(int centerX, int centerY, float _z, const DirectX::XMMATRIX& transformMatrix) {
-	if ((_loadImageWay==1 && _imageID==-1) || 
-	    (_loadImageWay==2 && _imagePath==L"") || 
-		(_loadImageWay!=1 && _loadImageWay!=2)) {
-		return;
-	}
-
-	UIImage image;
-	if (_loadImageWay==1) {
-		image = UIImage(_dllPath.c_str(), _imageID, _colorKey, _z);
-	} else {
-		image = UIImage(_imagePath, _colorKey, _z);
-	}
-	
-	image.operator()(centerX, centerY, 1.f, 255, transformMatrix);
-	image.operator()(centerX, centerY, 1+_hitPower*_frameIndex/_maxFrame, static_cast<UCHAR>(255-250*_frameIndex/_maxFrame), transformMatrix);
-}
-
-void UIAnimateEffectHitDrum::DrawHitDrumAnimate(RECT rc, float _z, const DirectX::XMMATRIX& transformMatrix) {
-	if ((_loadImageWay==1 && _imageID==-1) || 
-	    (_loadImageWay==2 && _imagePath==L"") || 
-		(_loadImageWay!=1 && _loadImageWay!=2)) {
-		return;
-	}
-
-	UIImage image;
-	if (_loadImageWay==1) {
-		image = UIImage(_dllPath.c_str(), _imageID, _colorKey, _z);
-	} else {
-		image = UIImage(_imagePath, _colorKey, _z);
-	}
-	
-	image.operator()(rc, 1.f, 255, transformMatrix);
-	image.operator()(rc, 1+_hitPower*_frameIndex/_maxFrame, static_cast<UCHAR>(255-250*_frameIndex/_maxFrame), transformMatrix);
-}
-
-void UIAnimateEffectHitDrum::DrawFrameHitDrumAnimate(RECT rc, int corner, float _z, const DirectX::XMMATRIX& transformMatrix) {
-	if ((_loadImageWay==1 && _imageID==-1) || 
-	    (_loadImageWay==2 && _imagePath==L"") || 
-		(_loadImageWay!=1 && _loadImageWay!=2)) {
-		return;
-	}
-
-	//
-	UISlicedImage frameImage;
-	if (_loadImageWay==1) {
-		frameImage = UISlicedImage(_dllPath.c_str(), _imageID, _colorKey, corner, corner, corner, corner, _z);
-	} else {
-		frameImage = UISlicedImage(_imagePath, _colorKey, corner, corner, corner, corner, _z);
-	}
-	
-	frameImage.operator()(rc, 255, transformMatrix);
-	frameImage.operator()(ScaleRect()(rc, 1+_hitPower*_frameIndex/_maxFrame), static_cast<UCHAR>(255-250*_frameIndex/_maxFrame), transformMatrix);
+void UIAnimateEffectHitDrum::DrawSlicedHitDrumAnimate(UISlicedImage& slicedImage, RECT rc, const DirectX::XMMATRIX& transformMatrix) {
+	slicedImage.operator()(rc, 255, transformMatrix);
+	slicedImage.operator()(ScaleRect()(rc, 1.0f + _hitPower*_frameIndex/_maxFrame), static_cast<UCHAR>(255-250*_frameIndex/_maxFrame), transformMatrix);
 }

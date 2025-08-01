@@ -123,6 +123,10 @@ UILabel::UILabel() {
 }
 
 void UILabel::Draw() {
+	if (!_isShow) {
+		return;
+	}
+
 	XMMATRIX transformMatrix = GetInheritedTransformMatrix();
 
 	if (_supportMultiLine) {
@@ -160,7 +164,31 @@ void UILabel::SetSupportMultiLine(bool support, float lineSpacing) {
 }
 
 
+void UIImageView::SetDLLPath(std::wstring path, const UIColor& colorKey) {
+	_dllPath = path;
+	_colorKey = colorKey;
+	_loadImageWay = 1;
+}
+
+void UIImageView::SetDLLID(int id) {
+	_imageID = id;
+
+	_image = UIImage(_dllPath.c_str(), _imageID, UIColor::Invalid, _z);
+}
+
+void UIImageView::SetImagePath(std::wstring path, const UIColor& colorKey) {
+	_imagePath = path;
+	_colorKey = colorKey;
+	_loadImageWay = 2;
+
+	_image = UIImage(_imagePath, UIColor::Invalid, _z);
+}
+
 void UIImageView::Draw() {
+	if (!_isShow) {
+		return;
+	}
+
 	XMMATRIX transformMatrix = GetInheritedTransformMatrix();
 
 	LONG& x_ = _abusolutePoint.x;
@@ -168,49 +196,67 @@ void UIImageView::Draw() {
 	int centerX = GetRectWidth()(_clientRC) / 2 + x_;
 	int centerY = GetRectHeight()(_clientRC) / 2 + y_;
 
+
+	RECT _imageRect;
+	_image.GetSize(_imageRect);
+	int imageWidth = GetRectWidth()(_imageRect);
+	int imageHeight = GetRectHeight()(_imageRect);
+
+	int clientWidth = GetRectWidth()(_clientRC);
+	int clientHeight = GetRectHeight()(_clientRC);
+
+	float scale = 1.0f;
+	if (imageWidth > clientWidth) {
+		scale = static_cast<float>(clientWidth) / imageWidth;
+	}
+	if (imageHeight > clientHeight) {
+		scale = std::min(scale, static_cast<float>(clientHeight) / imageHeight);
+	}
+
 	if (!IsAnimationRun()) {
 		if (_loadImageWay==1) {
-			UIImage(_dllPath.c_str(), _imageID, UIColor::Invalid, _z)(centerX, centerY, 1.f, 255, transformMatrix);
+			_image(centerX, centerY, scale, 255, transformMatrix);
 		} 
 		else if (_loadImageWay==2) {
-			UIImage(_imagePath, UIColor::Invalid, _z)(centerX, centerY, 1.f, 255, transformMatrix);
+			_image(centerX, centerY, scale, 255, transformMatrix);
 		}
 	} else {
-		DrawHitDrumAnimate(centerX, centerY, _z, transformMatrix);
+		DrawHitDrumAnimate(_image, centerX, centerY, scale, transformMatrix);
 	}
 }
 
 
-
 UIButton::UIButton() {
 	SetHitPower(0.3f);
-	SetDLLPath(L"GUIResource.dll", UIColor(255, 0, 255));
 
 	_isHover = false;
 	_isLButtonDown = false;
 }
 
 void UIButton::Draw() {
+	if (!_isShow) {
+		return;
+	}
+
 	XMMATRIX transformMatrix = GetInheritedTransformMatrix();
 
 	LONG& x_ = _abusolutePoint.x;
 	LONG& y_ = _abusolutePoint.y;
 
-	if (!IsAnimationRun()) {
-		// state image
-		int frameBMPID = IDB_BUTTON1_NORMAL;
-		if (_isLButtonDown==true) {
-			frameBMPID = IDB_BUTTON1_DOWN;
-		} else if (_isHover==true) {
-			frameBMPID = IDB_BUTTON1_HOT;
-		}
+	int frameBMPID = IDB_BUTTON1_NORMAL;
+	if (_isLButtonDown==true) {
+		frameBMPID = IDB_BUTTON1_DOWN;
+	} else if (_isHover==true) {
+		frameBMPID = IDB_BUTTON1_HOT;
+	}
+	UISlicedImage slicedImage(L"GUIResource.dll", frameBMPID, UIColor(255, 0, 255), 3, 3, 3, 3, _z);
 
-		// button image  UIColor(255, 0, 255)
-		UISlicedImage(L"GUIResource.dll", frameBMPID, UIColor(255, 0, 255), 3, 3, 3, 3, _z)(x_, y_, GetRectWidth()(_clientRC), GetRectHeight()(_clientRC), 255, transformMatrix);
+	if (!IsAnimationRun()) {
+		slicedImage(x_, y_, GetRectWidth()(_clientRC), GetRectHeight()(_clientRC), 255, transformMatrix);
 	} else {	
 		RECT rc = _clientRC;
 		OffsetRect(&rc, x_, y_);
-		DrawFrameHitDrumAnimate(rc, 3, _z, transformMatrix);
+		DrawSlicedHitDrumAnimate(slicedImage, rc, transformMatrix);
 	}
 
 	// display wstring
@@ -276,7 +322,6 @@ bool UIButton::OnLButtonUp(POINT) {
 			SendMessageToParent(WM_NOTIFY, (WPARAM)_id, 0);
 		}
 
-		SetDLLID(IDB_BUTTON1_HOT);
 		PlayHitDrumAnimate();
 	}
 
@@ -288,7 +333,6 @@ void UIButton::OnKeyDown(TCHAR nChar) {
 	if (nChar==VK_RETURN) {
 		SendMessageToParent(WM_NOTIFY, (WPARAM)_id, 0);
 
-		SetDLLID(IDB_BUTTON1_HOT);
 		PlayHitDrumAnimate();
 	}
 }
@@ -302,6 +346,10 @@ UICheckButton::UICheckButton() {
 }
 
 void UICheckButton::Draw() {
+	if (!_isShow) {
+		return;
+	}
+
 	XMMATRIX transformMatrix = GetInheritedTransformMatrix();
 
 	int checkBoxBMPID;
@@ -447,6 +495,10 @@ UIEdit::UIEdit() {
 }
 
 void UIEdit::Draw() {
+	if (!_isShow) {
+		return;
+	}
+
 	XMMATRIX transformMatrix = GetInheritedTransformMatrix();
 
 	UIFont fontHelp(_z, _fontHeight);
@@ -866,6 +918,10 @@ UISelectList::UISelectList() {
 }
 
 void UISelectList::Draw() {
+	if (!_isShow) {
+		return;
+	}
+
 	XMMATRIX transformMatrix = GetInheritedTransformMatrix();
 
 	// calc the drawing area
@@ -993,6 +1049,10 @@ UIComboBox::UIComboBox() {
 }
 
 void UIComboBox::Draw() {
+	if (!_isShow) {
+		return;
+	}
+
 	XMMATRIX transformMatrix = GetInheritedTransformMatrix();
 
 	LONG& x_ = _abusolutePoint.x;
@@ -1136,6 +1196,10 @@ UIScrollBar::UIScrollBar(int coordFlag) {
 }
 
 void UIScrollBar::Draw() {
+	if (!_isShow) {
+		return;
+	}
+
 	XMMATRIX transformMatrix = GetInheritedTransformMatrix();
 
 	LONG& x_ = _abusolutePoint.x;
@@ -1440,6 +1504,13 @@ UIGrid::UIGrid(): _xScroll(0), _yScroll(1) {
 }
 
 void UIGrid::Draw() {
+	if (!_isDraw) {
+		return;
+	}
+	if (_rowNum==0 || _columnNum==0) {
+		return;
+	}
+
 	_inheritedTransformMatrix = GetInheritedTransformMatrix();
 
 	// Draw the border
@@ -1448,14 +1519,6 @@ void UIGrid::Draw() {
 	RECT rc = _clientRC;
 	OffsetRect(&rc, x_, y_);
 	UIRect(rc, _z)(UIColor::PrimaryBlue, _inheritedTransformMatrix);
-
-	// Draw the check button
-	if (!_isDraw) {
-		return;
-	}
-	if (_rowNum==0 || _columnNum==0) {
-		return;
-	}
 
 	// Draw the scroll bar
 	DrawScrollBar();
@@ -3387,6 +3450,10 @@ UIChart::UIChart() {
 }
 
 void UIChart::Draw() {
+	if (!_isShow) {
+		return;
+	}
+
 	_inheritedTransformMatrix = GetInheritedTransformMatrix();
 
 	LONG& x_ = _abusolutePoint.x;
@@ -4993,6 +5060,10 @@ UICanvas::UICanvas() {
 }
 
 void UIColorBlock::Draw() {
+	if (!_isShow) {
+		return;
+	}
+
 	XMMATRIX transformMatrix = GetInheritedTransformMatrix();
 	_z = 0.99f;
 
@@ -5008,6 +5079,10 @@ UICanvas3D::UICanvas3D() {
 
 
 void UICanvas3D::Draw() {
+	if (!_isShow) {
+		return;
+	}
+
 	float offsetX = 0.f;
 	float offsetY = 0.f;
 

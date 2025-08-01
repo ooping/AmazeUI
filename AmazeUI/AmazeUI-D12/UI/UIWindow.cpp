@@ -785,6 +785,10 @@ UIContainer* UIFrame::GetTopUIContainer() {
 }
 
 void UIFrame::SetHookWindowForPopup(UIWindowBase* pHookWindow) {
+	if (_pHookWindowForPopup != NULL) {
+		_pHookWindowForPopup->ShowWindow(false);
+	}
+
 	_pHookWindowForPopup = pHookWindow;
 	if (_pHookWindowForPopup != NULL) {
 		_pHookWindowForPopup->SetTopZ();
@@ -817,6 +821,7 @@ bool UIFrame::HandleMessageFromHookWindow(UINT message, WPARAM wParam, LPARAM lP
 			pt.y = HIWORD(lParam);
 			if (ContainsPoint()(pt, _pHookWindowForPopup->GetAbusoluteRect())==false) {
 				if (message==WM_LBUTTONDOWN || message==WM_RBUTTONDOWN) {
+					_pHookWindowForPopup->ShowWindow(false);
 					_pHookWindowForPopup = NULL;
 					UIRefresh(true);
 				}

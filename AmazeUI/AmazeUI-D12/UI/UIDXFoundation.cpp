@@ -1578,9 +1578,7 @@ void UIDXFoundation::Draw2DRectSolid(const XMFLOAT2& start, const XMFLOAT2& end,
     Draw2DRectSolid(start, end, z, color, color, color, color, alpha);
 }
 
-void UIDXFoundation::Draw2DImage(size_t textureIndex, 
-                            RECT srcRect, XMFLOAT2 dstStart, XMFLOAT2 dstEnd, 
-                            float z, UCHAR alpha) {
+void UIDXFoundation::Draw2DImage(size_t textureIndex, RECT srcRect, XMFLOAT2 dstStart, XMFLOAT2 dstEnd, float z, UCHAR alpha) {
     // set color
     XMVECTORF32 color = { 1.0f, 1.0f, 1.0f, alpha / 255.0f };
 
