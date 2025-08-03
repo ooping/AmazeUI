@@ -13,12 +13,13 @@ UIWindowBase::UIWindowBase() {
 	//_isRecvTabKey = false;
 	_isFocus = false;
 	_isTransmissionMsg = false;
+	_isPopup = false;
 
 	_layoutLever = 1;
 	_z = 0;
 
-	p_parentUIContainer = NULL;
-	p_UIContainer = NULL;
+	p_parentUIContainer = nullptr;
+	p_UIContainer = nullptr;
 
 	_transformMatrix = DirectX::XMMatrixIdentity();
 }
@@ -28,7 +29,7 @@ UIWindowBase::~UIWindowBase() {
 
 bool UIWindowBase::CreateWindowBase(UIContainer* pUIContainer, const RECT& relativeRect, int layoutFlag, bool isShow, bool isOnHeap) {
 	// check if the parent container exists
-	if (pUIContainer == NULL) {
+	if (pUIContainer == nullptr) {
 		return false;
 	}
 
@@ -45,14 +46,16 @@ bool UIWindowBase::CreateWindowBase(UIContainer* pUIContainer, const RECT& relat
 	// relative to parent window starting point
 	_relativePoint = Shape2D::CreatePoint()(relativeRect.left, relativeRect.top);
 	// relative to handle window starting point
-	POINT p = p_parentUIContainer->GetBindWinAbusolutePoint();
+	POINT p = p_parentUIContainer->GetBindWindowAbusolutePoint();
 	_abusolutePoint = Shape2D::CreatePoint()(p.x+relativeRect.left, p.y+relativeRect.top);
 
 	// layout information
 	_layoutMode = layoutFlag;
+
 	// hierarchy information and z value
-	_layoutLever = p_parentUIContainer->GetBindWinLayoutLever()+1;
-	_z = 1.0f - (_layoutLever>1 ? (_layoutLever-1)*0.05f : 0.0f);	// layoutlever can't > 21
+	_isPopup = p_parentUIContainer->IsBindWindowPopup();
+	_layoutLever = p_parentUIContainer->GetBindWindowLayoutLever()+1;
+	_z = (!_isPopup ? 1.0f : 0.5f) - (_layoutLever - 1) * 0.01f;
 
 	return HandleMessage(WM_CREATE, isOnHeap?1:0, 0);
 }
@@ -80,7 +83,7 @@ bool UIWindowBase::HandleMessage(UINT message, WPARAM wParam, LPARAM lParam) {
 bool UIWindowBase::DefHandleMessage(UINT message, WPARAM wParam, LPARAM lParam) {
 	// transmit message
 	if (_isTransmissionMsg && UIMessageFilter2(message)) {
-		p_parentUIContainer->SendMessageToBindWin(message, wParam, lParam);
+		p_parentUIContainer->SendMessageToBindWindow(message, wParam, lParam);
 		return true;
 	}
 
@@ -96,7 +99,7 @@ bool UIWindowBase::DefHandleMessage(UINT message, WPARAM wParam, LPARAM lParam) 
 
 	// message pre-processing
 	bool rt = false;
-	if (p_UIContainer!=NULL) {	
+	if (p_UIContainer != nullptr) {	
 		// sub-window processing the corresponding message
 		rt = p_UIContainer->HandleMessagePre(message, wParam, lParam);
 	}
@@ -104,8 +107,7 @@ bool UIWindowBase::DefHandleMessage(UINT message, WPARAM wParam, LPARAM lParam) 
 	return rt;
 }
 
-void UIWindowBase::Draw()
-{
+void UIWindowBase::Draw() {
 	if (!_isShow) {
 		return;
 	}
@@ -113,7 +115,7 @@ void UIWindowBase::Draw()
 	// self drawing
 	//UIRect(_abusolutePoint.x, _abusolutePoint.y, GetRectWidth()(_clientRC), GetRectHeight()(_clientRC), _z)(_RED_, 100);
 
-	if (p_UIContainer!=NULL) {
+	if (p_UIContainer != nullptr) {
 		//RECT rc = _clientRC;
 		//OffsetRect(&rc, _abusolutePoint.x, _abusolutePoint.y);
 		//UIScreenClipRectGuard uiClip(rc);
@@ -151,11 +153,11 @@ void UIWindowBase::ShowWindow(bool flag) {
 }
 
 void UIWindowBase::MoveWindow(const RECT& relativeRect) {
-	if (p_parentUIContainer==NULL) {
+	if (p_parentUIContainer == nullptr) {
 		return;
 	}
 
-	POINT p = p_parentUIContainer->GetBindWinAbusolutePoint();
+	POINT p = p_parentUIContainer->GetBindWindowAbusolutePoint();
 	POINT tempPoint = Shape2D::CreatePoint()(p.x+relativeRect.left, p.y+relativeRect.top);
 
 	// if the position does not change, do not update the calculation
@@ -183,6 +185,22 @@ void UIWindowBase::SetWindowFocus() {
 	p_parentUIContainer->SetFocusOnChild(this);
 }
 
+
+void UIWindowBase::SetAsPopup(bool isPopup) {
+	if (_isPopup == isPopup) {
+		return; // No change needed
+	}
+
+	_isPopup = isPopup;
+	_z = (!isPopup ? 1.0f : 0.5f) - (_layoutLever - 1) * 0.01f;
+
+    if (p_UIContainer != nullptr) {
+        p_UIContainer->ForEachWindow([isPopup](UIWindowBase* pWin) {
+            pWin->SetAsPopup(isPopup);
+        });
+    }
+}
+
 void UIWindowBase::SetTransformMatrix(const XMMATRIX& transformMatrix) {
 	_transformMatrix = transformMatrix;
 }
@@ -198,14 +216,14 @@ XMMATRIX UIWindowBase::GetInheritedTransformMatrix() {
 
 UIContainer::UIContainer() {
 	_isBindDUI = true;
-	_pBindDUIWin = NULL;
+	_pBindDUIWin = nullptr;
 
 	_preMousePt = Shape2D::CreatePoint()(0, 0);
 }
 
 UIContainer::~UIContainer() {
 	for_each(_winList.begin(), _winList.end(), [](UIElement& elem) {
-		if (elem._isOnHeap && elem.p_win != NULL) {
+		if (elem._isOnHeap && elem.p_win != nullptr) {
 			delete elem.p_win;
 		}
 	});
@@ -254,7 +272,7 @@ void UIContainer::DelChild(UIWindowBase* pWin)
 void UIContainer::SetFocusOnChild(UIWindowBase* pNew) {
 	UIWindowBase* pOld = GetFocusOnChild();
 
-	if (pOld!=NULL && pOld!=pNew) {
+	if (pOld != nullptr && pOld != pNew) {
 		pOld->_isFocus = false;
 		pOld->HandleMessage(WM_KILLFOCUS, NULL, NULL);
 	}
@@ -286,7 +304,7 @@ UIWindowBase* UIContainer::GetFocusOnChild() {
 			return _winList[i].p_win;
 		}
 	}
-	return NULL;
+	return nullptr;
 }
 
 UIWindowBase* UIContainer::GetMinZChild(const POINT& pt) {
@@ -302,9 +320,9 @@ UIWindowBase* UIContainer::GetMinZChild(const POINT& pt) {
 			hoverIndexList.push_back(i);
 		}
 	}
-	// if there are no hover sub-windows, return NULL
+	// if there are no hover sub-windows, return nullptr
 	if (hoverIndexList.size()==0) {
-		return NULL;
+		return nullptr;
 	}
 	
 	// find the sub-window with the highest layout level, if there are the same, return the first one found
@@ -318,7 +336,7 @@ UIWindowBase* UIContainer::GetMinZChild(const POINT& pt) {
 	return pMinZWin;
 }
 
-POINT UIContainer::GetBindWinAbusolutePoint() {
+POINT UIContainer::GetBindWindowAbusolutePoint() {
 	if (_isBindDUI==true) {
 		return _pBindDUIWin->_abusolutePoint;
 	}
@@ -327,7 +345,7 @@ POINT UIContainer::GetBindWinAbusolutePoint() {
 }
 
 
-RECT UIContainer::GetBindWinAbusoluteRect() {
+RECT UIContainer::GetBindWindowAbusoluteRect() {
 	if (_isBindDUI==true) {
 		return _pBindDUIWin->GetAbusoluteRect();
 	}
@@ -335,7 +353,7 @@ RECT UIContainer::GetBindWinAbusoluteRect() {
 	return NULL_RECT;
 }
 
-int UIContainer::GetBindWinLayoutLever() {
+int UIContainer::GetBindWindowLayoutLever() {
 	if (_isBindDUI==true) {
 		return _pBindDUIWin->_layoutLever;
 	}
@@ -343,7 +361,15 @@ int UIContainer::GetBindWinLayoutLever() {
 	return 0;
 }
 
-void UIContainer::SendMessageToBindWin(UINT message, WPARAM wParam, LPARAM lParam) {
+bool UIContainer::IsBindWindowPopup() {
+	if (_isBindDUI==true) {
+		return _pBindDUIWin->_isPopup;
+	}
+
+	return false;
+}
+
+void UIContainer::SendMessageToBindWindow(UINT message, WPARAM wParam, LPARAM lParam) {
 	if (_isBindDUI==true) {
 		UIPostMessage(_pBindDUIWin, message, wParam, lParam);
 	}
@@ -353,7 +379,7 @@ void UIContainer::SendMessageToBindWin(UINT message, WPARAM wParam, LPARAM lPara
 }
 
 bool UIContainer::HandleMessagePre(UINT message, WPARAM wParam, LPARAM lParam) {
-	UIWindowBase* pMinZWin = NULL;
+	UIWindowBase* pMinZWin = nullptr;
 	bool isMsgHandled = false;
 
 	switch (message) {
@@ -438,7 +464,7 @@ bool UIContainer::HandleMessagePre(UINT message, WPARAM wParam, LPARAM lParam) {
 
 			// find the sub-window with the highest layout level that the mouse is currently on, and pass WM_MOUSEMOVE&WM_MOUSEHOVER messages
 			pMinZWin = GetMinZChild(pt);
-			if (pMinZWin!=NULL) {
+			if (pMinZWin != nullptr) {
 				pMinZWin->HandleMessage(WM_MOUSEHOVER, wParam, lParam);           //?
 				if (!ComparePoints()(pt, prePoint)) {
 					isMsgHandled = pMinZWin->HandleMessage(WM_MOUSEMOVE, wParam, lParam);
@@ -447,7 +473,7 @@ bool UIContainer::HandleMessagePre(UINT message, WPARAM wParam, LPARAM lParam) {
 		} break;
 		case WM_MOUSEWHEEL: {
 			UIWindowBase* pChild = GetFocusOnChild();
-			if (pChild==NULL) {
+			if (pChild == nullptr) {
 				break;
 			}
 
@@ -459,7 +485,7 @@ bool UIContainer::HandleMessagePre(UINT message, WPARAM wParam, LPARAM lParam) {
 			pt.y = HIWORD(lParam);
 
 			pMinZWin = GetMinZChild(pt);
-			if (pMinZWin!=NULL) {
+			if (pMinZWin != nullptr) {
 				SetFocusOnChild(pMinZWin);
 				isMsgHandled = pMinZWin->HandleMessage(WM_LBUTTONDOWN, wParam, lParam);
 			}
@@ -473,7 +499,7 @@ bool UIContainer::HandleMessagePre(UINT message, WPARAM wParam, LPARAM lParam) {
 			pt.y = HIWORD(lParam);
 
 			pMinZWin = GetMinZChild(pt);
-			if (pMinZWin!=NULL) {
+			if (pMinZWin != nullptr) {
 				isMsgHandled = pMinZWin->HandleMessage(WM_LBUTTONUP, wParam, lParam);
 			}
 		} break;
@@ -483,7 +509,7 @@ bool UIContainer::HandleMessagePre(UINT message, WPARAM wParam, LPARAM lParam) {
 			pt.y = HIWORD(lParam);
 
 			pMinZWin = GetMinZChild(pt);
-			if (pMinZWin!=NULL) {
+			if (pMinZWin != nullptr) {
 				SetFocusOnChild(pMinZWin);
 				isMsgHandled = pMinZWin->HandleMessage(WM_RBUTTONDOWN, wParam, lParam);
 			}
@@ -494,7 +520,7 @@ bool UIContainer::HandleMessagePre(UINT message, WPARAM wParam, LPARAM lParam) {
 			pt.y = HIWORD(lParam);
 
 			pMinZWin = GetMinZChild(pt);
-			if (pMinZWin!=NULL) {
+			if (pMinZWin != nullptr) {
 				isMsgHandled = pMinZWin->HandleMessage(WM_RBUTTONUP, wParam, lParam);
 			}
 		} break;
@@ -504,13 +530,13 @@ bool UIContainer::HandleMessagePre(UINT message, WPARAM wParam, LPARAM lParam) {
 			pt.y = HIWORD(lParam);
 
 			pMinZWin = GetMinZChild(pt);
-			if (pMinZWin!=NULL) {
+			if (pMinZWin != nullptr) {
 				isMsgHandled = pMinZWin->HandleMessage(WM_LBUTTONDBLCLK, wParam, lParam);
 			}
 		} break;
 		case WM_KEYDOWN: {
 			UIWindowBase* pChild = GetFocusOnChild();
-			if (pChild==NULL) {
+			if (pChild == nullptr) {
 				break;
 			}
 
@@ -522,7 +548,7 @@ bool UIContainer::HandleMessagePre(UINT message, WPARAM wParam, LPARAM lParam) {
 		} break;
 		case WM_CHAR: {
 			UIWindowBase* pChild = GetFocusOnChild();
-			if (pChild==NULL) {
+			if (pChild == nullptr) {
 				break;
 			}
 
@@ -543,7 +569,7 @@ bool UIContainer::HandleMessagePre(UINT message, WPARAM wParam, LPARAM lParam) {
 		} break;
 		case WM_COPY: {
 			UIWindowBase* pChild = GetFocusOnChild();
-			if (pChild==NULL) {
+			if (pChild == nullptr) {
 				break;
 			}
 
@@ -551,7 +577,7 @@ bool UIContainer::HandleMessagePre(UINT message, WPARAM wParam, LPARAM lParam) {
 		} break;
 		case WM_PASTE: {
 			UIWindowBase* pChild = GetFocusOnChild();
-			if (pChild==NULL) {
+			if (pChild == nullptr) {
 				break;
 			}
 
@@ -559,7 +585,7 @@ bool UIContainer::HandleMessagePre(UINT message, WPARAM wParam, LPARAM lParam) {
 		} break;
 		case WM_CUT: {
 			UIWindowBase* pChild = GetFocusOnChild();
-			if (pChild==NULL) {
+			if (pChild == nullptr) {
 				break;
 			}
 
@@ -586,11 +612,17 @@ void UIContainer::Draw() {
 	}
 }
 
-
 XMMATRIX UIContainer::GetBindWindowInheritedTransformMatrix() {
 	return _isBindDUI ? _pBindDUIWin->GetInheritedTransformMatrix() : XMMatrixIdentity();
 }
 
+void UIContainer::ForEachWindow(function<void(UIWindowBase*)> func) {
+	for (auto& element : _winList) {
+		if (element.p_win != nullptr) {
+			func(element.p_win);
+		}
+	}
+}
 
 
 bool UIMessageFilter1(UINT message) {
@@ -707,7 +739,7 @@ void UIMessageLoop::RunMessageLoopThread() {
 		// process all messages in the message queue until the queue is empty or the time limit is reached
         UIMessage msg;
 		while (PopMessage(msg)) {
-			if (msg.p_win == NULL && msg._msg == WM_DESTROY) {
+			if (msg.p_win == nullptr && msg._msg == WM_DESTROY) {
 				shouldExit = true;
 			}
 
@@ -742,11 +774,11 @@ void UIMessageLoop::RunMessageLoop() {
 
 bool UIMessageLoop::HandleMessage(UIWindowBase* winPoint, UINT message, WPARAM wParam, LPARAM lParam) {
 	// Game message processing is generally used to process pure animation objects
-	//if (winPoint==NULL)
+	//if (winPoint == nullptr)
 	//	UIWinShell::_pWinShell->HandleMessageGame(message, wParam, lParam);
 
 	bool rt = false;
-	if (winPoint == NULL) {
+	if (winPoint == nullptr) {
 		if (UIFrame::GetSingletonInstance()->HandleMessageFromHookWindow(message, wParam, lParam)) {
 			return true;
 		}
@@ -764,9 +796,9 @@ bool UIMessageLoop::HandleMessage(UIWindowBase* winPoint, UINT message, WPARAM w
 
 
 UIFrame::UIFrame() {
-	_windowHWnd = NULL;
-	_pHookWindowForPopup = NULL;
-	_pHookWindowForScrollBar = NULL;
+	_windowHWnd = nullptr;
+	_pHookWindowForPopup = nullptr;
+	_pHookWindowForScrollBar = nullptr;
 }
 
 void UIFrame::Initialize(HWND windowHWnd, int width, int height) {
@@ -785,13 +817,17 @@ UIContainer* UIFrame::GetTopUIContainer() {
 }
 
 void UIFrame::SetHookWindowForPopup(UIWindowBase* pHookWindow) {
-	if (_pHookWindowForPopup != NULL) {
+	if (pHookWindow == _pHookWindowForPopup) {
+		return;
+	}
+
+	if (_pHookWindowForPopup != nullptr) {
 		_pHookWindowForPopup->ShowWindow(false);
 	}
 
 	_pHookWindowForPopup = pHookWindow;
-	if (_pHookWindowForPopup != NULL) {
-		_pHookWindowForPopup->SetTopZ();
+	if (_pHookWindowForPopup != nullptr) {
+		_pHookWindowForPopup->SetAsPopup();
 	}
 }
 
@@ -800,7 +836,7 @@ void UIFrame::SetHookWindowForScrollBar(UIWindowBase* pHookWindow) {
 }
 
 bool UIFrame::HandleMessageFromHookWindow(UINT message, WPARAM wParam, LPARAM lParam) {
-	if (_pHookWindowForScrollBar!=NULL && _pHookWindowForScrollBar->IsWindowShow()) {
+	if (_pHookWindowForScrollBar != nullptr && _pHookWindowForScrollBar->IsWindowShow()) {
 		// Judge if the lbutton is down status
 		if( IsKeyDown()(VK_LBUTTON) ) {
 			if (message == WM_MOUSEMOVE) {
@@ -808,29 +844,27 @@ bool UIFrame::HandleMessageFromHookWindow(UINT message, WPARAM wParam, LPARAM lP
 				return true;
 			}
 		} else {
-			_pHookWindowForScrollBar = NULL;
+			_pHookWindowForScrollBar = nullptr;
 		}
 	}
 	
-	if (_pHookWindowForPopup!=NULL && _pHookWindowForPopup->IsWindowShow()) {
-		if (message==WM_LBUTTONDOWN || message==WM_LBUTTONUP || message==WM_RBUTTONDOWN || message==WM_RBUTTONUP || 
-			message==WM_MOUSEMOVE) {
-			// judge if the mouse is in the popup window
+	if (_pHookWindowForPopup != nullptr && _pHookWindowForPopup->IsWindowShow()) {
+		// judge if the mouse is in the popup window
+		if (message==WM_LBUTTONDOWN || message==WM_RBUTTONDOWN) {
 			POINT pt;
 			pt.x = LOWORD(lParam);
 			pt.y = HIWORD(lParam);
+
 			if (ContainsPoint()(pt, _pHookWindowForPopup->GetAbusoluteRect())==false) {
 				if (message==WM_LBUTTONDOWN || message==WM_RBUTTONDOWN) {
 					_pHookWindowForPopup->ShowWindow(false);
-					_pHookWindowForPopup = NULL;
-					UIRefresh(true);
+					_pHookWindowForPopup = nullptr;
+					UIHideCaret();
+					UIRefresh(true); // force refresh
 				}
 
 				return false;
 			}
-
-			_pHookWindowForPopup->HandleMessage(message, wParam, lParam);
-			return true;
 		}
 	}
 

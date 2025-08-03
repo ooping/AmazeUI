@@ -62,7 +62,7 @@ UICaret::UICaret() {
 	_y = 0;
 	_width = 1;
 	_height = 16;
-	_z = -0.5;
+	_z = 0.2f;
 
 	_oldTick = 0;
 

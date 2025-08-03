@@ -135,7 +135,7 @@ protected:
 
 	// Internal utility functions
 	void SendMessageToParent(UINT msg, WPARAM wParam, LPARAM lParam) {
-		p_parentUIContainer->SendMessageToBindWin(msg, wParam, lParam);
+		p_parentUIContainer->SendMessageToBindWindow(msg, wParam, lParam);
 	}
 	void CalcArea() {}
 };
@@ -200,6 +200,19 @@ public:
 
 	bool OnNotifyEvent() {
 		auto it = _eventMap.find("Notify");
+		if (it != _eventMap.end()) {
+			it->second();
+			return true;
+		}
+		return false;
+	}
+
+	void SetMouseHoverEvent(std::function<void()> callback) {
+        RegisterEvent("MouseHover", callback);
+    }
+
+	bool OnMouseHoverEvent() {
+		auto it = _eventMap.find("MouseHover");
 		if (it != _eventMap.end()) {
 			it->second();
 			return true;
@@ -303,9 +316,6 @@ class UIImageView : public UIControlBase<UIImageView>, public UIAnimateEffectHit
 	friend UIControlBase;
 
 public:
-	UIImageView() = default;
-	~UIImageView() = default;
-	
 	void SetDLLPath(std::wstring path = L"GUIResource.dll", const UIColor& colorKey = UIColor::Invalid);
 	void SetDLLID(int id);
 	void SetImagePath(std::wstring path, const UIColor& colorKey = UIColor::Invalid);
@@ -933,6 +943,7 @@ public:
 	void SetCurCell(UINT index);
 	void SetX();
 	void SetY();
+	void SetAnimate3D(int isAnimate3D);
 
 	int GetCurCell();
 
@@ -985,6 +996,8 @@ private:
 	//
 	UINT _selectedIndex;
 
+	int _isAnimate3D;
+
 	DirectX::XMMATRIX _inheritedTransformMatrix;
 };
 
@@ -993,15 +1006,20 @@ private:
 class UICanvas : public UIWindowBase, public UIContainerHelp<UICanvas> {
 public:
 	UICanvas();
+
+	void Draw();
+	void SetColor(UIColor color);
+	void SetAlpha(UCHAR alpha);
+
+protected:
+	UIColor _color;				// canvas color
+	UCHAR _alpha;
 };
 
-class UIColorBlock  : public UIWindowBase {
+class UIColorPanel : public UIWindowBase {
 public:
 	void Draw();
 };
-
-
-
 
 /*------------------------------------------------------- UICanvas3D -------------------------------------------------------*/
 class UICanvas3D : public UIControlBase<UICanvas3D>, public UIContainerHelp<UICanvas3D>, public UIEventHelp{

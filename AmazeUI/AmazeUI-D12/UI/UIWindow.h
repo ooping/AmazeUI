@@ -48,7 +48,9 @@ public:
 
 	// when call this function, should make sure the parent window is focus, otherwise there are some logic problems
 	void SetWindowFocus();
-	void SetTopZ() { _z = 0.f; }
+	
+	// set popup window
+	void SetAsPopup(bool isPopup = true);
 
 	// read, unprotected
 	RECT GetClientRect();
@@ -77,7 +79,7 @@ protected:
 	POINT _abusolutePoint;						// starting position of top-level window
 
 	// hierarchy information
-	int _layoutLever;							// hierarchy, determines depth value 1-1.0 2-0.95 3-0.9
+	int _layoutLever;							// hierarchy, determines depth value 1-1.0 2-0.99 3-0.98
 	float _z;									// depth value
 
 	// other
@@ -86,6 +88,7 @@ protected:
 	bool _isFocus;								// window focus activation information
 	int _layoutMode;							// layout mode
 	bool _isTransmissionMsg;					// transmit sub-window messages
+	bool _isPopup;								// whether it is a popup window, if true, the z value is set to 0.5f, otherwise it is set to 1.0f - (_layoutLever > 1 ? (_layoutLever - 1) * 0.05f : 0.0f)
 		 
 	UIContainer* p_UIContainer;					// pointer to self container
 	UIContainer* p_parentUIContainer;			// pointer to parent container
@@ -139,19 +142,22 @@ public:
 	bool HandleMessagePre(UINT message, WPARAM wParam, LPARAM lParam);
 
 	// read
-	POINT GetBindWinAbusolutePoint();
-	RECT GetBindWinAbusoluteRect();
-	int GetBindWinLayoutLever();
+	POINT GetBindWindowAbusolutePoint();
+	RECT GetBindWindowAbusoluteRect();
+	int GetBindWindowLayoutLever();
+	bool IsBindWindowPopup();
 
 	// set
 	void SetFocusOnChild(UIWindowBase* pNew);
 	void SetUnFocusAll();
-	void SendMessageToBindWin(UINT message, WPARAM wParam, LPARAM lParam);
+	void SendMessageToBindWindow(UINT message, WPARAM wParam, LPARAM lParam);
 
 	// draw
 	void Draw();
-
+	
 	DirectX::XMMATRIX GetBindWindowInheritedTransformMatrix();
+
+	void ForEachWindow(std::function<void(UIWindowBase*)> func);
 
 protected:
 	UIWindowBase* GetMinZChild(const POINT& pt);

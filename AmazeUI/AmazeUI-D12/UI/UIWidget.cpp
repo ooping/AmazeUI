@@ -926,7 +926,7 @@ void UISelectList::Draw() {
 
 	// calc the drawing area
 	LONG dh = static_cast<LONG>(20*_list.size());
-	RECT parentRC = p_parentUIContainer->GetBindWinAbusoluteRect();
+	RECT parentRC = p_parentUIContainer->GetBindWindowAbusoluteRect();
 	RECT abusoluteRC = parentRC.bottom+dh < UIDXFoundation::GetSingletonInstance()->GetOutputHeight() ? 
 						CreateRect()(parentRC.left, parentRC.bottom, parentRC.right, parentRC.bottom+dh) : 
 						CreateRect()(parentRC.left, parentRC.top-dh, parentRC.right, parentRC.top);
@@ -1035,7 +1035,7 @@ bool UISelectList::OnLButtonDown(POINT pt) {
 	point.y -= _abusolutePoint.y;
 
 	_selectedectIndex = point.y/20;
-	p_parentUIContainer->SendMessageToBindWin(WM_NOTIFY, _id, _selectedectIndex);
+	p_parentUIContainer->SendMessageToBindWindow(WM_NOTIFY, _id, _selectedectIndex);
 	return true;
 }
 
@@ -1457,6 +1457,7 @@ bool UIGrid::GridCellInfo::DeleteCellControl() {
 		pControl->DestroyWindowBase();
 	}
 
+	delete _pCtrl; // delete the control pointer
 	_pCtrl = NULL;
 	return true;
 }
@@ -4735,6 +4736,8 @@ UITab::UITab() {
 	_selectedIndex = 0;
 	_hoverIndex = -1;
 
+	_isAnimate3D = true;
+
 	_isTransmissionMsg = true;
 }
 
@@ -4919,9 +4922,11 @@ void UITab::DrawAnimate1Cell() {
 				float k = (float)(_cellRCList[i].left - _cellRC.left) / (_cellRC.right - _cellRC.left);
 				rc = _cellRCList[i];
 				OffsetRect(&rc, _abusolutePoint.x, _abusolutePoint.y);
-				POINT center = GetRectCenter()(rc);
-				XMMATRIX transformMatrix = UIZPlaneTransform::GetTransformMatrix(false, 0, 0, 0, false, 0, 0, true, (float)center.x, -k*XM_PI/8, _z);
-				p_win->SetTransformMatrix(transformMatrix);
+				if (_isAnimate3D) {
+					POINT center = GetRectCenter()(rc);
+					XMMATRIX transformMatrix = UIZPlaneTransform::GetTransformMatrix(false, 0, 0, 0, false, 0, 0, true, (float)center.x, -k*XM_PI/8, _z);
+					p_win->SetTransformMatrix(transformMatrix);
+				}
 			}
 		} else {
 			if (_cellRCList[i].bottom<_cellRC.top || _cellRCList[i].top>_cellRC.bottom) {
@@ -4930,9 +4935,11 @@ void UITab::DrawAnimate1Cell() {
 				float k = (float)(_cellRCList[i].top - _cellRC.top) / (_cellRC.bottom - _cellRC.top);
 				rc = _cellRCList[i];
 				OffsetRect(&rc, _abusolutePoint.x, _abusolutePoint.y);
-				POINT center = GetRectCenter()(rc);
-				XMMATRIX transformMatrix = UIZPlaneTransform::GetTransformMatrix(false, 0, 0, 0, true, (float)center.y, -k*XM_PI/8, false, 0, 0, _z);
-				p_win->SetTransformMatrix(transformMatrix);
+				if (_isAnimate3D) {
+					POINT center = GetRectCenter()(rc);
+					XMMATRIX transformMatrix = UIZPlaneTransform::GetTransformMatrix(false, 0, 0, 0, true, (float)center.y, -k*XM_PI/8, false, 0, 0, _z);
+					p_win->SetTransformMatrix(transformMatrix);
+				}
 			}
 		}
 
@@ -5000,6 +5007,10 @@ void UITab::SetY() {
 	CalcArea();
 }
 
+void UITab::SetAnimate3D(int isAnimate3D) {
+	_isAnimate3D = isAnimate3D;
+}
+
 bool UITab::OnMouseMove(POINT pt) {
 	POINT point = pt;
 	point.x -= _abusolutePoint.x;
@@ -5057,15 +5068,47 @@ bool UITab::OnLButtonDown(POINT pt) {
 
 UICanvas::UICanvas() {
 	_isTransmissionMsg = true;
+
+	_alpha = 0;
+	_color = UIColor::Gray95;
 }
 
-void UIColorBlock::Draw() {
+void UICanvas::Draw() {
 	if (!_isShow) {
 		return;
 	}
 
 	XMMATRIX transformMatrix = GetInheritedTransformMatrix();
-	_z = 0.99f;
+
+	if (_alpha!=0 && _color!=UIColor::Invalid) {
+		RECT rc = _clientRC;
+		OffsetRect(&rc, _abusolutePoint.x, _abusolutePoint.y);
+		UIRect(rc, _z)(_color, _alpha, transformMatrix);
+	}
+	
+	if (p_UIContainer!=NULL) {
+		p_UIContainer->Draw();
+	}
+}
+
+void UICanvas::SetColor(UIColor color) {
+	_color = color;
+}
+
+void UICanvas::SetAlpha(UCHAR alpha) {
+	_alpha = alpha;
+}
+
+
+
+
+void UIColorPanel::Draw() {
+	if (!_isShow) {
+		return;
+	}
+
+	XMMATRIX transformMatrix = GetInheritedTransformMatrix();
+	_z = 1.f;
 
 	RECT rc = _clientRC;
 	OffsetRect(&rc, _abusolutePoint.x, _abusolutePoint.y);
@@ -5129,6 +5172,9 @@ void UICanvas3D::Draw() {
 
 
 bool UICanvas3D::OnMouseMove(POINT pt) {
+	if (!_isHover && OnMouseHoverEvent()) {
+	}
+
 	_isHover = true;
 
 	if (ComparePoints()(_curMousePos, pt)) {
@@ -5137,6 +5183,8 @@ bool UICanvas3D::OnMouseMove(POINT pt) {
 
 	_curMousePos = pt;
 	UIRefresh();
+
+
 
 	return true;
 }
