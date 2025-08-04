@@ -866,6 +866,8 @@ bool UIFrame::HandleMessageFromHookWindow(UINT message, WPARAM wParam, LPARAM lP
 				return false;
 			}
 		}
+
+		return _pHookWindowForPopup->HandleMessage(message, wParam, lParam);
 	}
 
 	return false;
