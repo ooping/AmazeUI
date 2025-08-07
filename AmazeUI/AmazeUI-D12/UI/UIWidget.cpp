@@ -164,6 +164,7 @@ void UILabel::SetSupportMultiLine(bool support, float lineSpacing) {
 }
 
 
+
 void UIImageView::SetDLLPath(std::wstring path, const UIColor& colorKey) {
 	_dllPath = path;
 	_colorKey = colorKey;
@@ -5111,6 +5112,10 @@ void UIColorPanel::Draw() {
 	_z = 1.f;
 
 	RECT rc = _clientRC;
+	rc.left -= 5;
+	rc.top -= 5;
+	rc.right += 5;
+	rc.bottom += 5;
 	OffsetRect(&rc, _abusolutePoint.x, _abusolutePoint.y);
 	UIRect(rc, _z)(UIColor::Gray95, 255, transformMatrix);
 }
@@ -5146,11 +5151,16 @@ void UICanvas3D::Draw() {
 	RECT rc = _clientRC;
 	OffsetRect(&rc, _abusolutePoint.x, _abusolutePoint.y);
 	POINT center = GetRectCenter()(rc);
+	rc.left -= 5;
+	rc.top -= 5;
+	rc.right += 5;
+	rc.bottom += 5;
+
 	XMMATRIX transform = UIZPlaneTransform::GetTransformMatrix(false, 0, 0, 0, true, (float)center.y, offsetY*XM_PI/128, true, (float)center.x, -offsetX*XM_PI/128, _z);
 
 	SetTransformMatrix(transform);
 
-	UIRect(rc, _z+0.1f)(UIColor::Gray95, 255, transform);
+	UIRect(rc, _z+0.005f)(UIColor::Gray95, 255, transform);
 
 	if (p_UIContainer!=NULL) {
 		//RECT rc = _clientRC;

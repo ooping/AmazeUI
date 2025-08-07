@@ -850,7 +850,7 @@ bool UIFrame::HandleMessageFromHookWindow(UINT message, WPARAM wParam, LPARAM lP
 	
 	if (_pHookWindowForPopup != nullptr && _pHookWindowForPopup->IsWindowShow()) {
 		// judge if the mouse is in the popup window
-		if (message==WM_LBUTTONDOWN || message==WM_RBUTTONDOWN) {
+		if (message==WM_LBUTTONDOWN || message==WM_RBUTTONDOWN || message == WM_MOUSEMOVE) {
 			POINT pt;
 			pt.x = LOWORD(lParam);
 			pt.y = HIWORD(lParam);

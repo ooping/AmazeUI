@@ -3090,6 +3090,8 @@ void UIDXFoundation::Draw2DTextMultiLineFT(const wstring& text, const RECT& rc, 
         startY = rc.top + (GetRectHeight()(rc) - totalTextHeight) / 2;
     } else if (posFlag & 0x08) { // bottom
         startY = rc.bottom - totalTextHeight;
+    } else {
+        startY = (float)rc.top; //+(int)(ftSizeFont._ftFontAscent);
     }
 
     // 3. set overall clipping region
@@ -3213,6 +3215,8 @@ void UIDXFoundation::Draw3DTextMultiLineFT(const std::wstring& text, const RECT&
         startY = rc.top + (GetRectHeight()(rc) - totalTextHeight) / 2;
     } else if (posFlag & 0x08) { // bottom
         startY = rc.bottom - totalTextHeight;
+    } else {
+        startY = (float)rc.top;; //+(int)(ftSizeFont._ftFontAscent);
     }
 
     // 3. set overall clipping region (Note: 3D text may not respect 2D clipping perfectly)
