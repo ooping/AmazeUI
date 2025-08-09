@@ -297,6 +297,7 @@ UIString UIButton::GetText() {
 
 bool UIButton::OnMouseMove(POINT)  {
 	if (!_isHover) {
+		OnMouseHoverEvent();
 		_isHover = true;
 		UIRefresh();
 	}
@@ -5182,20 +5183,17 @@ void UICanvas3D::Draw() {
 
 
 bool UICanvas3D::OnMouseMove(POINT pt) {
-	if (!_isHover && OnMouseHoverEvent()) {
+	if (!_isHover) {
+		OnMouseHoverEvent();
+		_isHover = true;
+		UIRefresh();
 	}
-
-	_isHover = true;
 
 	if (ComparePoints()(_curMousePos, pt)) {
 		return true;
 	}
-
 	_curMousePos = pt;
-	UIRefresh();
-
-
-
+	
 	return true;
 }
 
