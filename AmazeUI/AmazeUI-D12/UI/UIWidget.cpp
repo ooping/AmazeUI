@@ -1106,6 +1106,17 @@ void UIComboBox::SetSelectIndex(int index) {
 	_selectedectIndex = index;
 }
 
+void UIComboBox::SetText(UIString text) {
+	vector<wstring> textList = _dropDownList.GetTextList();
+	
+	auto it = std::find(textList.begin(), textList.end(), (wstring)text);
+	if (it != textList.end()) {
+		_selectedectIndex = static_cast<int>(std::distance(textList.begin(), it));
+	} else {
+		_selectedectIndex = -1; // not found
+	}
+}
+
 void UIComboBox::ClearList() {
 	_dropDownList.ClearList();
 }

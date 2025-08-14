@@ -494,11 +494,12 @@ public:
 	UIComboBox();
 	void Draw();
 
+	void ClearList();
 	void AddText(UIString text);
 	UIString GetText();
-	void SetSelectIndex(int index);
-	void ClearList();
+	void SetText(UIString text);
 	int GetSelectIndex();
+	void SetSelectIndex(int index);
 	std::vector<std::wstring> GetTextList();
 
 	void IsDrawBoader(bool flag);				// whether to draw the border

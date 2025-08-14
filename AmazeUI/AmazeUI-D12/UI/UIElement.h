@@ -153,6 +153,7 @@ struct UIFont {
 		HLEFT_VCENTER = 0x04,
 		HCENTER_VCENTER = 0x01|0x04,
 		HRIGHT_VCENTER = 0x02|0x04,
+		HCENTER_VTOP = 0x01,
 	};
 
 	float _z;
