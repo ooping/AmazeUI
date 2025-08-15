@@ -1578,7 +1578,9 @@ void UIDXFoundation::Draw2DRectSolid(const XMFLOAT2& start, const XMFLOAT2& end,
     Draw2DRectSolid(start, end, z, color, color, color, color, alpha);
 }
 
-void UIDXFoundation::Draw2DImage(size_t textureIndex, RECT srcRect, XMFLOAT2 dstStart, XMFLOAT2 dstEnd, float z, UCHAR alpha) {
+void UIDXFoundation::Draw2DImage(size_t textureIndex, 
+                            RECT srcRect, XMFLOAT2 dstStart, XMFLOAT2 dstEnd, 
+                            float z, UCHAR alpha) {
     // set color
     XMVECTORF32 color = { 1.0f, 1.0f, 1.0f, alpha / 255.0f };
 
@@ -3090,8 +3092,6 @@ void UIDXFoundation::Draw2DTextMultiLineFT(const wstring& text, const RECT& rc, 
         startY = rc.top + (GetRectHeight()(rc) - totalTextHeight) / 2;
     } else if (posFlag & 0x08) { // bottom
         startY = rc.bottom - totalTextHeight;
-    } else {
-        startY = (float)rc.top; //+(int)(ftSizeFont._ftFontAscent);
     }
 
     // 3. set overall clipping region
@@ -3215,8 +3215,6 @@ void UIDXFoundation::Draw3DTextMultiLineFT(const std::wstring& text, const RECT&
         startY = rc.top + (GetRectHeight()(rc) - totalTextHeight) / 2;
     } else if (posFlag & 0x08) { // bottom
         startY = rc.bottom - totalTextHeight;
-    } else {
-        startY = (float)rc.top;; //+(int)(ftSizeFont._ftFontAscent);
     }
 
     // 3. set overall clipping region (Note: 3D text may not respect 2D clipping perfectly)

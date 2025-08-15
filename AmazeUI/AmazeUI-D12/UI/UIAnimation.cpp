@@ -10,17 +10,17 @@ UIAnimationManage::~UIAnimationManage() {
 }
 
 void UIAnimationManage::AddAnimation(UIAnimationBase* pAnimateObj) {
-	if (pAnimateObj!=NULL) {
-		if (find(_animationList.begin(), _animationList.end(), pAnimateObj)==_animationList.end()) {
+	if (pAnimateObj != NULL) {
+		if (find(_animationList.begin(), _animationList.end(), pAnimateObj) == _animationList.end()) {
 			_animationList.push_back(pAnimateObj);
 		}
 	}
 }
 
 void UIAnimationManage::DelAnimation(UIAnimationBase* pAnimateObj) {
-	if (pAnimateObj!=NULL) {
+	if (pAnimateObj != NULL) {
 		auto it = find(_animationList.begin(), _animationList.end(), pAnimateObj);
-		if (it!=_animationList.end()) {
+		if (it != _animationList.end()) {
 			_animationList.erase(it);
 		}
 	}
@@ -46,7 +46,7 @@ bool UIAnimationManage::UpdateAnimations() {
 }
 
 void UIAnimationManage::DrawAnimations() {
-	for (auto i=_animationList.begin(); i!=_animationList.end(); ++i) {
+	for (auto i = _animationList.begin(); i != _animationList.end(); ++i) {
 		(*i)->DrawAnimation();
 	}
 }
@@ -75,9 +75,9 @@ bool UICaret::IsAnimationRun() {
 
 bool UICaret::UpdateAnimation() {
 	DWORD nowTick = ::GetTickCount();
-	DWORD dxTick  = nowTick-_oldTick;						// ?????
+	DWORD dxTick = nowTick - _oldTick;						// ?????
 	
-	if (dxTick>600) {
+	if (dxTick > 600) {
 		_oldTick = nowTick;
 		_isCaretOn = !_isCaretOn;
 		return true;
@@ -108,7 +108,7 @@ void UICaret::SetCaret(float z, ULONG width, ULONG height, const UIColor& color)
 }
 
 void UICaret::SetPos(ULONG x, ULONG y, bool IsShowImmd, const DirectX::XMMATRIX& transformMatrix) {
-	if (_x!=x || _y!=y) {
+	if (_x != x || _y != y) {
 		_x = x;
 		_y = y;
 	}
@@ -127,7 +127,7 @@ void UICaret::DrawAnimation() {
 		return;
 	}
 
-	UIRect(_x, _y-_height/2, _x+_width-1, _y+_height/2, _z)(_color, 255, _transformMatrix);
+	UIRect(_x, _y - _height / 2, _x + _width - 1, _y + _height / 2, _z)(_color, 255, _transformMatrix);
 }
 
 void UIShowCaret(float z, ULONG width, ULONG height, const UIColor& color) {
@@ -151,7 +151,7 @@ UIAnimateHelp::UIAnimateHelp() {
 }
 
 bool UIAnimateHelp::IsAnimationRun() {
-	return _frameIndex<=_maxFrame;
+	return _frameIndex <= _maxFrame;
 }
 
 bool UIAnimateHelp::UpdateAnimation() {
@@ -181,20 +181,20 @@ void UIAnimateEffectHitDrum::PlayHitDrumAnimate(int maxFrame) {
 }
 
 void UIAnimateEffectHitDrum::SetHitPower(float v) {
-	_hitPower=v;
+	_hitPower = v;
 }
 
 void UIAnimateEffectHitDrum::DrawHitDrumAnimate(UIImage& image, int centerX, int centerY, float scale, const DirectX::XMMATRIX& transformMatrix) {
 	image.operator()(centerX, centerY, scale, 255, transformMatrix);
-	image.operator()(centerX, centerY, scale+_hitPower*_frameIndex/_maxFrame, static_cast<UCHAR>(255-250*_frameIndex/_maxFrame), transformMatrix);
+	image.operator()(centerX, centerY, scale + (_hitPower * _frameIndex / _maxFrame), static_cast<UCHAR>(255 - (250 * _frameIndex / _maxFrame)), transformMatrix);
 }
 
 void UIAnimateEffectHitDrum::DrawHitDrumAnimate(UIImage& image, RECT rc, const DirectX::XMMATRIX& transformMatrix) {
 	image.operator()(rc, 1.0f, 255, transformMatrix);
-	image.operator()(rc, 1.0f + _hitPower*_frameIndex/_maxFrame, static_cast<UCHAR>(255-250*_frameIndex/_maxFrame), transformMatrix);
+	image.operator()(rc, 1.0f + (_hitPower * _frameIndex / _maxFrame), static_cast<UCHAR>(255 - (250 * _frameIndex / _maxFrame)), transformMatrix);
 }
 
 void UIAnimateEffectHitDrum::DrawSlicedHitDrumAnimate(UISlicedImage& slicedImage, RECT rc, const DirectX::XMMATRIX& transformMatrix) {
 	slicedImage.operator()(rc, 255, transformMatrix);
-	slicedImage.operator()(ScaleRect()(rc, 1.0f + _hitPower*_frameIndex/_maxFrame), static_cast<UCHAR>(255-250*_frameIndex/_maxFrame), transformMatrix);
+	slicedImage.operator()(ScaleRect()(rc, 1.0f + (_hitPower * _frameIndex / _maxFrame)), static_cast<UCHAR>(255 - (250 * _frameIndex / _maxFrame)), transformMatrix);
 }

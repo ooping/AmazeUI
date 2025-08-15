@@ -23,11 +23,11 @@ void UI2DDemo::Draw()
      UIPoint(5, 5, 0.3)(UIColor::Red);
 
      vector<POINT> points = {
-         POINT{10, 10},
-         POINT{20, 20},
-         POINT{30, 30},
-         POINT{40, 40},
-         POINT{50, 50},
+        POINT{10, 10},
+        POINT{20, 20},
+        POINT{30, 30},
+        POINT{40, 40},
+        POINT{50, 50},
      };
      UIPoints(points, 0.5)(UIColor::Blue);
 

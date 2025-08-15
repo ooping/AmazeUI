@@ -114,24 +114,24 @@ UIImage::UIImage(std::wstring resDLLPath, UINT id, const UIColor& colorKey, floa
 
 void UIImage::operator()(const RECT& srcRect, const RECT& dstRect, UCHAR alphy, const DirectX::XMMATRIX& transformMatrix) {
 	if (!XMMatrixIsIdentity(transformMatrix)) {
-		if (_sourceFlag==1)	{
+		if (_sourceFlag == 1)	{
 			UIDXFoundation::GetSingletonInstance()->Draw3DImage(_path, _colorKey, srcRect,
 														XMFLOAT2{static_cast<float>(dstRect.left), static_cast<float>(dstRect.top)}, 
 														XMFLOAT2{static_cast<float>(dstRect.right), static_cast<float>(dstRect.bottom)}, 
 														_z, alphy, transformMatrix);
-		} else if (_sourceFlag==2) {
+		} else if (_sourceFlag == 2) {
 			UIDXFoundation::GetSingletonInstance()->Draw3DImage(_path, _id, _colorKey, srcRect,
 														XMFLOAT2{static_cast<float>(dstRect.left), static_cast<float>(dstRect.top)}, 
 														XMFLOAT2{static_cast<float>(dstRect.right), static_cast<float>(dstRect.bottom)}, 
 														_z, alphy, transformMatrix);
 		}
 	} else {
-		if (_sourceFlag==1)	{
+		if (_sourceFlag == 1)	{
 			UIDXFoundation::GetSingletonInstance()->Draw2DImage(_path, _colorKey, srcRect,
 														XMFLOAT2{static_cast<float>(dstRect.left), static_cast<float>(dstRect.top)}, 
 														XMFLOAT2{static_cast<float>(dstRect.right), static_cast<float>(dstRect.bottom)}, 
 														_z, alphy);
-		} else if (_sourceFlag==2) {
+		} else if (_sourceFlag == 2) {
 			UIDXFoundation::GetSingletonInstance()->Draw2DImage(_path, _id, _colorKey, srcRect,
 														XMFLOAT2{static_cast<float>(dstRect.left), static_cast<float>(dstRect.top)}, 
 														XMFLOAT2{static_cast<float>(dstRect.right), static_cast<float>(dstRect.bottom)}, 
@@ -146,7 +146,7 @@ void UIImage::operator()(const RECT& srcRect, LONG dstBeginX, LONG dstBeginY, UC
 }
 
 void UIImage::operator()(const RECT& dstRect, float scale, UCHAR alphy, const DirectX::XMMATRIX& transformMatrix) {
-	this->operator()(NULL_RECT, scale==1 ? dstRect : ScaleRect()(dstRect, scale), alphy, transformMatrix);
+	this->operator()(NULL_RECT, scale == 1 ? dstRect : ScaleRect()(dstRect, scale), alphy, transformMatrix);
 }
 
 
@@ -156,16 +156,16 @@ void UIImage::operator()(LONG dstCenterX, LONG dstCenterY, float scale, UCHAR al
 		return;
 	}
 
-	RECT dstRect = CreateRect()(Shape2D::CreatePoint()((LONG)(dstCenterX-textureRect.right*scale/2), (LONG)(dstCenterY-textureRect.bottom*scale/2)), 
-										 CreateSize()((LONG)((textureRect.right-textureRect.left)*scale), (LONG)((textureRect.bottom-textureRect.top)*scale)));
+	RECT dstRect = CreateRect()(Shape2D::CreatePoint()((LONG)(dstCenterX - (textureRect.right * scale / 2)), (LONG)(dstCenterY - (textureRect.bottom * scale / 2))), 
+										 CreateSize()((LONG)((textureRect.right - textureRect.left) * scale), (LONG)((textureRect.bottom - textureRect.top) * scale)));
 	this->operator()(NULL_RECT, dstRect, alphy, transformMatrix);
 }
 
 
 bool UIImage::GetSize(RECT& textureRect) {
-	if (_sourceFlag==1) {
+	if (_sourceFlag == 1) {
 		return UIDXFoundation::GetSingletonInstance()->Get2DImageSize(_path, _colorKey, textureRect);
-	} else if (_sourceFlag==2) {
+	} else if (_sourceFlag == 2) {
 		return UIDXFoundation::GetSingletonInstance()->Get2DImageSize(_path, _id, _colorKey, textureRect);
 	}
 	return false;
@@ -195,7 +195,7 @@ UISlicedImage::UISlicedImage(std::wstring resDLLPath, UINT id, const UIColor& co
 
 void UISlicedImage::operator()(LONG dstBeginX, LONG dstBeginY, LONG width, LONG height, UCHAR alphy, const DirectX::XMMATRIX& transformMatrix) {
 	RECT textureRect;
-	if( !_image.GetSize(textureRect) ) {
+	if (!_image.GetSize(textureRect)) {
 		return;
 	}
 	UINT imageWidth = GetRectWidth()(textureRect);
@@ -204,38 +204,38 @@ void UISlicedImage::operator()(LONG dstBeginX, LONG dstBeginY, LONG width, LONG 
 	RECT rc1 = CreateRect()(Shape2D::CreatePoint()(0, 0), CreateSize()(_leftBarWidth, _topBarHeight));
 	_image(rc1, dstBeginX, dstBeginY, alphy, transformMatrix);
 
-	RECT rc3 = CreateRect()(Shape2D::CreatePoint()(imageWidth-_rightBarWidth , 0), CreateSize()(_rightBarWidth, _topBarHeight));
-	_image(rc3, dstBeginX+width-_rightBarWidth, dstBeginY, alphy, transformMatrix);
+	RECT rc3 = CreateRect()(Shape2D::CreatePoint()(imageWidth - _rightBarWidth , 0), CreateSize()(_rightBarWidth, _topBarHeight));
+	_image(rc3, dstBeginX + width - _rightBarWidth, dstBeginY, alphy, transformMatrix);
 
-	RECT rc4 = CreateRect()(Shape2D::CreatePoint()(0, imageHeight-_bottomBarHeight), CreateSize()(_leftBarWidth, _bottomBarHeight));
-	_image(rc4, dstBeginX, dstBeginY+height-_bottomBarHeight, alphy, transformMatrix);
+	RECT rc4 = CreateRect()(Shape2D::CreatePoint()(0, imageHeight - _bottomBarHeight), CreateSize()(_leftBarWidth, _bottomBarHeight));
+	_image(rc4, dstBeginX, dstBeginY + height - _bottomBarHeight, alphy, transformMatrix);
 
-	RECT rc6 = CreateRect()(Shape2D::CreatePoint()(imageWidth-_rightBarWidth, imageHeight-_bottomBarHeight), CreateSize()(_rightBarWidth, _bottomBarHeight));
-	_image(rc6, dstBeginX+width-_rightBarWidth, dstBeginY+height-_bottomBarHeight, alphy, transformMatrix);
+	RECT rc6 = CreateRect()(Shape2D::CreatePoint()(imageWidth - _rightBarWidth, imageHeight - _bottomBarHeight), CreateSize()(_rightBarWidth, _bottomBarHeight));
+	_image(rc6, dstBeginX + width - _rightBarWidth, dstBeginY + height - _bottomBarHeight, alphy, transformMatrix);
 
-	RECT rc2 = CreateRect()(Shape2D::CreatePoint()(_leftBarWidth, 0) , CreateSize()(imageWidth-_leftBarWidth-_rightBarWidth, _topBarHeight));
-	RECT rc2d = CreateRect()(Shape2D::CreatePoint()(dstBeginX+_leftBarWidth, dstBeginY), CreateSize()(width-_leftBarWidth-_rightBarWidth, _topBarHeight));
+	RECT rc2 = CreateRect()(Shape2D::CreatePoint()(_leftBarWidth, 0) , CreateSize()(imageWidth - _leftBarWidth - _rightBarWidth, _topBarHeight));
+	RECT rc2d = CreateRect()(Shape2D::CreatePoint()(dstBeginX + _leftBarWidth, dstBeginY), CreateSize()(width - _leftBarWidth - _rightBarWidth, _topBarHeight));
 	_image(rc2, rc2d, alphy, transformMatrix);
 
-	RECT rc5 = CreateRect()(Shape2D::CreatePoint()(_leftBarWidth, imageHeight-_bottomBarHeight), CreateSize()(imageWidth-_leftBarWidth-_rightBarWidth, _bottomBarHeight));
-	RECT rc5d = CreateRect()(Shape2D::CreatePoint()(dstBeginX+_leftBarWidth, dstBeginY+height-_bottomBarHeight), CreateSize()(width-_leftBarWidth-_rightBarWidth, _bottomBarHeight));
+	RECT rc5 = CreateRect()(Shape2D::CreatePoint()(_leftBarWidth, imageHeight - _bottomBarHeight), CreateSize()(imageWidth - _leftBarWidth - _rightBarWidth, _bottomBarHeight));
+	RECT rc5d = CreateRect()(Shape2D::CreatePoint()(dstBeginX + _leftBarWidth, dstBeginY + height - _bottomBarHeight), CreateSize()(width - _leftBarWidth - _rightBarWidth, _bottomBarHeight));
 	_image(rc5, rc5d, alphy, transformMatrix);
 
-	RECT rc7 = CreateRect()(Shape2D::CreatePoint()(0, _topBarHeight), CreateSize()(_leftBarWidth, imageHeight-_topBarHeight-_bottomBarHeight));
-	RECT rc7d = CreateRect()(Shape2D::CreatePoint()(dstBeginX, dstBeginY+_topBarHeight), CreateSize()(_leftBarWidth, height-_topBarHeight-_bottomBarHeight));
+	RECT rc7 = CreateRect()(Shape2D::CreatePoint()(0, _topBarHeight), CreateSize()(_leftBarWidth, imageHeight - _topBarHeight - _bottomBarHeight));
+	RECT rc7d = CreateRect()(Shape2D::CreatePoint()(dstBeginX, dstBeginY + _topBarHeight), CreateSize()(_leftBarWidth, height - _topBarHeight - _bottomBarHeight));
 	_image(rc7, rc7d, alphy, transformMatrix);
 
-	RECT rc8 = CreateRect()(Shape2D::CreatePoint()(imageWidth-_rightBarWidth, _topBarHeight), CreateSize()(_rightBarWidth, imageHeight-_topBarHeight-_bottomBarHeight));
-	RECT rc8d = CreateRect()(Shape2D::CreatePoint()(dstBeginX+width-_rightBarWidth, dstBeginY+_topBarHeight), CreateSize()(_rightBarWidth, height-_topBarHeight-_bottomBarHeight));
+	RECT rc8 = CreateRect()(Shape2D::CreatePoint()(imageWidth - _rightBarWidth, _topBarHeight), CreateSize()(_rightBarWidth, imageHeight - _topBarHeight - _bottomBarHeight));
+	RECT rc8d = CreateRect()(Shape2D::CreatePoint()(dstBeginX + width - _rightBarWidth, dstBeginY + _topBarHeight), CreateSize()(_rightBarWidth, height - _topBarHeight - _bottomBarHeight));
 	_image(rc8, rc8d, alphy, transformMatrix);
 	
-	RECT rc9 = CreateRect()(Shape2D::CreatePoint()(_leftBarWidth, _topBarHeight), CreateSize()(imageWidth-_leftBarWidth-_rightBarWidth, imageHeight-_topBarHeight-_bottomBarHeight));
-	RECT rc9d = CreateRect()(Shape2D::CreatePoint()(dstBeginX+_leftBarWidth, dstBeginY+_topBarHeight), CreateSize()(width-_leftBarWidth-_rightBarWidth, height-_topBarHeight-_bottomBarHeight));
+	RECT rc9 = CreateRect()(Shape2D::CreatePoint()(_leftBarWidth, _topBarHeight), CreateSize()(imageWidth - _leftBarWidth - _rightBarWidth, imageHeight - _topBarHeight - _bottomBarHeight));
+	RECT rc9d = CreateRect()(Shape2D::CreatePoint()(dstBeginX + _leftBarWidth, dstBeginY + _topBarHeight), CreateSize()(width - _leftBarWidth - _rightBarWidth, height - _topBarHeight - _bottomBarHeight));
 	_image(rc9, rc9d, alphy, transformMatrix);
 }
 
 void UISlicedImage::operator()(const RECT& dstRC, UCHAR alphy, const DirectX::XMMATRIX& transformMatrix) {
-	this->operator()(dstRC.left, dstRC.top, dstRC.right-dstRC.left, dstRC.bottom-dstRC.top, alphy, transformMatrix);
+	this->operator()(dstRC.left, dstRC.top, dstRC.right - dstRC.left, dstRC.bottom - dstRC.top, alphy, transformMatrix);
 }
 
 UIFont::UIFont(float z, float fontSize) {
@@ -318,7 +318,7 @@ void UICameraBase::SetProjectionMatrix() {
 
 // let the camera can see the whole screen
 void UICameraUI::SetCameraFor2D(float width, float height) {
-	_position = XMFLOAT3(0.0f, 0.0f, -height/2.0f);
+	_position = XMFLOAT3(0.0f, 0.0f, -height / 2.0f);
 	_target = XMFLOAT3(0.0f, 0.0f, 0.0f);
 	_up = XMFLOAT3(0.0f, -1.0f, 0.0f);
 	//
@@ -326,7 +326,7 @@ void UICameraUI::SetCameraFor2D(float width, float height) {
 
 	//
 	_fov = XM_PIDIV2;
-	_aspectRatio = width/height;
+	_aspectRatio = width / height;
 	//
 	SetProjectionMatrix();
 }
@@ -348,7 +348,7 @@ XMFLOAT3 UICameraUI::ConvertScreen2DTo3D(const XMFLOAT3& screenPos) {
     
     // calculate in view space
     float tanHalfFovY = tanf(_fov / 2.0f);
-    float totalDepth = viewportHeight/2 + depth;
+    float totalDepth = viewportHeight / 2 + depth;
     float viewX = ndcX * totalDepth * _aspectRatio * tanHalfFovY;
     float viewY = ndcY * totalDepth * tanHalfFovY;
     float viewZ = totalDepth; // view space Z includes camera retreat distance
@@ -420,7 +420,7 @@ XMFLOAT3 UICameraUI::Convert3DToScreen2D(const XMFLOAT3& worldPos) {
     float totalDepth = viewZ;
 	
 	// calculate depth in the window
-    float depth = totalDepth - viewportHeight/2;
+    float depth = totalDepth - viewportHeight / 2;
 
 	// calculate ndc
 	float ndcX = viewX / (totalDepth * _aspectRatio * tanHalfFovY);

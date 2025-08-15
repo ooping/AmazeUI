@@ -39,13 +39,13 @@ bool UIWin32APP::Instance(HINSTANCE hInstance, std::wstring titleStr, int width,
 	{
 		HWND parentHwnd;
 		RECT rc, rc2;
-		int  x,y;
+		int x, y;
 		//
 		((parentHwnd = GetParent(_hWnd)) == NULL) ? SystemParametersInfo(SPI_GETWORKAREA, 0, &rc, 0) : GetClientRect(parentHwnd, &rc);
 
 		GetWindowRect(_hWnd, &rc2);
-		x = ((rc.right-rc.left)-(rc2.right-rc2.left))/2 +rc.left;
-		y = ((rc.bottom-rc.top)-(rc2.bottom-rc2.top))/2 +rc.top;
+		x = ((rc.right - rc.left) - (rc2.right - rc2.left)) / 2 + rc.left;
+		y = ((rc.bottom - rc.top) - (rc2.bottom - rc2.top)) / 2 + rc.top;
 		//
 		SetWindowPos(_hWnd, HWND_TOP, x, y, 0, 0, SWP_NOSIZE);
 	}
@@ -63,8 +63,7 @@ bool UIWin32APP::Instance(HINSTANCE hInstance, std::wstring titleStr, int width,
         if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
             TranslateMessage(&msg);
             DispatchMessage(&msg);
-        }
-        else {
+        } else {
             // 这里可以处理其他任务
             // 比如更新游戏逻辑、渲染等
             Sleep(1); // 可选：避免CPU占用过高
@@ -90,7 +89,7 @@ LRESULT CALLBACK UIWin32APP::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
 
 	switch (message) {
 		case WM_SIZE: {
-			if (wParam!=SIZE_MINIMIZED && !s_in_sizemove) {
+			if (wParam != SIZE_MINIMIZED && !s_in_sizemove) {
 				UIPostMessage(NULL, WM_SIZERESET, wParam, lParam);
 			}
 		} break;
@@ -115,9 +114,8 @@ LRESULT CALLBACK UIWin32APP::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
 int UIWin32APP::GetClientWidth() { 
 	RECT rc;
 	if (::GetClientRect(_hWnd, &rc) == TRUE) {
-		return rc.right-rc.left; 
-	}
-	else {
+		return rc.right - rc.left; 
+	} else {
 		return -1;
 	}
 }
@@ -125,9 +123,8 @@ int UIWin32APP::GetClientWidth() {
 int UIWin32APP::GetClientHeight() { 
 	RECT rc;
 	if (::GetClientRect(_hWnd, &rc) == TRUE) {
-		return rc.bottom-rc.top; 
-	}
-	else {
+		return rc.bottom - rc.top; 
+	} else {
 		return -1;
 	}
 }
