@@ -261,7 +261,7 @@ void UIButton::Draw() {
 	}
 
 	// display wstring
-	UIFont fontHelp(_z-gDeltaZ, gDefaultFontSize);
+	UIFont fontHelp(_z - gDeltaZ, gDefaultFontSize);
 	RECT rc;
 	if (_isLButtonDown==false) {
 		rc = _strRect;

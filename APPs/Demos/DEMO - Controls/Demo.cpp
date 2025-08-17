@@ -32,16 +32,15 @@ void UIWinTop::OnCreate()
 		rc.top = rc.bottom - 40;
 		_canvas000.CreateWindowBase(this, rc, UILayoutCalc::MOVE_Y);
 
-
 		_label000.CreateControl(0, &_canvas000);
 		_label000.SetText("Show Message..");
 
 		// Test the efficiency of multiple calls of std::unique_ptr<DirectX::PrimitiveBatch<DirectX::VertexPositionTexture>>::DrawIndexed()
-		// for (int i = 0; i < 1000; ++i) {
-		// 	auto *pCtrl = new UILabel();
-		// 	pCtrl->CreateControlOnHeap(0, &_canvas000);
-		// 	pCtrl->SetText(std::format("B"));
-		// }
+		//for (int i = 0; i < 1; ++i) {
+		//	auto *pLabel = new UILabel();
+		//	pLabel->CreateControlOnHeap(0, &_canvas000);
+		//	pLabel->SetText("B");
+		//}
 
 		// 
 		UILayoutGrid layoutGrid1;
@@ -121,7 +120,6 @@ void UIWinTop::OnCreate()
 			}
 		}
 
-		_image3D101.CreateControl(0, &_canvas100);
 
 		// ≤ºæ÷º∆À„
 		UILayoutGrid layoutGrid1;
@@ -142,8 +140,6 @@ void UIWinTop::OnCreate()
 
 		//
 		layoutGrid1.SetCell(0, 6, 15, 7, &_grid101);
-		//
-		layoutGrid1.SetCell(8, 1, 11, 3, &_image3D101);
 		//
 		layoutGrid1.CalcGridPos();
 	}

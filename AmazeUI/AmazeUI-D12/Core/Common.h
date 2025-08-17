@@ -20,6 +20,7 @@
 #include <deque>
 #include <list>
 #include <stack>
+#include <variant>
 #include <algorithm>
 #include <numeric>
 #include <functional>		

@@ -28,7 +28,6 @@ private:
 	UIComboBox _combo101;
 	UIGrid _grid101;
 
-	UIImage3D _image3D101;
 
 	UICanvas _canvas200;
 	UIChart _chart201;

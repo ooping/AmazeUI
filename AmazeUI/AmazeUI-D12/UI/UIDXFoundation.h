@@ -308,6 +308,8 @@ public:
 	// 2D clip rect
 	void BeginScreenClipRect(const RECT& clipRC);
 	void EndScreenClipRect();
+	RECT GetCurrentClipRect() const;
+	void ExecuteClipRect(const RECT& clipRC);
 
 private:
 	void Draw2DImage(size_t textureIndex, 
@@ -356,4 +358,72 @@ private:
 					 RECT srcRect, DirectX::XMFLOAT2 dstStart, DirectX::XMFLOAT2 dstEnd, 
 					 float z, UCHAR alpha, 
 					 const DirectX::XMMATRIX& transformMatrix);
+
+/*************************************************** Batch Rendering System ***************************************************/
+private:
+	struct BatchData {
+		int _batchID;														// 1: p_batch   2: p_batchTexture
+
+		// as key
+		DirectX::BasicEffect* _effect;										// p_batch & p_batchTexture
+		D3D_PRIMITIVE_TOPOLOGY _topology;									// p_batch & p_batchTexture
+		D3D12_GPU_DESCRIPTOR_HANDLE _srvDescriptor;							// p_batchTexture
+		D3D12_GPU_DESCRIPTOR_HANDLE _samplerDescriptor;						// p_batchTexture
+		UCHAR _alpha;														// p_batchTexture
+		RECT _clipRect;														// p_batch & p_batchTexture
+
+		// data  // p_batch & p_batchTexture
+		std::vector<std::vector<uint16_t>> _indices;						
+		std::vector<std::vector<DirectX::VertexPositionColor>> _colorVertices;    	// p_batch
+		std::vector<std::vector<DirectX::VertexPositionTexture>> _textureVertices; 	// p_batchTexture
+
+		// Helper function to compare if two BatchData have the same key
+		bool IsSameKey(const BatchData& other) const {
+			if (_batchID != other._batchID) {
+				return false;
+			}
+			if (_effect != other._effect) {
+				return false;
+			}
+			if (_topology != other._topology) {
+				return false;
+			}
+
+			if (memcmp(&_clipRect, &other._clipRect, sizeof(RECT)) != 0) {
+				return false;
+			}
+
+			if (_batchID == 2) {
+				if (_srvDescriptor.ptr != other._srvDescriptor.ptr) {
+					return false;
+				}
+				if (_samplerDescriptor.ptr != other._samplerDescriptor.ptr) {
+					return false;
+				}
+				if (_alpha != other._alpha) {
+					return false;
+				}
+			}
+			
+			return true;
+		}
+	};
+
+	// Batch registration functions
+	void RegisterBatchData(const std::vector<DirectX::VertexPositionColor>& vertices, const std::vector<uint16_t>& indices, 
+						   std::unique_ptr<DirectX::BasicEffect>& effect, D3D_PRIMITIVE_TOPOLOGY topology, const RECT& clipRect);
+	void RegisterBatchTextureData(const std::vector<DirectX::VertexPositionTexture>& vertices, const std::vector<uint16_t>& indices,
+						   		  std::unique_ptr<DirectX::BasicEffect>& effect, 
+						   		  D3D12_GPU_DESCRIPTOR_HANDLE srvDescriptor, D3D12_GPU_DESCRIPTOR_HANDLE samplerDescriptor, UCHAR alpha,
+						   		  D3D_PRIMITIVE_TOPOLOGY topology, const RECT& clipRect);
+
+	// Batch execution functions
+	void ExecuteAllBatches();
+	void ExecuteColorBatch(const BatchData& batch, ID3D12GraphicsCommandList* commandList);
+	void ExecuteTextureBatch(const BatchData& batch, ID3D12GraphicsCommandList* commandList);
+
+	// Batch clear functions
+	void ClearAllBatches();
+
+	std::vector<BatchData> _batchDataList;
 };

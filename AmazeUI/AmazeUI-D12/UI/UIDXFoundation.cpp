@@ -762,6 +762,9 @@ void UIDXFoundation::Render() {
     auto commandList = p_deviceResources->GetCommandList();
     ID3D12DescriptorHeap* heaps[] = { p_resourceDescriptors->Heap(), p_states->Heap() };
     commandList->SetDescriptorHeaps(_countof(heaps), heaps);
+    
+    // Clear all batch data for this frame
+    ClearAllBatches();
 
     //Render3D();
 
@@ -770,6 +773,9 @@ void UIDXFoundation::Render() {
 
     // draw animations
     UIAnimationManage::GetSingletonInstance()->DrawAnimations();
+
+    // Execute all batch rendering calls - this replaces the multiple individual DrawIndexed calls
+    ExecuteAllBatches();
 
     // Show the new frame.
     p_deviceResources->Present();
@@ -1342,11 +1348,11 @@ void UIDXFoundation::Calculate2DRectPoints(const XMFLOAT2& start, const XMFLOAT2
 }
 
 void UIDXFoundation::BeginScreenClipRect(const RECT& clipRC) {
-    auto commandList = p_deviceResources->GetCommandList();
+    //auto commandList = p_deviceResources->GetCommandList();
 
     RECT tempRC = NULL_RECT;
 
-    if (clipRC.left>clipRC.right || clipRC.top>clipRC.bottom) {
+    if (clipRC.left > clipRC.right || clipRC.top > clipRC.bottom) {
         tempRC = NULL_RECT;
     } else {
         if (_clipRectStack.size() > 0) {
@@ -1363,28 +1369,47 @@ void UIDXFoundation::BeginScreenClipRect(const RECT& clipRC) {
 
     // Set the scissor rect
     D3D12_RECT scissorRect = { 
-        tempRC.left>1 ? tempRC.left-1 : 0,
-        tempRC.top>1 ? tempRC.top-1 : 0,
-        tempRC.right+1,
-        tempRC.bottom+1
+        tempRC.left > 1 ? tempRC.left - 1 : 0,
+        tempRC.top > 1 ? tempRC.top - 1 : 0,
+        tempRC.right + 1,
+        tempRC.bottom + 1
     };
     _clipRectStack.push(scissorRect);
 
-    commandList->RSSetScissorRects(1, &scissorRect);
+    //commandList->RSSetScissorRects(1, &scissorRect);
 }
 
 void UIDXFoundation::EndScreenClipRect() {
-    auto commandList = p_deviceResources->GetCommandList();
+    //auto commandList = p_deviceResources->GetCommandList();
 
     _clipRectStack.pop();
+    // if (_clipRectStack.size() > 0) {
+    //     RECT preClipRC = _clipRectStack.top();
+    //     commandList->RSSetScissorRects(1, &preClipRC);
+    // }
+    // else {
+    //     // if it's the last clip rect, reset to full screen
+    //     D3D12_RECT fullscreenRect = {0, 0, LONG_MAX, LONG_MAX};
+    //     commandList->RSSetScissorRects(1, &fullscreenRect);
+    // }
+}
+
+RECT UIDXFoundation::GetCurrentClipRect() const {
     if (_clipRectStack.size() > 0) {
-        RECT preClipRC = _clipRectStack.top();
-        commandList->RSSetScissorRects(1, &preClipRC);
+        return _clipRectStack.top();
     }
-    else {
-        // if it's the last clip rect, reset to full screen
+    return NULL_RECT;
+}
+
+void UIDXFoundation::ExecuteClipRect(const RECT& clipRC) {
+    auto commandList = p_deviceResources->GetCommandList();
+
+    if (CompareRects()(clipRC, NULL_RECT)) {
+        // If the clip rectangle is null, reset the scissor rect
         D3D12_RECT fullscreenRect = {0, 0, LONG_MAX, LONG_MAX};
         commandList->RSSetScissorRects(1, &fullscreenRect);
+    } else {
+        commandList->RSSetScissorRects(1, &clipRC);
     }
 }
 
@@ -1398,97 +1423,26 @@ void UIDXFoundation::Draw2DPoint(const XMFLOAT2& point, float z, const UIColor& 
     const float halfSize = pointSize/2;
     
     // Create a small square with 4 vertices
-    VertexPositionColor vertices[4] = {
+    std::vector<VertexPositionColor> vertices = {
         {{ p.x - halfSize, p.y - halfSize, viewZ }, color.ToXMVECTORF32()},
         {{ p.x - halfSize, p.y + halfSize, viewZ }, color.ToXMVECTORF32()},
         {{ p.x + halfSize, p.y - halfSize, viewZ }, color.ToXMVECTORF32()},
         {{ p.x + halfSize, p.y + halfSize, viewZ }, color.ToXMVECTORF32()}
     };
     // Define the indexes of the two triangles
-    uint16_t indices[6] = { 
+    std::vector<uint16_t> indices = { 
         0, 1, 2,  // 1st triangle
         1, 3, 2   // 2nd triangle
     };
-    
-    auto commandList = p_deviceResources->GetCommandList();
-    //
-    p_triangleEffect2D->Apply(commandList);
-    //  
-    p_batch->Begin(commandList);
-    // Draw the suqare bulilt by 2 triangles
-    p_batch->DrawIndexed(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, indices, 6, vertices, 4);
-    p_batch->End();
 
-
-
-    // only one vertex    (1,1) is on the pixel (0,0)
-    // VertexPositionColor vertex = { { point.x, point.y, viewZ }, color.ToXMVECTORF32() };
-    
-    // auto commandList = p_deviceResources->GetCommandList();
-       
-    // p_pointEffect2D->Apply(commandList);
-    // p_batch->Begin(commandList);
-    // p_batch->Draw(D3D_PRIMITIVE_TOPOLOGY_POINTLIST, &vertex, 1);
-    // p_batch->End();
+    RegisterBatchData(vertices, indices, p_triangleEffect2D, D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, GetCurrentClipRect());
 }
 
 void UIDXFoundation::Draw2DPoints(const vector<XMFLOAT2>& points, float z, const UIColor& color, float pointSize) {
-    if (points.empty()) {
-        return;
-    }
-
-    float viewZ = CalculateViewZByOrtho(z);
-
-    vector<XMFLOAT2> pList;
+    // call Draw2DPoint for each point
     for (const auto& point : points) {
-        XMFLOAT2 p;
-        Calculate2DPoint(point, p);
-        pList.push_back(p);
+        Draw2DPoint(point, z, color, pointSize);
     }
-
-    // Pre-allocate vertex and index arrays
-    const size_t pointCount = points.size();
-    vector<VertexPositionColor> vertices;
-    vector<uint16_t> indices;
-    vertices.reserve(pointCount * 4);  // 4 vertices per poin
-    indices.reserve(pointCount * 6);   // 6 indices per point (2 triangles)
-    
-    // Calculate half size for each point
-    const float halfSize = pointSize / 2.0f;
-    
-    // Create a small square for each point
-    for (size_t i = 0; i < pointCount; ++i) {
-        const XMFLOAT2& point = pList[i];
-        
-        // Add 4 vertices
-        vertices.push_back({{point.x - halfSize, point.y - halfSize, viewZ}, color.ToXMVECTORF32()}); // Top-left
-        vertices.push_back({{point.x - halfSize, point.y + halfSize, viewZ}, color.ToXMVECTORF32()}); // Bottom-left
-        vertices.push_back({{point.x + halfSize, point.y - halfSize, viewZ}, color.ToXMVECTORF32()}); // Top-right
-        vertices.push_back({{point.x + halfSize, point.y + halfSize, viewZ}, color.ToXMVECTORF32()}); // Bottom-right
-        
-        // Add 6 indices (2 triangles)
-        const uint16_t baseIndex = static_cast<uint16_t>(i * 4);
-        indices.push_back(baseIndex);
-        indices.push_back(baseIndex + 1);
-        indices.push_back(baseIndex + 2);
-        indices.push_back(baseIndex + 1);
-        indices.push_back(baseIndex + 3);
-        indices.push_back(baseIndex + 2);
-    }
-    
-    auto commandList = p_deviceResources->GetCommandList();
-    //
-    p_triangleEffect2D->Apply(commandList);
-    //
-    p_batch->Begin(commandList);
-    p_batch->DrawIndexed(
-        D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST,
-        indices.data(),
-        static_cast<uint32_t>(indices.size()),
-        vertices.data(),
-        static_cast<uint32_t>(vertices.size())
-    );
-    p_batch->End();
 }
 
 void UIDXFoundation::Draw2DLine(const XMFLOAT2& start, const XMFLOAT2& end, float z, const UIColor& color, float lineWidth) {
@@ -1513,22 +1467,16 @@ void UIDXFoundation::Draw2DLine(const XMFLOAT2& start, const XMFLOAT2& end, floa
     float viewZ = CalculateViewZByOrtho(z);
 
     // calculate four vertices
-    VertexPositionColor vertices[4] = {
+    std::vector<VertexPositionColor> vertices = {
         {{ p1.x + normal.x * halfWidth, p1.y + normal.y * halfWidth, viewZ }, finalColor},
         {{ p1.x - normal.x * halfWidth, p1.y - normal.y * halfWidth, viewZ }, finalColor},
         {{ p2.x + normal.x * halfWidth, p2.y + normal.y * halfWidth, viewZ }, finalColor},
         {{ p2.x - normal.x * halfWidth, p2.y - normal.y * halfWidth, viewZ }, finalColor}
     };
     // draw two triangles
-    uint16_t indices[6] = { 0, 1, 2, 1, 3, 2 };
+    std::vector<uint16_t> indices = { 0, 1, 2, 1, 3, 2 };
 
-    auto commandList = p_deviceResources->GetCommandList();
-    //
-    p_triangleEffect2D->Apply(commandList);
-    //
-    p_batch->Begin(commandList);
-    p_batch->DrawIndexed(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, indices, 6, vertices, 4);
-    p_batch->End();
+    RegisterBatchData(vertices, indices, p_triangleEffect2D, D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, GetCurrentClipRect());
 }
 
 // Draw a 2D rectangle with specified color, hollow style
@@ -1540,7 +1488,7 @@ void UIDXFoundation::Draw2DRectOutline(const XMFLOAT2& start, const XMFLOAT2& en
 }
 
 void UIDXFoundation::Draw2DRectSolid(const XMFLOAT2& start, const XMFLOAT2& end, float z, 
-						        const UIColor& colorLT, const UIColor& colorRT, const UIColor& colorLB, const UIColor& colorRB, UCHAR alpha) {
+						             const UIColor& colorLT, const UIColor& colorRT, const UIColor& colorLB, const UIColor& colorRB, UCHAR alpha) {
     XMVECTORF32  finalColorLT = colorLT.ToXMVECTORF32(alpha);
     XMVECTORF32  finalColorRT = colorRT.ToXMVECTORF32(alpha);
     XMVECTORF32  finalColorLB = colorLB.ToXMVECTORF32(alpha);
@@ -1554,7 +1502,7 @@ void UIDXFoundation::Draw2DRectSolid(const XMFLOAT2& start, const XMFLOAT2& end,
     float viewZ = CalculateViewZByOrtho(z);
 
     // Create vertices for the rectangle corners
-    VertexPositionColor vertices[4] = {
+    std::vector<VertexPositionColor> vertices = {
         {{ ps.x, ps.y, viewZ }, finalColorLT},         // Top-left (0)
         {{ pe.x, ps.y, viewZ }, finalColorRT},         // Top-right (1)
         {{ ps.x, pe.y, viewZ }, finalColorLB},         // Bottom-left (2)
@@ -1562,15 +1510,9 @@ void UIDXFoundation::Draw2DRectSolid(const XMFLOAT2& start, const XMFLOAT2& end,
     };
     
     // Define indices for two triangles
-    uint16_t indices[6] = { 0, 1, 2, 1, 3, 2 };
+    std::vector<uint16_t> indices = { 0, 1, 2, 1, 3, 2 };
 
-    auto commandList = p_deviceResources->GetCommandList();
-    //
-    p_triangleEffect2D->Apply(commandList);
-    //
-    p_batch->Begin(commandList);
-    p_batch->DrawIndexed(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, indices, 6, vertices, 4);
-    p_batch->End();
+    RegisterBatchData(vertices, indices, p_triangleEffect2D, D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, GetCurrentClipRect());
 }
 
 // Draw a 2D rectangle with specified color, alpha transparency and z-depth
@@ -1581,9 +1523,6 @@ void UIDXFoundation::Draw2DRectSolid(const XMFLOAT2& start, const XMFLOAT2& end,
 void UIDXFoundation::Draw2DImage(size_t textureIndex, 
                             RECT srcRect, XMFLOAT2 dstStart, XMFLOAT2 dstEnd, 
                             float z, UCHAR alpha) {
-    // set color
-    XMVECTORF32 color = { 1.0f, 1.0f, 1.0f, alpha / 255.0f };
-
     // get texture resource
     TextureResource& resource = _textureResources[textureIndex];
 
@@ -1615,7 +1554,7 @@ void UIDXFoundation::Draw2DImage(size_t textureIndex,
     float texBottom = (float)srcRect.bottom / (float)GetRectHeight()(textureRect);
 
     // create vertex data
-    VertexPositionTexture vertices[4] = {
+    std::vector<VertexPositionTexture> vertices = {
         { {ps.x, ps.y, viewZ}, XMFLOAT2(texLeft, texTop) },      // Top-left
         { {pe.x, ps.y, viewZ}, XMFLOAT2(texRight, texTop) },     // Top-right
         { {ps.x, pe.y, viewZ}, XMFLOAT2(texLeft, texBottom) },   // Bottom-left
@@ -1623,18 +1562,10 @@ void UIDXFoundation::Draw2DImage(size_t textureIndex,
     };
 
     // define index data
-    uint16_t indices[6] = { 0, 1, 2, 1, 3, 2 };
+    std::vector<uint16_t> indices = { 0, 1, 2, 1, 3, 2 };
 
-    // get command list
-    auto commandList = p_deviceResources->GetCommandList();
-    // apply texture effect
-    p_triangleTexturedEffect2DUI->SetTexture(resource._gpuDescriptor, p_states->LinearClamp());
-    p_triangleTexturedEffect2DUI->SetColorAndAlpha(color);
-    p_triangleTexturedEffect2DUI->Apply(commandList);
-    //
-    p_batchTexture->Begin(commandList);
-    p_batchTexture->DrawIndexed(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, indices, 6, vertices, 4);
-    p_batchTexture->End();
+    RegisterBatchTextureData(vertices, indices, p_triangleTexturedEffect2DUI, 
+                             resource._gpuDescriptor, p_states->LinearClamp(), alpha, D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, GetCurrentClipRect());
 
 
 
@@ -1815,99 +1746,27 @@ void UIDXFoundation::Draw3DPoint(const XMFLOAT2& point, float z, const UIColor& 
     UIZPlaneTransform::TransformPoints(transformMatrix, quadPoints, z, wps);
 
     // Create a small square with 4 vertices
-    VertexPositionColor vertices[4] = {
+    std::vector<VertexPositionColor> vertices = {
         { { wps[0].x, wps[0].y, wps[0].z }, finalColor },  // left top
         { { wps[1].x, wps[1].y, wps[1].z }, finalColor },  // left bottom
         { { wps[2].x, wps[2].y, wps[2].z }, finalColor },  // right top
         { { wps[3].x, wps[3].y, wps[3].z }, finalColor }   // right bottom
     };
     // Define the indexes of the two triangles
-    uint16_t indices[6] = { 
+    std::vector<uint16_t> indices = { 
         0, 1, 2,  // 1st triangle
         1, 3, 2   // 2nd triangle
     };
     
-    auto commandList = p_deviceResources->GetCommandList();
-    //
-    p_triangleEffect3DUI->Apply(commandList);
-    //
-    p_batch->Begin(commandList);
-    p_batch->DrawIndexed(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, indices, 6, vertices, 4);
-    p_batch->End();
+    RegisterBatchData(vertices, indices, p_triangleEffect3DUI, D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, GetCurrentClipRect());
 }
 
 void UIDXFoundation::Draw3DPoints(const vector<XMFLOAT2>& points, float z, const UIColor& color, float pointSize, 
-                             const XMMATRIX& transformMatrix) {
-    if (points.empty()) {
-        return;
+                                  const XMMATRIX& transformMatrix) {
+    // call Draw3DPoint for each point
+    for (const auto& point : points) {
+        Draw3DPoint(point, z, color, pointSize, transformMatrix);
     }
-
-    XMVECTORF32 finalColor = color.ToXMVECTORF32();
-
-    // Calculate the number of vertices and indices required
-    size_t pointCount = points.size();
-    size_t vertexCount = pointCount * 4;  // 4 vertices per point
-    size_t indexCount = pointCount * 6;   // 6 indices per point (2 triangles)
-
-    // fix points to screen space
-    vector<XMFLOAT2> pList(pointCount);
-    for (size_t i = 0; i < pointCount; i++) {
-        Calculate2DPoint(points[i], pList[i]);
-    }
-
-    const float halfSize = pointSize / 2;
-
-    // Pre-allocate vertices and indices arrays
-    vector<VertexPositionColor> vertices(vertexCount);
-    vector<uint16_t> indices(indexCount);
-
-    // create quadrilateral geometry for each point (in screen space)
-    vector<XMFLOAT2> quadPoints(vertexCount);
-    for (size_t i = 0; i < pointCount; i++) {
-        const XMFLOAT2& p = pList[i];
-        size_t baseIndex = i * 4;
-        
-        // define the four corners of the quadrilateral
-        quadPoints[baseIndex] = { p.x - halfSize, p.y - halfSize };     // left top
-        quadPoints[baseIndex + 1] = { p.x - halfSize, p.y + halfSize }; // left bottom
-        quadPoints[baseIndex + 2] = { p.x + halfSize, p.y - halfSize }; // right top
-        quadPoints[baseIndex + 3] = { p.x + halfSize, p.y + halfSize }; // right bottom
-    }
-
-    // transform the quadrilateral from screen space to 3D space
-    vector<XMFLOAT3> wps(vertexCount);
-    UIZPlaneTransform::TransformPoints(transformMatrix, quadPoints, z, wps);
-
-    // create vertices and indices buffer
-    for (size_t i = 0; i < pointCount; i++) {
-        size_t vertexIdx = i * 4;
-        size_t indexIdx = i * 6;
-        
-        // set vertices data
-        vertices[vertexIdx] = { { wps[vertexIdx].x, wps[vertexIdx].y, wps[vertexIdx].z }, finalColor };     // left top
-        vertices[vertexIdx + 1] = { { wps[vertexIdx + 1].x, wps[vertexIdx + 1].y, wps[vertexIdx + 1].z }, finalColor }; // left bottom
-        vertices[vertexIdx + 2] = { { wps[vertexIdx + 2].x, wps[vertexIdx + 2].y, wps[vertexIdx + 2].z }, finalColor }; // right top
-        vertices[vertexIdx + 3] = { { wps[vertexIdx + 3].x, wps[vertexIdx + 3].y, wps[vertexIdx + 3].z }, finalColor }; // right bottom
-        
-        // set indices data (each point has two triangles)
-        uint16_t vertexBase = static_cast<uint16_t>(vertexIdx);
-        indices[indexIdx] = vertexBase;            // first triangle: left top
-        indices[indexIdx + 1] = vertexBase + 1;    // first triangle: left bottom
-        indices[indexIdx + 2] = vertexBase + 2;    // first triangle: right top
-        indices[indexIdx + 3] = vertexBase + 1;    // second triangle: left bottom
-        indices[indexIdx + 4] = vertexBase + 3;    // second triangle: right bottom
-        indices[indexIdx + 5] = vertexBase + 2;    // second triangle: right top
-    }
-
-    // execute drawing
-    auto commandList = p_deviceResources->GetCommandList();
-    
-    p_triangleEffect3DUI->Apply(commandList);
-    
-    p_batch->Begin(commandList);
-    p_batch->DrawIndexed(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, indices.data(), static_cast<uint32_t>(indexCount), 
-                         vertices.data(), static_cast<uint32_t>(vertexCount));
-    p_batch->End();
 }
 
 void UIDXFoundation::Draw3DLine(const XMFLOAT2& start, const XMFLOAT2& end, float z, const UIColor& color, float lineWidth, const XMMATRIX& transformMatrix) {
@@ -1939,22 +1798,16 @@ void UIDXFoundation::Draw3DLine(const XMFLOAT2& start, const XMFLOAT2& end, floa
     UIZPlaneTransform::TransformPoints(transformMatrix, points, z, wps);
 
      // create rectangle vertices
-    VertexPositionColor vertices[4] = {
+    std::vector<VertexPositionColor> vertices = {
         { { wps[0].x, wps[0].y, wps[0].z }, finalColor },  // left top
         { { wps[1].x, wps[1].y, wps[1].z }, finalColor },  // right top
         { { wps[2].x, wps[2].y, wps[2].z }, finalColor },  // left bottom
         { { wps[3].x, wps[3].y, wps[3].z }, finalColor }   // right bottom
     };
     // Define indices for two triangles
-    uint16_t indices[6] = { 0, 1, 2, 1, 3, 2 };
+    std::vector<uint16_t> indices = { 0, 1, 2, 1, 3, 2 };
 
-    auto commandList = p_deviceResources->GetCommandList();
-    //
-    p_triangleEffect3DUI->Apply(commandList);
-    //
-    p_batch->Begin(commandList);
-    p_batch->DrawIndexed(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, indices, 6, vertices, 4);
-    p_batch->End();
+    RegisterBatchData(vertices, indices, p_triangleEffect3DUI, D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, GetCurrentClipRect());
 }
 
 void UIDXFoundation::Draw3DRectOutline(const XMFLOAT2& start, const XMFLOAT2& end, float z, const UIColor& color, float lineWidth, const XMMATRIX& transformMatrix) {    
@@ -1966,8 +1819,8 @@ void UIDXFoundation::Draw3DRectOutline(const XMFLOAT2& start, const XMFLOAT2& en
 
 // Draw a 3D rectangle with specified color, alpha transparency and z-depth
 void UIDXFoundation::Draw3DRectSolid(const XMFLOAT2& start, const XMFLOAT2& end, float z,
-                                const UIColor& colorLT, const UIColor& colorRT, const UIColor& colorLB, const UIColor& colorRB, UCHAR alpha,
-                                const XMMATRIX& transformMatrix) {
+                                     const UIColor& colorLT, const UIColor& colorRT, const UIColor& colorLB, const UIColor& colorRB, UCHAR alpha,
+                                     const XMMATRIX& transformMatrix) {
     // create final color with alpha
     XMVECTORF32  finalColorLT = colorLT.ToXMVECTORF32(alpha);
     XMVECTORF32  finalColorRT = colorRT.ToXMVECTORF32(alpha);
@@ -1980,36 +1833,28 @@ void UIDXFoundation::Draw3DRectSolid(const XMFLOAT2& start, const XMFLOAT2& end,
     UIZPlaneTransform::TransformRectPoints(transformMatrix, ps, pe, z, wps);
     
     // create rectangle vertices
-    VertexPositionColor vertices[4] = {
+    std::vector<VertexPositionColor> vertices = {
         { { wps[0].x, wps[0].y, wps[0].z }, finalColorLT },  // left top
         { { wps[1].x, wps[1].y, wps[1].z }, finalColorRT },  // right top
         { { wps[2].x, wps[2].y, wps[2].z }, finalColorLB },  // left bottom
         { { wps[3].x, wps[3].y, wps[3].z }, finalColorRB }   // right bottom
     };
     // Define indices for two triangles
-    uint16_t indices[6] = { 0, 1, 2, 1, 3, 2 };
+    std::vector<uint16_t> indices = { 0, 1, 2, 1, 3, 2 };
 
-    auto commandList = p_deviceResources->GetCommandList();
-    //
-    p_triangleEffect3DUI->Apply(commandList);
-    //
-    p_batch->Begin(commandList);
-    p_batch->DrawIndexed(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, indices, 6, vertices, 4);
-    p_batch->End();
+    RegisterBatchData(vertices, indices, p_triangleEffect3DUI, D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, GetCurrentClipRect());
 }
 
 void UIDXFoundation::Draw3DRectSolid(const XMFLOAT2& start, const XMFLOAT2& end, float z,
-                                const UIColor& color, UCHAR alpha,
-                                const XMMATRIX& transformMatrix) {
+                                     const UIColor& color, UCHAR alpha,
+                                     const XMMATRIX& transformMatrix) {
     Draw3DRectSolid(start, end, z, color, color, color, color, alpha, transformMatrix);
 }
 
 void UIDXFoundation::Draw3DImage(size_t textureIndex, 
-                            RECT srcRect, XMFLOAT2 dstStart, XMFLOAT2 dstEnd, 
-                            float z, UCHAR alpha, 
-                            const XMMATRIX& transformMatrix) {
-    XMVECTOR color = XMVectorSet(1.0f, 1.0f, 1.0f, alpha / 255.0f);
-    
+                                 RECT srcRect, XMFLOAT2 dstStart, XMFLOAT2 dstEnd, 
+                                 float z, UCHAR alpha, 
+                                 const XMMATRIX& transformMatrix) {
     // get the texture rect
     const RECT textureRect = Get2DTextureRect(_textureResources[textureIndex]._texture);
 
@@ -2030,24 +1875,17 @@ void UIDXFoundation::Draw3DImage(size_t textureIndex,
     UIZPlaneTransform::TransformRectPoints(transformMatrix, ps, pe, z, wps);
 
     // create vertices with texture coordinates
-    VertexPositionTexture vertices[4] = {
+    std::vector<VertexPositionTexture> vertices = {
         { {wps[0].x, wps[0].y, wps[0].z}, XMFLOAT2((float)srcRect.left/GetRectWidth()(textureRect), (float)srcRect.top/GetRectHeight()(textureRect)) },
         { {wps[1].x, wps[1].y, wps[1].z}, XMFLOAT2((float)srcRect.right/GetRectWidth()(textureRect), (float)srcRect.top/GetRectHeight()(textureRect)) },
         { {wps[2].x, wps[2].y, wps[2].z}, XMFLOAT2((float)srcRect.left/GetRectWidth()(textureRect), (float)srcRect.bottom/GetRectHeight()(textureRect)) },
         { {wps[3].x, wps[3].y, wps[3].z}, XMFLOAT2((float)srcRect.right/GetRectWidth()(textureRect), (float)srcRect.bottom/GetRectHeight()(textureRect)) }
     };
     // Define indices for two triangles
-    uint16_t indices[6] = { 0, 1, 2, 1, 3, 2 };
+    std::vector<uint16_t> indices = { 0, 1, 2, 1, 3, 2 };
 
-    auto commandList = p_deviceResources->GetCommandList();
-    //
-    p_triangleTexturedEffect3DUI->SetTexture(_textureResources[textureIndex]._gpuDescriptor, p_states->LinearClamp());
-    p_triangleTexturedEffect3DUI->SetColorAndAlpha(color);
-    p_triangleTexturedEffect3DUI->Apply(commandList);
-    //
-    p_batchTexture->Begin(commandList);
-    p_batchTexture->DrawIndexed(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, indices, 6, vertices, 4);
-    p_batchTexture->End();
+    RegisterBatchTextureData(vertices, indices, p_triangleTexturedEffect3DUI, 
+                             _textureResources[textureIndex]._gpuDescriptor, p_states->LinearClamp(), alpha, D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, GetCurrentClipRect());
 }
 
 void UIDXFoundation::Draw3DImage(const wstring& dllPath, UINT id, const UIColor& colorKey,
@@ -2534,23 +2372,23 @@ bool UIDXFoundation::GetFTSizeFont(float fontSize, FTSizeFont& ftSizeFont) {
 /*
                        bitmap.width
                     <-------------->
-                    ┌──────────────┐       ┬
-                    │              │       │
-                    │              │       │ bitmap.rows
-      baseline      │    glyph     │       │
+                    ┌──────────────�?      �?
+                    �?             �?      �?
+                    �?             �?      �?bitmap.rows
+      baseline      �?   glyph     �?      �?
       ──────────────┼──────────────┼───────┼────────────────────────
-                    │              │       │
-                    └──────────────┘       ┴
+                    �?             �?      �?
+                    └──────────────�?      �?
                     ^              ^
-                    │              │
-                    │              └─── right edge of bitmap
-                    │
+                    �?             �?
+                    �?             └─── right edge of bitmap
+                    �?
                     └─── left edge of bitmap
 
       <-bitmap_left->|              |<----------advance.x---------->|
       
       ^
-      │
+      �?
       origin point       
 
 
@@ -2560,11 +2398,11 @@ bool UIDXFoundation::GetFTSizeFont(float fontSize, FTSizeFont& ftSizeFont) {
     bitmap_left: the horizontal distance from the left edge of the glyph bitmap to the origin point
     bitmap_top: the vertical distance from the top edge of the glyph bitmap to the baseline
 
-    for space char：
+    for space char�?
     bitmap.width & bitmap.rows:0
     bitmap_left & bitmap_top:0
     advance.x >> 6 will decide the width of the space
-    Note：>> 6 is a displacement operation that converts FreeType's 1/64 pixel units to integer pixel units.
+    Note�?> 6 is a displacement operation that converts FreeType's 1/64 pixel units to integer pixel units.
 */
 bool UIDXFoundation::GetCharTextureResourceFT(const wchar_t& wch, float fontSize, const UIColor& color, size_t& textureIndex) {
     // use wchar+color as the key
@@ -2639,13 +2477,19 @@ bool UIDXFoundation::GetCharTextureResourceFT(const wchar_t& wch, float fontSize
                 // get grey value
                 uint8_t grey = isNoBitmap ? 0 : bitmap.buffer[y * bitmap.pitch + x];
 
+                UINT index = (y * width + x) * 4;
                 if (grey > 0) {
                     // convert to RGBA format
-                    UINT index = (y * width + x) * 4;
                     imageData[index] = color._r; // R
                     imageData[index + 1] = color._g; // G
                     imageData[index + 2] = color._b; // B
                     imageData[index + 3] = (grey * color._a) / 255; // A
+                } else {
+                    // make sure the background is completely transparent
+                    imageData[index] = 0;
+                    imageData[index + 1] = 0;
+                    imageData[index + 2] = 0;
+                    imageData[index + 3] = 0;       // completely transparent
                 }
             }
         }
@@ -2714,9 +2558,6 @@ void UIDXFoundation::Draw2DCharTextureFT(size_t textureIndex, XMFLOAT2 position,
     // get original texture size
     const RECT textureRect = Get2DTextureRect(resource._texture);
 
-    // set color
-    XMVECTORF32 color = { 1.0f, 1.0f, 1.0f, alpha / 255.0f };
-
     // calculate destination rectangle end point
     XMFLOAT2 dstEnd;
     dstEnd.x = position.x + (float)(GetRectWidth()(textureRect)) * scale;
@@ -2726,7 +2567,7 @@ void UIDXFoundation::Draw2DCharTextureFT(size_t textureIndex, XMFLOAT2 position,
     float viewZ = CalculateViewZByOrtho(z);
 
     // create vertex data
-    VertexPositionTexture vertices[4] = {
+    std::vector<VertexPositionTexture> vertices = {
         { {position.x, position.y, viewZ}, XMFLOAT2(0.f, 0.f) },
         { {dstEnd.x, position.y, viewZ}, XMFLOAT2(1.f, 0.f) },
         { {position.x, dstEnd.y, viewZ}, XMFLOAT2(0.f, 1.f) },
@@ -2734,20 +2575,10 @@ void UIDXFoundation::Draw2DCharTextureFT(size_t textureIndex, XMFLOAT2 position,
     };
 
     // define index data
-    uint16_t indices[6] = { 0, 1, 2, 1, 3, 2 };
+    std::vector<uint16_t> indices = { 0, 1, 2, 1, 3, 2 };
 
-    // get command list
-    auto commandList = p_deviceResources->GetCommandList();
-    // apply effect
-    p_triangleTexturedEffect2DUI->SetTexture(resource._gpuDescriptor, p_states->LinearClamp());
-    p_triangleTexturedEffect2DUI->SetColorAndAlpha(color);
-    p_triangleTexturedEffect2DUI->Apply(commandList);
-    //
-    p_batchTexture->Begin(commandList);
-    p_batchTexture->DrawIndexed(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, indices, 6, vertices, 4);
-    p_batchTexture->End();
-    
-
+    RegisterBatchTextureData(vertices, indices, p_triangleTexturedEffect2DUI, 
+                             resource._gpuDescriptor, p_states->LinearClamp(), alpha, D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, GetCurrentClipRect());
     
 
     // p_sprites use more memory and is slower than PrimitiveBatch!!!
@@ -2778,20 +2609,16 @@ void UIDXFoundation::Draw2DCharTextureFT(size_t textureIndex, XMFLOAT2 position,
     // p_sprites->End();
 }
 
-void UIDXFoundation::Draw3DCharTextureFT(size_t textureIndex, DirectX::XMFLOAT2 position, float z, float scale, UCHAR alpha, const DirectX::XMMATRIX& transformMatrix)
-{
+void UIDXFoundation::Draw3DCharTextureFT(size_t textureIndex, DirectX::XMFLOAT2 position, float z, float scale, UCHAR alpha, const DirectX::XMMATRIX& transformMatrix) {
     position.x = round(position.x);
     //position.y = round(position.y);
 
-    // set color
-    XMVECTORF32 color = { 1.0f, 1.0f, 1.0f, alpha / 255.0f };
-    
     // get original texture size 
     const RECT textureRect = Get2DTextureRect(_charTextureResources[textureIndex]._texture);
 
     XMFLOAT2 dstEnd;
-    dstEnd.x = position.x + (float)(GetRectWidth()(textureRect))*scale;
-    dstEnd.y = position.y + (float)(GetRectHeight()(textureRect))*scale;
+    dstEnd.x = position.x + (float)(GetRectWidth()(textureRect)) * scale;
+    dstEnd.y = position.y + (float)(GetRectHeight()(textureRect)) * scale;
 
     XMFLOAT2 ps, pe;
     Calculate2DRectPoints(position, dstEnd, ps, pe);
@@ -2799,24 +2626,18 @@ void UIDXFoundation::Draw3DCharTextureFT(size_t textureIndex, DirectX::XMFLOAT2 
     UIZPlaneTransform::TransformRectPoints(transformMatrix, ps, pe, z, wps);
 
     // create vertices with texture coordinates
-    VertexPositionTexture vertices[4] = {
+    std::vector<VertexPositionTexture> vertices = {
         { {wps[0].x, wps[0].y, wps[0].z}, XMFLOAT2(0.f, 0.f) },
         { {wps[1].x, wps[1].y, wps[1].z}, XMFLOAT2(1.f, 0.f) },
         { {wps[2].x, wps[2].y, wps[2].z}, XMFLOAT2(0.f, 1.f) },
         { {wps[3].x, wps[3].y, wps[3].z}, XMFLOAT2(1.f, 1.f) }
     };
     // Define indices for two triangles
-    uint16_t indices[6] = { 0, 1, 2, 1, 3, 2 };
+    std::vector<uint16_t> indices = { 0, 1, 2, 1, 3, 2 };
 
-    auto commandList = p_deviceResources->GetCommandList();
-    //
-    p_triangleTexturedEffect3DUI->SetTexture(_charTextureResources[textureIndex]._gpuDescriptor, p_states->LinearClamp());
-    p_triangleTexturedEffect3DUI->SetColorAndAlpha(color);
-    p_triangleTexturedEffect3DUI->Apply(commandList);
-    //
-    p_batchTexture->Begin(commandList);
-    p_batchTexture->DrawIndexed(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, indices, 6, vertices, 4);
-    p_batchTexture->End();
+    RegisterBatchTextureData(vertices, indices, p_triangleTexturedEffect3DUI, 
+                             _charTextureResources[textureIndex]._gpuDescriptor, 
+                             p_states->LinearClamp(), alpha, D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, GetCurrentClipRect());
 }
 
 void UIDXFoundation::Draw2DTextFT(const wstring& text, const DirectX::XMFLOAT2& position, float z, const UIColor& color, float fontSize) {
@@ -2908,7 +2729,7 @@ void UIDXFoundation::Draw2DTextFT(const wstring& text, const RECT& rc, int posFl
 }
 
 void UIDXFoundation::Draw3DTextFT(const wstring& text, const DirectX::XMFLOAT2& position, float z, const UIColor& color, float fontSize,
-					         const DirectX::XMMATRIX& transformMatrix) {
+					              const DirectX::XMMATRIX& transformMatrix) {
     FTSizeFont ftSizeFont;
     GetFTSizeFont(fontSize, ftSizeFont);
 
@@ -3239,4 +3060,137 @@ void UIDXFoundation::Draw3DTextMultiLineFT(const std::wstring& text, const RECT&
         // call existing single-line drawing function
         Draw3DTextFT(line, lineRect, posFlag, z, color, fontSize, transformMatrix);
     }
+}
+
+/*************************************************** Batch Rendering System Implementation ***************************************************/
+// Batch registration functions
+void UIDXFoundation::RegisterBatchData(const std::vector<DirectX::VertexPositionColor>& vertices, const std::vector<uint16_t>& indices, 
+                                       std::unique_ptr<DirectX::BasicEffect>& effect, D3D_PRIMITIVE_TOPOLOGY topology, const RECT& clipRect) {
+    // Create new batch data with key information
+    BatchData newBatch;
+    newBatch._batchID = 1;  // p_batch
+    newBatch._effect = effect.get();
+    newBatch._topology = topology;
+    newBatch._clipRect = clipRect;
+
+    // search the same key
+    for (auto& batch : _batchDataList) {
+        if (newBatch.IsSameKey(batch)) {
+            batch._indices.push_back(indices);
+            batch._colorVertices.push_back(vertices);
+            return;
+        }
+    }
+
+    // no matching key found
+    newBatch._indices.push_back(indices);
+    newBatch._colorVertices.push_back(vertices);
+    _batchDataList.push_back(std::move(newBatch));
+}
+
+void UIDXFoundation::RegisterBatchTextureData(const std::vector<DirectX::VertexPositionTexture>& vertices, const std::vector<uint16_t>& indices,
+                                              std::unique_ptr<DirectX::BasicEffect>& effect, 
+                                              D3D12_GPU_DESCRIPTOR_HANDLE srvDescriptor, D3D12_GPU_DESCRIPTOR_HANDLE samplerDescriptor, UCHAR alpha,
+                                              D3D_PRIMITIVE_TOPOLOGY topology, const RECT& clipRect) {
+    // Create new batch data with key information
+    BatchData newBatch;
+    newBatch._batchID = 2;  // p_batchTexture
+    newBatch._effect = effect.get();
+    newBatch._topology = topology;
+    newBatch._srvDescriptor = srvDescriptor;
+    newBatch._samplerDescriptor = samplerDescriptor;
+    newBatch._alpha = alpha;
+    newBatch._clipRect = clipRect;
+    
+    // search the same key
+    for (auto& batch : _batchDataList) {
+        if (newBatch.IsSameKey(batch)) {
+            batch._indices.push_back(indices);
+            batch._textureVertices.push_back(vertices);
+            return;
+        }
+    }
+
+    // no matching key found, insert new element
+    newBatch._indices.push_back(indices);
+    newBatch._textureVertices.push_back(vertices);
+    _batchDataList.push_back(std::move(newBatch));
+}
+
+// Batch execution functions
+void UIDXFoundation::ExecuteAllBatches() {
+    if (_batchDataList.empty()) {
+        return;
+    }
+
+    auto commandList = p_deviceResources->GetCommandList();
+    
+    // Execute each batch in registration order
+    for (const auto& batch : _batchDataList) {
+        // Set clipping rectangle for this batch
+        ExecuteClipRect(batch._clipRect);
+        
+        if (batch._batchID == 1) {
+            // Execute color batch (p_batch)
+            ExecuteColorBatch(batch, commandList);
+        } else if (batch._batchID == 2) {
+            // Execute texture batch (p_batchTexture)
+            ExecuteTextureBatch(batch, commandList);
+        }
+    }
+}
+
+void UIDXFoundation::ExecuteColorBatch(const BatchData& batch, ID3D12GraphicsCommandList* commandList) {
+    if (batch._colorVertices.empty() || batch._indices.empty()) {
+        return;
+    }
+    
+    // Apply effect for this batch
+    batch._effect->Apply(commandList);
+    
+    // Render each draw call in this batch
+    p_batch->Begin(commandList);
+    for (size_t i = 0; i < batch._indices.size(); ++i) {
+        const auto& indices = batch._indices[i];
+        const auto& vertices = batch._colorVertices[i];
+        
+        p_batch->DrawIndexed(batch._topology,
+                             indices.data(), indices.size(),
+                             vertices.data(), vertices.size());
+    }
+    p_batch->End();
+}
+
+void UIDXFoundation::ExecuteTextureBatch(const BatchData& batch, ID3D12GraphicsCommandList* commandList) {
+    if (batch._textureVertices.empty() || batch._indices.empty()) {
+        return;
+    }
+    
+    // Set texture and alpha for this batch
+    XMVECTORF32 colorAlpha = { 1.0f, 1.0f, 1.0f, batch._alpha / 255.0f };
+    batch._effect->SetTexture(batch._srvDescriptor, batch._samplerDescriptor);
+    batch._effect->SetColorAndAlpha(colorAlpha);
+    batch._effect->Apply(commandList);
+    
+    // Render each draw call in this batch
+    p_batchTexture->Begin(commandList);
+    for (size_t i = 0; i < batch._indices.size(); ++i) {
+        const auto& indices = batch._indices[i];
+        const auto& vertices = batch._textureVertices[i];
+        
+        p_batchTexture->DrawIndexed(batch._topology,
+                                    indices.data(), indices.size(),
+                                    vertices.data(), vertices.size());
+    }
+    p_batchTexture->End();
+}
+
+// Batch clear functions
+void UIDXFoundation::ClearAllBatches() {
+    for (auto& batch : _batchDataList) {
+        batch._indices.clear();
+        batch._colorVertices.clear();
+        batch._textureVertices.clear();
+    }
+    _batchDataList.clear();
 }
