@@ -50,7 +50,7 @@ class UICaret : public UIAnimationBase, public SingletonPattern<UICaret> {
     friend class SingletonPattern<UICaret>;
 
 public:
-	void SetCaret(float z, ULONG width, ULONG height, const UIColor& color);
+	void SetCaret(ULONG width, ULONG height, const UIColor& color);
 	void HideCaret();
 	void SetPos(ULONG x, ULONG y, bool IsShowImmd, const DirectX::XMMATRIX& transformMatrix);
 
@@ -74,7 +74,7 @@ private:
 
 	DirectX::XMMATRIX _transformMatrix;
 };
-void UIShowCaret(float z, ULONG width, ULONG height, const UIColor& color);
+void UIShowCaret(ULONG width, ULONG height, const UIColor& color);
 void UIHideCaret();
 void UISetCaretPos(ULONG x, ULONG y, bool IsShowImmd=true, const DirectX::XMMATRIX& transformMatrix=DirectX::XMMatrixIdentity());
 

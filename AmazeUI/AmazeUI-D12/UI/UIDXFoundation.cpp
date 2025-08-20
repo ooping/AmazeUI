@@ -1435,7 +1435,7 @@ void UIDXFoundation::Draw2DPoint(const XMFLOAT2& point, float z, const UIColor& 
         1, 3, 2   // 2nd triangle
     };
 
-    RegisterBatchData(vertices, indices, p_triangleEffect2D, D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, GetCurrentClipRect());
+    RegisterBatchData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, p_triangleEffect2D, GetCurrentClipRect());
 }
 
 void UIDXFoundation::Draw2DPoints(const vector<XMFLOAT2>& points, float z, const UIColor& color, float pointSize) {
@@ -1476,7 +1476,7 @@ void UIDXFoundation::Draw2DLine(const XMFLOAT2& start, const XMFLOAT2& end, floa
     // draw two triangles
     std::vector<uint16_t> indices = { 0, 1, 2, 1, 3, 2 };
 
-    RegisterBatchData(vertices, indices, p_triangleEffect2D, D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, GetCurrentClipRect());
+    RegisterBatchData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, p_triangleEffect2D, GetCurrentClipRect());
 }
 
 // Draw a 2D rectangle with specified color, hollow style
@@ -1512,7 +1512,7 @@ void UIDXFoundation::Draw2DRectSolid(const XMFLOAT2& start, const XMFLOAT2& end,
     // Define indices for two triangles
     std::vector<uint16_t> indices = { 0, 1, 2, 1, 3, 2 };
 
-    RegisterBatchData(vertices, indices, p_triangleEffect2D, D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, GetCurrentClipRect());
+    RegisterBatchData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, p_triangleEffect2D, GetCurrentClipRect());
 }
 
 // Draw a 2D rectangle with specified color, alpha transparency and z-depth
@@ -1564,8 +1564,8 @@ void UIDXFoundation::Draw2DImage(size_t textureIndex,
     // define index data
     std::vector<uint16_t> indices = { 0, 1, 2, 1, 3, 2 };
 
-    RegisterBatchTextureData(vertices, indices, p_triangleTexturedEffect2DUI, 
-                             resource._gpuDescriptor, p_states->LinearClamp(), alpha, D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, GetCurrentClipRect());
+    RegisterBatchTextureData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, p_triangleTexturedEffect2DUI, 
+                             resource._gpuDescriptor, p_states->LinearClamp(), alpha, GetCurrentClipRect());
 
 
 
@@ -1758,7 +1758,7 @@ void UIDXFoundation::Draw3DPoint(const XMFLOAT2& point, float z, const UIColor& 
         1, 3, 2   // 2nd triangle
     };
     
-    RegisterBatchData(vertices, indices, p_triangleEffect3DUI, D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, GetCurrentClipRect());
+    RegisterBatchData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, p_triangleEffect3DUI, GetCurrentClipRect());
 }
 
 void UIDXFoundation::Draw3DPoints(const vector<XMFLOAT2>& points, float z, const UIColor& color, float pointSize, 
@@ -1807,7 +1807,7 @@ void UIDXFoundation::Draw3DLine(const XMFLOAT2& start, const XMFLOAT2& end, floa
     // Define indices for two triangles
     std::vector<uint16_t> indices = { 0, 1, 2, 1, 3, 2 };
 
-    RegisterBatchData(vertices, indices, p_triangleEffect3DUI, D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, GetCurrentClipRect());
+    RegisterBatchData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, p_triangleEffect3DUI, GetCurrentClipRect());
 }
 
 void UIDXFoundation::Draw3DRectOutline(const XMFLOAT2& start, const XMFLOAT2& end, float z, const UIColor& color, float lineWidth, const XMMATRIX& transformMatrix) {    
@@ -1842,7 +1842,7 @@ void UIDXFoundation::Draw3DRectSolid(const XMFLOAT2& start, const XMFLOAT2& end,
     // Define indices for two triangles
     std::vector<uint16_t> indices = { 0, 1, 2, 1, 3, 2 };
 
-    RegisterBatchData(vertices, indices, p_triangleEffect3DUI, D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, GetCurrentClipRect());
+    RegisterBatchData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, p_triangleEffect3DUI, GetCurrentClipRect());
 }
 
 void UIDXFoundation::Draw3DRectSolid(const XMFLOAT2& start, const XMFLOAT2& end, float z,
@@ -1884,8 +1884,8 @@ void UIDXFoundation::Draw3DImage(size_t textureIndex,
     // Define indices for two triangles
     std::vector<uint16_t> indices = { 0, 1, 2, 1, 3, 2 };
 
-    RegisterBatchTextureData(vertices, indices, p_triangleTexturedEffect3DUI, 
-                             _textureResources[textureIndex]._gpuDescriptor, p_states->LinearClamp(), alpha, D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, GetCurrentClipRect());
+    RegisterBatchTextureData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, p_triangleTexturedEffect3DUI, 
+                             _textureResources[textureIndex]._gpuDescriptor, p_states->LinearClamp(), alpha, GetCurrentClipRect());
 }
 
 void UIDXFoundation::Draw3DImage(const wstring& dllPath, UINT id, const UIColor& colorKey,
@@ -2577,8 +2577,8 @@ void UIDXFoundation::Draw2DCharTextureFT(size_t textureIndex, XMFLOAT2 position,
     // define index data
     std::vector<uint16_t> indices = { 0, 1, 2, 1, 3, 2 };
 
-    RegisterBatchTextureData(vertices, indices, p_triangleTexturedEffect2DUI, 
-                             resource._gpuDescriptor, p_states->LinearClamp(), alpha, D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, GetCurrentClipRect());
+    RegisterBatchTextureData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, p_triangleTexturedEffect2DUI, 
+                             resource._gpuDescriptor, p_states->LinearClamp(), alpha, GetCurrentClipRect());
     
 
     // p_sprites use more memory and is slower than PrimitiveBatch!!!
@@ -2623,7 +2623,7 @@ void UIDXFoundation::Draw3DCharTextureFT(size_t textureIndex, DirectX::XMFLOAT2 
     XMFLOAT2 ps, pe;
     Calculate2DRectPoints(position, dstEnd, ps, pe);
     vector<XMFLOAT3> wps;
-    UIZPlaneTransform::TransformRectPoints(transformMatrix, ps, pe, z, wps);
+    UIZPlaneTransform::TransformRectPoints(transformMatrix, ps, pe, z - 0.1f, wps);
 
     // create vertices with texture coordinates
     std::vector<VertexPositionTexture> vertices = {
@@ -2635,9 +2635,9 @@ void UIDXFoundation::Draw3DCharTextureFT(size_t textureIndex, DirectX::XMFLOAT2 
     // Define indices for two triangles
     std::vector<uint16_t> indices = { 0, 1, 2, 1, 3, 2 };
 
-    RegisterBatchTextureData(vertices, indices, p_triangleTexturedEffect3DUI, 
+    RegisterBatchTextureData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, p_triangleTexturedEffect3DUI, 
                              _charTextureResources[textureIndex]._gpuDescriptor, 
-                             p_states->LinearClamp(), alpha, D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, GetCurrentClipRect());
+                             p_states->LinearClamp(), alpha, GetCurrentClipRect());
 }
 
 void UIDXFoundation::Draw2DTextFT(const wstring& text, const DirectX::XMFLOAT2& position, float z, const UIColor& color, float fontSize) {
@@ -3064,8 +3064,9 @@ void UIDXFoundation::Draw3DTextMultiLineFT(const std::wstring& text, const RECT&
 
 /*************************************************** Batch Rendering System Implementation ***************************************************/
 // Batch registration functions
-void UIDXFoundation::RegisterBatchData(const std::vector<DirectX::VertexPositionColor>& vertices, const std::vector<uint16_t>& indices, 
-                                       std::unique_ptr<DirectX::BasicEffect>& effect, D3D_PRIMITIVE_TOPOLOGY topology, const RECT& clipRect) {
+void UIDXFoundation::RegisterBatchData(D3D_PRIMITIVE_TOPOLOGY topology,
+                                       const std::vector<DirectX::VertexPositionColor>& vertices, const std::vector<uint16_t>& indices, 
+                                       std::unique_ptr<DirectX::BasicEffect>& effect, const RECT& clipRect) {
     // Create new batch data with key information
     BatchData newBatch;
     newBatch._batchID = 1;  // p_batch
@@ -3088,10 +3089,11 @@ void UIDXFoundation::RegisterBatchData(const std::vector<DirectX::VertexPosition
     _batchDataList.push_back(std::move(newBatch));
 }
 
-void UIDXFoundation::RegisterBatchTextureData(const std::vector<DirectX::VertexPositionTexture>& vertices, const std::vector<uint16_t>& indices,
+void UIDXFoundation::RegisterBatchTextureData(D3D_PRIMITIVE_TOPOLOGY topology,
+                                              const std::vector<DirectX::VertexPositionTexture>& vertices, const std::vector<uint16_t>& indices,
                                               std::unique_ptr<DirectX::BasicEffect>& effect, 
                                               D3D12_GPU_DESCRIPTOR_HANDLE srvDescriptor, D3D12_GPU_DESCRIPTOR_HANDLE samplerDescriptor, UCHAR alpha,
-                                              D3D_PRIMITIVE_TOPOLOGY topology, const RECT& clipRect) {
+                                              const RECT& clipRect) {
     // Create new batch data with key information
     BatchData newBatch;
     newBatch._batchID = 2;  // p_batchTexture

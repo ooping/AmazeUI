@@ -46,15 +46,16 @@ void UI2DDemo::Draw()
     wchar_t strFilePath[MAX_PATH] = {};
     DX::FindMediaFile(strFilePath, MAX_PATH, L"GUIResource.dll");
     UIImage(strFilePath, 80003, UIColor(255, 0, 255, 0), 0.3)(NULL_RECT, RECT{100, 75, 0, 0});
+
     UIImage(strFilePath, IDB_BUTTON1_NORMAL, UIColor(255, 0, 255, 0), 0.5)(RECT{850, 130, 1050, 180});
     UISlicedImage(strFilePath, IDB_BUTTON1_NORMAL, UIColor(255, 0, 255, 0), 3, 3, 3, 3, 0.5)(RECT{850, 50, 1050, 100});
 
     DX::FindMediaFile(strFilePath, MAX_PATH, L"cat.png");
-    UIImage(strFilePath, UIColor::Invalid, 0.5)(NULL_RECT, RECT{ 100, 100, 0, 0 });
+    UIImage(strFilePath, UIColor::Invalid, 0.5)(NULL_RECT, RECT{ 100, 100, 0, 0 }, 100);
 
     {
         UIScreenClipRectGuard clipRect(RECT{ 450, 50, 550, 150 });
-        UIRect(RECT{ 500, 10, 600, 200 }, 0.2)(UIColor::Pink, 100);
+        UIRect(RECT{ 500, 10, 600, 200 }, 0.3)(UIColor::Pink, 100);
     }
  
     UIFont(0.5, 24)(L"DirectXTK Simple UIDXFoundation", POINT{100, 10}, UIColor::Black);

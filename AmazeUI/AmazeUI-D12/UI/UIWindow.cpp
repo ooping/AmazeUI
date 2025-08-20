@@ -8,6 +8,10 @@ using namespace std;
 using namespace Shape2D;
 using namespace DirectX;
 
+const float gLevelZ = 0.01f;
+const float gPopupZ = 0.5f;
+
+
 UIWindowBase::UIWindowBase() {
 	_isShow = false;
 	//_isRecvTabKey = false;
@@ -55,7 +59,7 @@ bool UIWindowBase::CreateWindowBase(UIContainer* pUIContainer, const RECT& relat
 	// hierarchy information and z value
 	_isPopup = p_parentUIContainer->IsBindWindowPopup();
 	_layoutLever = p_parentUIContainer->GetBindWindowLayoutLever()+1;
-	_z = (!_isPopup ? 1.0f : 0.5f) - (_layoutLever - 1) * 0.01f;
+	_z = (!_isPopup ? 1.0f : gPopupZ) - (_layoutLever - 1) * gLevelZ;
 
 	return HandleMessage(WM_CREATE, isOnHeap?1:0, 0);
 }
@@ -192,7 +196,7 @@ void UIWindowBase::SetAsPopup(bool isPopup) {
 	}
 
 	_isPopup = isPopup;
-	_z = (!isPopup ? 1.0f : 0.5f) - (_layoutLever - 1) * 0.01f;
+	_z = (!isPopup ? 1.0f : gPopupZ) - (_layoutLever - 1) * gLevelZ;
 
     if (p_UIContainer != nullptr) {
         p_UIContainer->ForEachWindow([isPopup](UIWindowBase* pWin) {

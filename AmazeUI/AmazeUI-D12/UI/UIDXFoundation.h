@@ -366,14 +366,14 @@ private:
 
 		// as key
 		DirectX::BasicEffect* _effect;										// p_batch & p_batchTexture
-		D3D_PRIMITIVE_TOPOLOGY _topology;									// p_batch & p_batchTexture
 		D3D12_GPU_DESCRIPTOR_HANDLE _srvDescriptor;							// p_batchTexture
 		D3D12_GPU_DESCRIPTOR_HANDLE _samplerDescriptor;						// p_batchTexture
 		UCHAR _alpha;														// p_batchTexture
 		RECT _clipRect;														// p_batch & p_batchTexture
 
-		// data  // p_batch & p_batchTexture
-		std::vector<std::vector<uint16_t>> _indices;						
+		// data
+		D3D_PRIMITIVE_TOPOLOGY _topology;									// p_batch & p_batchTexture
+		std::vector<std::vector<uint16_t>> _indices;						// p_batch & p_batchTexture
 		std::vector<std::vector<DirectX::VertexPositionColor>> _colorVertices;    	// p_batch
 		std::vector<std::vector<DirectX::VertexPositionTexture>> _textureVertices; 	// p_batchTexture
 
@@ -383,9 +383,6 @@ private:
 				return false;
 			}
 			if (_effect != other._effect) {
-				return false;
-			}
-			if (_topology != other._topology) {
 				return false;
 			}
 
@@ -410,12 +407,14 @@ private:
 	};
 
 	// Batch registration functions
-	void RegisterBatchData(const std::vector<DirectX::VertexPositionColor>& vertices, const std::vector<uint16_t>& indices, 
-						   std::unique_ptr<DirectX::BasicEffect>& effect, D3D_PRIMITIVE_TOPOLOGY topology, const RECT& clipRect);
-	void RegisterBatchTextureData(const std::vector<DirectX::VertexPositionTexture>& vertices, const std::vector<uint16_t>& indices,
+	void RegisterBatchData(D3D_PRIMITIVE_TOPOLOGY topology, 
+						   const std::vector<DirectX::VertexPositionColor>& vertices, const std::vector<uint16_t>& indices, 
+						   std::unique_ptr<DirectX::BasicEffect>& effect, const RECT& clipRect);
+	void RegisterBatchTextureData(D3D_PRIMITIVE_TOPOLOGY topology, 
+								  const std::vector<DirectX::VertexPositionTexture>& vertices, const std::vector<uint16_t>& indices,
 						   		  std::unique_ptr<DirectX::BasicEffect>& effect, 
 						   		  D3D12_GPU_DESCRIPTOR_HANDLE srvDescriptor, D3D12_GPU_DESCRIPTOR_HANDLE samplerDescriptor, UCHAR alpha,
-						   		  D3D_PRIMITIVE_TOPOLOGY topology, const RECT& clipRect);
+						   		  const RECT& clipRect);
 
 	// Batch execution functions
 	void ExecuteAllBatches();

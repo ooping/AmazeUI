@@ -62,7 +62,7 @@ UICaret::UICaret() {
 	_y = 0;
 	_width = 1;
 	_height = 16;
-	_z = 0.2f;
+	_z = 0.0f;
 
 	_oldTick = 0;
 
@@ -95,8 +95,7 @@ void UICaret::HideCaret() {
 	UIAnimationManage::GetSingletonInstance()->DelAnimation(UICaret::GetSingletonInstance());
 }
 
-void UICaret::SetCaret(float z, ULONG width, ULONG height, const UIColor& color) {
-	_z = z;
+void UICaret::SetCaret(ULONG width, ULONG height, const UIColor& color) {
 	_width = width;
 	_height = height;
 	_color = color;
@@ -130,8 +129,8 @@ void UICaret::DrawAnimation() {
 	UIRect(_x, _y - _height / 2, _x + _width - 1, _y + _height / 2, _z)(_color, 255, _transformMatrix);
 }
 
-void UIShowCaret(float z, ULONG width, ULONG height, const UIColor& color) {
-	UICaret::GetSingletonInstance()->SetCaret(z, width, height, color);
+void UIShowCaret(ULONG width, ULONG height, const UIColor& color) {
+	UICaret::GetSingletonInstance()->SetCaret(width, height, color);
 }
 
 void UIHideCaret() {
