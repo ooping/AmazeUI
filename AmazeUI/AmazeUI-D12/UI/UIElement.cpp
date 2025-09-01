@@ -300,35 +300,26 @@ SIZE UIFont::GetDrawAreaSize(std::wstring text) {
    - Z-axis: positive direction is into the screen
 */
 void UICameraBase::SetViewMatrix() {
-	_view = Matrix::CreateLookAt(
-		Vector3(_position.x, _position.y, _position.z), // eye
-		Vector3(_target.x, _target.y, _target.z),       // at
-		Vector3(_up.x, _up.y, _up.z)                    // up
-	);
+	_view = Matrix::CreateLookAt(Vector3(_position.x, _position.y, _position.z), // eye
+								 Vector3(_target.x, _target.y, _target.z),       // at
+								 Vector3(_up.x, _up.y, _up.z));                  // up
+								
 }
 	
 void UICameraBase::SetProjectionMatrix() {
-	_projection3D = Matrix::CreatePerspectiveFieldOfView(
-		_fov,
-		_aspectRatio,
-		_nearPlane,
-		_farPlane
-	);
+	_projection3D = Matrix::CreatePerspectiveFieldOfView(_fov, _aspectRatio, _nearPlane, _farPlane);
 }
 
 // let the camera can see the whole screen
-void UICameraUI::SetCameraFor2D(float width, float height) {
+void UICameraUI::SetCameraFor3D(float width, float height) {
+	_aspectRatio = width / height;
+	SetProjectionMatrix();
+
 	_position = XMFLOAT3(0.0f, 0.0f, -height / 2.0f);
 	_target = XMFLOAT3(0.0f, 0.0f, 0.0f);
 	_up = XMFLOAT3(0.0f, -1.0f, 0.0f);
 	//
 	SetViewMatrix();
-
-	//
-	_fov = XM_PIDIV2;
-	_aspectRatio = width / height;
-	//
-	SetProjectionMatrix();
 }
 
 // convert screen 2D to 3D
@@ -434,13 +425,13 @@ XMFLOAT3 UICameraUI::Convert3DToScreen2D(const XMFLOAT3& worldPos) {
 	return screenPos;
 }
 
-void UICameraGame::SetCamera(const XMFLOAT3& position, const XMFLOAT3& target, const XMFLOAT3& up) {
-	_position = position;
-	_target = target;
-	_up = up;
+// void UICameraGame::SetCamera(const XMFLOAT3& position, const XMFLOAT3& target, const XMFLOAT3& up) {
+// 	_position = position;
+// 	_target = target;
+// 	_up = up;
 
-	SetViewMatrix();
-}
+// 	SetViewMatrix();
+// }
 
 void UICameraGame::SetAspectRatioAndProjectionMatrix(float aspectRatio) {
 	_aspectRatio = aspectRatio;

@@ -206,7 +206,7 @@ class UICameraUI : public UICameraBase, public SingletonPattern<UICameraUI> {
 
 public:
 	// Setup methods
-	void SetCameraFor2D(float width, float height);
+	void SetCameraFor3D(float width, float height);
 
 	// Convert screen 2D to 3D
 	DirectX::XMFLOAT3 ConvertScreen2DTo3D(const DirectX::XMFLOAT3& screenPos);
@@ -230,7 +230,7 @@ class UICameraGame : public UICameraBase, public SingletonPattern<UICameraGame> 
 
 public:
 	// Setup methods
-	void SetCamera(const DirectX::XMFLOAT3& position, const DirectX::XMFLOAT3& target, const DirectX::XMFLOAT3& up);
+	//void SetCamera(const DirectX::XMFLOAT3& position, const DirectX::XMFLOAT3& target, const DirectX::XMFLOAT3& up);
 	void SetAspectRatioAndProjectionMatrix(float aspectRatio);
 
 private:

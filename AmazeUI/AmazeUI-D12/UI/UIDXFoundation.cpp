@@ -715,12 +715,8 @@ LONG UIDXFoundation::GetOutputHeight() const {
 	return GetRectHeight()(p_deviceResources->_outputSize);
 }
 
-#pragma region Frame Render
-
 void UIDXFoundation::Render3D() {
     {
-        p_lineEffect3DGame->SetWorld(Matrix::Identity);
-
         //Draw procedurally generated dynamic 3D grid
         const XMVECTORF32 xaxis = { 20.f, 0.f, 0.f };
         const XMVECTORF32 yaxis = { 0.f, 0.f, 20.f };
@@ -763,10 +759,10 @@ void UIDXFoundation::Render() {
     ID3D12DescriptorHeap* heaps[] = { p_resourceDescriptors->Heap(), p_states->Heap() };
     commandList->SetDescriptorHeaps(_countof(heaps), heaps);
     
+    //Render3D();
+    
     // Clear all batch data for this frame
     ClearAllBatches();
-
-    //Render3D();
 
     // draw top container
     UIFrame::GetSingletonInstance()->GetTopUIContainer()->Draw();
@@ -1978,9 +1974,7 @@ void XM_CALLCONV UIDXFoundation::DrawGrid(FXMVECTOR xAxis, FXMVECTOR yAxis, FXMV
     
     PIXEndEvent(commandList);
 }
-#pragma endregion
 
-#pragma region Message Handlers
 // Message handlers
 void UIDXFoundation::OnActivated()
 {
@@ -2011,9 +2005,6 @@ void UIDXFoundation::NewAudioDevice()
 {
 }
 
-#pragma endregion
-
-#pragma region Direct3D Resources
 // These are the resources that depend on the device.
 void UIDXFoundation::CreateDeviceDependentResourcesXTK() {
     auto device = p_deviceResources->GetD3DDevice();
@@ -2224,33 +2215,36 @@ void UIDXFoundation::CreateWindowSizeDependentResourcesXTK() {
     );
     
     // set the matrices for 2D drawing
-    p_pointEffect2D->SetView(Matrix::Identity);
     p_pointEffect2D->SetWorld(Matrix::Identity);
+    p_pointEffect2D->SetView(Matrix::Identity);
     p_pointEffect2D->SetProjection(_orthoMatrix2D);
 
-    p_lineEffect2D->SetView(Matrix::Identity);
     p_lineEffect2D->SetWorld(Matrix::Identity);
+    p_lineEffect2D->SetView(Matrix::Identity);
     p_lineEffect2D->SetProjection(_orthoMatrix2D);
 
-    p_triangleEffect2D->SetView(Matrix::Identity);
     p_triangleEffect2D->SetWorld(Matrix::Identity);
+    p_triangleEffect2D->SetView(Matrix::Identity);
     p_triangleEffect2D->SetProjection(_orthoMatrix2D);
 
-    p_triangleTexturedEffect2DUI->SetView(Matrix::Identity);
     p_triangleTexturedEffect2DUI->SetWorld(Matrix::Identity);
+    p_triangleTexturedEffect2DUI->SetView(Matrix::Identity);
     p_triangleTexturedEffect2DUI->SetProjection(_orthoMatrix2D);
 
     // 3D resources
-    UICameraUI::GetSingletonInstance()->SetCameraFor2D(float(size.right), float(size.bottom));
+    UICameraUI::GetSingletonInstance()->SetCameraFor3D(float(size.right), float(size.bottom));
     //
+    p_triangleEffect3DUI->SetWorld(Matrix::Identity);
     p_triangleEffect3DUI->SetView(UICameraUI::GetSingletonInstance()->GetViewMatrix());
     p_triangleEffect3DUI->SetProjection(UICameraUI::GetSingletonInstance()->GetProjectionMatrix());
+    p_triangleTexturedEffect3DUI->SetWorld(Matrix::Identity);
     p_triangleTexturedEffect3DUI->SetView(UICameraUI::GetSingletonInstance()->GetViewMatrix());
     p_triangleTexturedEffect3DUI->SetProjection(UICameraUI::GetSingletonInstance()->GetProjectionMatrix());
     
     UICameraGame::GetSingletonInstance()->SetAspectRatioAndProjectionMatrix(float(size.right) / float(size.bottom));
     UICameraGame::GetSingletonInstance()->SetViewMatrix();
     //
+    p_lineEffect3DGame->SetWorld(Matrix::Identity);
     p_lineEffect3DGame->SetView(UICameraGame::GetSingletonInstance()->GetViewMatrix());
     p_lineEffect3DGame->SetProjection(UICameraGame::GetSingletonInstance()->GetProjectionMatrix());
     p_shapeEffectGame->SetView(UICameraGame::GetSingletonInstance()->GetViewMatrix());

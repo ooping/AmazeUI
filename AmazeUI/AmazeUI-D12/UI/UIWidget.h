@@ -1038,3 +1038,86 @@ private:
 	POINT _curMousePos;
 	bool _isHover;
 };
+
+/*------------------------------------------------------- UIChart3D -------------------------------------------------------*/
+class UIChart3D : public UIControlBase<UIChart3D> {
+	friend UIControlBase;
+
+	// 3D point structure
+	struct Point3D {
+		double x, y, z;
+		Point3D(double x = 0.0, double y = 0.0, double z = 0.0) : x(x), y(y), z(z) {}
+	};
+
+	// 3D curve data
+	struct Curve3D {
+		std::vector<Point3D> points;
+		std::wstring name;
+		UIColor color;
+		bool isVisible;
+		
+		Curve3D() : name(L""), color(UIColor::Red), isVisible(true) {}
+	};
+
+	// coordinate system parameters
+	struct CoordinateSystem {
+		DirectX::XMFLOAT3 origin;          // origin position in world coordinates
+		float axisLength;                  // axis length in world units
+		DirectX::XMFLOAT3 xAxisDir;        // X axis direction
+		DirectX::XMFLOAT3 yAxisDir;        // Y axis direction  
+		DirectX::XMFLOAT3 zAxisDir;        // Z axis direction
+		
+		CoordinateSystem() : 
+			origin(0.0f, 0.0f, 0.0f),
+			axisLength(5.0f),
+			xAxisDir(1.0f, 0.0f, 0.0f),
+			yAxisDir(0.0f, 1.0f, 0.0f),
+			zAxisDir(0.0f, 0.0f, 1.0f) {}
+	};
+
+	// data transform parameters
+	struct DataTransform {
+		double xMin, xMax;                 // data range
+		double yMin, yMax;
+		double zMin, zMax;
+		float scale;                       // overall scale
+		
+		DataTransform() : 
+			xMin(-10.0), xMax(10.0),
+			yMin(-10.0), yMax(10.0),
+			zMin(-10.0), zMax(10.0),
+			scale(1.0f) {}
+	};
+
+public:
+	UIChart3D();
+	void CalcArea();
+	void Draw();
+
+	// add test curve
+	void AddTestCurve();
+	
+	// clear all curves
+	void Clear();
+
+private:
+	// core drawing methods
+	void DrawAxes();                       // draw XYZ coordinate axes
+	void DrawGrid();                       // draw grid (optional)
+	void DrawAxisLabels();                 // draw axis labels
+	void DrawCurves();                     // draw 3D curves
+	
+	// coordinate transformation
+	DirectX::XMFLOAT3 DataToWorld(double dataX, double dataY, double dataZ);
+	DirectX::XMFLOAT2 MapPoint3DTo2D(const Point3D& point3D);  // isometric projection helper
+	
+	// coordinate system and data
+	CoordinateSystem _coordSys;
+	DataTransform _dataTransform;
+	std::vector<Curve3D> _curves;
+	
+	RECT _drawRect;                        // drawing area
+	
+	DirectX::XMMATRIX _inheritedTransformMatrix;
+};
+

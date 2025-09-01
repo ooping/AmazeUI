@@ -248,7 +248,7 @@ void UIContainer::AddChild(UIWindowBase* pWin, bool isOnHeap) {
 
 	// initialize the layout information of the sub-window
 	RECT parentRect;
-	if (_isBindDUI==true) {
+	if (_isBindDUI == true) {
 		parentRect = _pBindDUIWin->GetClientRect();
 	}
 	else {
@@ -263,7 +263,7 @@ void UIContainer::DelChild(UIWindowBase* pWin)
 {
 	// delete from sub-window list
 	UIElementListType::iterator it = find(_winList.begin(), _winList.end(), pWin);
-	if (it==_winList.end()) {
+	if (it == _winList.end()) {
 		return;
 	}
 

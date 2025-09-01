@@ -5163,4 +5163,165 @@ bool UICanvas3D::OnMouseLeave(POINT) {
 	return true;
 }
 
+/*------------------------------------------------------- UIChart3D -------------------------------------------------------*/
+UIChart3D::UIChart3D() {
+	_drawRect = Shape2D::NULL_RECT;
+	
+	// initialize coordinate system (fixed position and orientation)
+	_coordSys.origin = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
+	_coordSys.axisLength = 5.0f;
+	_coordSys.xAxisDir = DirectX::XMFLOAT3(1.0f, 0.0f, 0.0f);
+	_coordSys.yAxisDir = DirectX::XMFLOAT3(0.0f, 1.0f, 0.0f);
+	_coordSys.zAxisDir = DirectX::XMFLOAT3(0.0f, 0.0f, 1.0f);
+	
+	// initialize data transform
+	_dataTransform.xMin = -10.0; _dataTransform.xMax = 10.0;
+	_dataTransform.yMin = -10.0; _dataTransform.yMax = 10.0;
+	_dataTransform.zMin = -10.0; _dataTransform.zMax = 10.0;
+	_dataTransform.scale = 1.0f;
+	
+	// add test curve
+	AddTestCurve();
+}
+
+void UIChart3D::CalcArea() {
+	_drawRect = _clientRC;
+}
+
+void UIChart3D::Draw() {
+	if (!_isShow) {
+		return;
+	}
+	
+	//auto p_dx = UIDXFoundation::GetSingletonInstance();
+	
+	// draw coordinate axes
+	DrawAxes();
+	
+	// draw curves
+	DrawCurves();
+}
+
+void UIChart3D::DrawAxes() {
+	auto p_dx = UIDXFoundation::GetSingletonInstance();
+	
+	// For now, use the 2D+Z approach to draw axis lines in 3D space
+	// This is a simplified implementation using existing public methods
+	
+	float z = 0.0f; // depth
+	
+	// Draw X axis (red) - horizontal line
+	DirectX::XMFLOAT2 xStart(100.0f, 300.0f);
+	DirectX::XMFLOAT2 xEnd(200.0f, 300.0f);
+	p_dx->Draw3DLine(xStart, xEnd, z, UIColor::Red, 2.0f, DirectX::XMMatrixIdentity());
+	
+	// Draw Y axis (green) - vertical line  
+	DirectX::XMFLOAT2 yStart(100.0f, 300.0f);
+	DirectX::XMFLOAT2 yEnd(100.0f, 200.0f);
+	p_dx->Draw3DLine(yStart, yEnd, z, UIColor::Green, 2.0f, DirectX::XMMatrixIdentity());
+	
+	// Draw Z axis (blue) - diagonal line simulating depth
+	DirectX::XMFLOAT2 zStart(100.0f, 300.0f);
+	DirectX::XMFLOAT2 zEnd(150.0f, 250.0f);
+	p_dx->Draw3DLine(zStart, zEnd, z, UIColor::Blue, 2.0f, DirectX::XMMatrixIdentity());
+}
+
+void UIChart3D::DrawCurves() {
+	auto p_dx = UIDXFoundation::GetSingletonInstance();
+	
+	// draw each curve using the 2D+Z approach
+	for (auto& curve : _curves) {
+		if (!curve.isVisible || curve.points.size() < 2) continue;
+		
+		// draw curve as connected line segments
+		for (size_t i = 0; i < curve.points.size() - 1; ++i) {
+			// map 3D points to 2D screen coordinates with simulated depth
+			DirectX::XMFLOAT2 p1_2d = MapPoint3DTo2D(curve.points[i]);
+			DirectX::XMFLOAT2 p2_2d = MapPoint3DTo2D(curve.points[i + 1]);
+			
+			float z1 = (float)curve.points[i].z * 0.1f; // scale Z for depth
+			float z2 = (float)curve.points[i + 1].z * 0.1f;
+			
+			// Draw line with depth simulation
+			p_dx->Draw3DLine(p1_2d, p2_2d, (z1 + z2) * 0.5f, curve.color, 1.5f, DirectX::XMMatrixIdentity());
+		}
+	}
+}
+
+DirectX::XMFLOAT3 UIChart3D::DataToWorld(double dataX, double dataY, double dataZ) {
+	// normalize data to [0,1] range
+	float normalizedX = (float)((dataX - _dataTransform.xMin) / (_dataTransform.xMax - _dataTransform.xMin));
+	float normalizedY = (float)((dataY - _dataTransform.yMin) / (_dataTransform.yMax - _dataTransform.yMin));
+	float normalizedZ = (float)((dataZ - _dataTransform.zMin) / (_dataTransform.zMax - _dataTransform.zMin));
+	
+	// map to world coordinates relative to origin
+	DirectX::XMFLOAT3 worldPos;
+	worldPos.x = _coordSys.origin.x + 
+				normalizedX * _coordSys.axisLength * _coordSys.xAxisDir.x +
+				normalizedY * _coordSys.axisLength * _coordSys.yAxisDir.x +
+				normalizedZ * _coordSys.axisLength * _coordSys.zAxisDir.x;
+	
+	worldPos.y = _coordSys.origin.y + 
+				normalizedX * _coordSys.axisLength * _coordSys.xAxisDir.y +
+				normalizedY * _coordSys.axisLength * _coordSys.yAxisDir.y +
+				normalizedZ * _coordSys.axisLength * _coordSys.zAxisDir.y;
+	
+	worldPos.z = _coordSys.origin.z + 
+				normalizedX * _coordSys.axisLength * _coordSys.xAxisDir.z +
+				normalizedY * _coordSys.axisLength * _coordSys.yAxisDir.z +
+				normalizedZ * _coordSys.axisLength * _coordSys.zAxisDir.z;
+	
+	return worldPos;
+}
+
+DirectX::XMFLOAT2 UIChart3D::MapPoint3DTo2D(const Point3D& point3D) {
+	// Simple isometric projection mapping
+	// Scale and offset to fit in control area
+	float centerX = (_drawRect.left + _drawRect.right) * 0.5f;
+	float centerY = (_drawRect.top + _drawRect.bottom) * 0.5f;
+	
+	// Normalize data coordinates
+	float normalizedX = (float)((point3D.x - _dataTransform.xMin) / (_dataTransform.xMax - _dataTransform.xMin) - 0.5);
+	float normalizedY = (float)((point3D.y - _dataTransform.yMin) / (_dataTransform.yMax - _dataTransform.yMin) - 0.5);
+	float normalizedZ = (float)((point3D.z - _dataTransform.zMin) / (_dataTransform.zMax - _dataTransform.zMin) - 0.5);
+	
+	// Simple isometric projection
+	float scale = 80.0f; // scale factor
+	float screenX = centerX + (normalizedX - normalizedY) * scale;
+	float screenY = centerY + (normalizedX + normalizedY) * 0.5f * scale - normalizedZ * scale;
+	
+	return DirectX::XMFLOAT2(screenX, screenY);
+}
+
+void UIChart3D::AddTestCurve() {
+	Curve3D testCurve;
+	testCurve.name = L"TestSpiralCurve";
+	testCurve.color = UIColor::Red;
+	testCurve.isVisible = true;
+	
+	// generate spiral curve test data
+	for (int i = 0; i < 50; ++i) {
+		double t = i * 0.3;
+		testCurve.points.push_back(Point3D(
+			cos(t) * 5.0,      // x: 5*cos(t) 
+			sin(t) * 5.0,      // y: 5*sin(t)
+			t * 2.0            // z: 2*t (spiral rising)
+		));
+	}
+	
+	_curves.push_back(testCurve);
+}
+
+void UIChart3D::Clear() {
+	_curves.clear();
+}
+
+void UIChart3D::DrawGrid() {
+	// TODO: implement grid drawing if needed
+}
+
+void UIChart3D::DrawAxisLabels() {
+	// TODO: implement axis labels if needed
+}
+
 

@@ -280,7 +280,7 @@ private:
 	std::vector<CharTextureResource> _charTextureResources;
 	std::unordered_map<std::wstring, size_t> _charTextureResourceMap;
 
-/*************************************************** 2D APIs ***************************************************/
+/*************************************************** 2D UI APIs ***************************************************/
 public:
 	void Draw2DPoint(const DirectX::XMFLOAT2& point, float z, const UIColor& color, float pointSize=4);
 	void Draw2DPoints(const std::vector<DirectX::XMFLOAT2>& points, float z, const UIColor& color, float pointSize=4);
@@ -325,7 +325,7 @@ private:
 
 	std::stack<RECT> _clipRectStack;
 
-/*************************************************** 3D APIs ***************************************************/
+/*************************************************** 3D UI APIs ***************************************************/
 public:
 	void Draw3DPoint(const DirectX::XMFLOAT2& point, float z, const UIColor& color, float pointSize=4, 
 					 const DirectX::XMMATRIX& transformMatrix = DirectX::XMMatrixIdentity());
@@ -358,6 +358,9 @@ private:
 					 RECT srcRect, DirectX::XMFLOAT2 dstStart, DirectX::XMFLOAT2 dstEnd, 
 					 float z, UCHAR alpha, 
 					 const DirectX::XMMATRIX& transformMatrix);
+
+/*************************************************** 3D Game APIs ***************************************************/
+
 
 /*************************************************** Batch Rendering System ***************************************************/
 private:
