@@ -55,7 +55,7 @@ public:
 	// read, unprotected
 	RECT GetClientRect();
 	RECT GetRelativeRect();
-	RECT GetAbusoluteRect();
+	RECT GetAbsoluteRect();
 	bool IsWindowFocus();
 	bool IsWindowShow();
 

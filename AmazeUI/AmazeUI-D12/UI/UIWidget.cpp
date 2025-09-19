@@ -130,10 +130,10 @@ void UILabel::Draw() {
 	XMMATRIX transformMatrix = GetInheritedTransformMatrix();
 
 	if (_supportMultiLine) {
-		UIFont(_z, _fontHeight)(_text, GetAbusoluteRect(), _color, _pos, _lineSpacing, transformMatrix);
+		UIFont(_z, _fontHeight)(_text, GetAbsoluteRect(), _color, _pos, _lineSpacing, transformMatrix);
 	} else {
 		// single line text
-		UIFont(_z, _fontHeight)(_text, GetAbusoluteRect(), _color, _pos, transformMatrix);
+		UIFont(_z, _fontHeight)(_text, GetAbsoluteRect(), _color, _pos, transformMatrix);
 	}
 }
 
@@ -4949,7 +4949,8 @@ void UITab::SetCurCell(UINT index) {
 		}
 
 		_selectedIndex = index;
-		PlayAnimate(MAX_FRAME1);
+		//PlayAnimate(MAX_FRAME1);
+		PlayAnimate(100);
 	}
 }
 
@@ -5117,12 +5118,14 @@ void UICanvas3D::Draw() {
 	rc.right += 5;
 	rc.bottom += 5;
 
-	XMMATRIX transform = UIZPlaneTransform::GetTransformMatrix(false, 0, 0, 0, true, 
-															   (float)center.y, offsetY * XM_PI / 128, true, (float)center.x, -offsetX * XM_PI / 128, _z);
-	SetTransformMatrix(transform);
+	XMMATRIX localTransform = UIZPlaneTransform::GetTransformMatrix(false, 0, 0, 0, true, (float)center.y, -offsetY * XM_PI / 128, 
+															        true, (float)center.x, -offsetX * XM_PI / 128, _z);
+	SetTransformMatrix(localTransform);
 
-	UIRect(rc, _z + gDeltaZ)(UIColor::Gray95, 255, transform);
-	//UIFont(_z - gDeltaZ * 10, 40).operator()(L"UICanvas3D", rc, UIColor::Black, UIFont::HCENTER_VCENTER, transform);
+	XMMATRIX transformMatrix = GetInheritedTransformMatrix();
+
+	UIRect(rc, _z + gDeltaZ)(UIColor::Gray95, 255, transformMatrix);
+	//UIFont(_z - gDeltaZ * 10, 40).operator()(L"UICanvas3D", rc, UIColor::Black, UIFont::HCENTER_VCENTER, transformMatrix);
 
 	if (p_UIContainer != NULL) {
 		// RECT rc = _clientRC;
@@ -5138,8 +5141,8 @@ void UICanvas3D::Draw() {
     // DX::FindMediaFile(strFilePath, MAX_PATH, L"gamepad.dds");
 	// UIDXFoundation::GetSingletonInstance()->Draw3DImage(strFilePath, UIColor::Invalid, 
 	// 											   NULL_RECT, XMFLOAT2((float)rc.left, (float)rc.top), XMFLOAT2((float)rc.right, (float)rc.bottom), 
-	// 											   _z, 255, transform);
-	// UIDXFoundation::GetSingletonInstance()->Draw3DTextFT(L"AmazeUI 3D Text", rc, 0x01|0x04, _z-0.1f, Colors::Yellow, 28, transform);
+	// 											   _z, 255, transformMatrix);
+	// UIDXFoundation::GetSingletonInstance()->Draw3DTextFT(L"AmazeUI 3D Text", rc, 0x01|0x04, _z-0.1f, Colors::Yellow, 28, transformMatrix);
 }
 
 
@@ -5164,164 +5167,251 @@ bool UICanvas3D::OnMouseLeave(POINT) {
 }
 
 /*------------------------------------------------------- UIChart3D -------------------------------------------------------*/
+/*------------------------------------------------------- UIChart3D::Camera Implementation -------------------------------------------------------*/
+UIChart3D::UICameraCtrl::UICameraCtrl() {
+	_farPlane = 1000.0f;
+}
+
+void UIChart3D::UICameraCtrl::SetCtrlRect(const RECT& ctrlRC) {
+	RECT windowRect = UIDXFoundation::GetSingletonInstance()->GetOutputSize();
+	LONG windowWidth = GetRectWidth()(windowRect);
+	LONG windowHeight = GetRectHeight()(windowRect);
+	if (windowWidth == 0 || windowHeight == 0) {
+		return;
+	}
+
+	// Update aspect ratio based on control rectangle
+	LONG ctrlWidth = GetRectWidth()(ctrlRC);
+	LONG ctrlHeight = GetRectHeight()(ctrlRC);
+	if (ctrlWidth == 0 || ctrlHeight == 0) {
+		return;
+	}
+
+	_aspectRatio = static_cast<float>(ctrlWidth) / ctrlHeight;
+	SetProjectionMatrix();
+
+	float ctrlCenterX = ctrlRC.left + ctrlWidth * 0.5f;
+    float ctrlCenterY = ctrlRC.top + ctrlHeight * 0.5f;
+    float windowCenterX = windowWidth * 0.5f;
+    float windowCenterY = windowHeight * 0.5f;
+
+	float offsetX = ctrlCenterX - windowCenterX;
+    float offsetY = ctrlCenterY - windowCenterY;
+
+	// 计算世界空间的偏移
+    float tanHalfFOV = tan(_fov * 0.5f);
+    _worldHeight = 2.0f * _viewDistance * tanHalfFOV;
+    _worldWidth = _worldHeight * _aspectRatio;
+
+	float worldOffsetX = -(offsetX / windowWidth) * _worldWidth;  // X轴反向修正
+    float worldOffsetY = -(offsetY / windowHeight) * _worldHeight;  // Y轴翻转
+
+	_position = DirectX::XMFLOAT3(worldOffsetX, worldOffsetY, -_viewDistance);
+    _target = DirectX::XMFLOAT3(worldOffsetX, worldOffsetY, 0.0f);
+	_up = DirectX::XMFLOAT3(0.0f, 1.0f, 0.0f);
+	_right = DirectX::XMFLOAT3(1.0f, 0.0f, 0.0f);
+	_forward = DirectX::XMFLOAT3(0.0f, 0.0f, 1.0f);
+
+	SetViewMatrix();
+
+	// Setup viewport and scissor rects
+	_viewport.TopLeftX = static_cast<float>(ctrlRC.left);
+	_viewport.TopLeftY = static_cast<float>(ctrlRC.top);
+	_viewport.Width = static_cast<float>(ctrlWidth);
+	_viewport.Height = static_cast<float>(ctrlHeight);
+	_viewport.MinDepth = 0.0f;
+	_viewport.MaxDepth = 1.0f;
+
+	_scissorRect.left = ctrlRC.left;
+	_scissorRect.top = ctrlRC.top;
+	_scissorRect.right = ctrlRC.right;
+	_scissorRect.bottom = ctrlRC.bottom;
+}
+
+RECT UIChart3D::UICameraCtrl::GetScissorRect() const { 
+	return _scissorRect; 
+}
+
+D3D12_VIEWPORT UIChart3D::UICameraCtrl::GetViewport() const { 
+	return _viewport; 
+}
+
+float UIChart3D::UICameraCtrl::GetWorldWidth() const {
+	return _worldWidth;
+}
+
+float UIChart3D::UICameraCtrl::GetWorldHeight() const {
+	return _worldHeight;
+}
+
+void UIChart3D::UICameraCtrl::RotateCamera(float deltaYaw, float deltaPitch) {
+	_yaw += deltaYaw;
+	_pitch += deltaPitch;
+	
+	// 限制pitch角度，避免翻转
+	_pitch = std::max(-89.0f, std::min(89.0f, _pitch));
+	
+	//UpdateCameraPosition
+	// 将角度转换为弧度
+	float yawRad = DirectX::XMConvertToRadians(_yaw);
+	float pitchRad = DirectX::XMConvertToRadians(_pitch);
+	
+	// 计算摄像机相对于目标的位置（球坐标系）
+	float x = _viewDistance * cosf(pitchRad) * sinf(yawRad);
+	float y = _viewDistance * sinf(pitchRad);
+	float z = -_viewDistance * cosf(pitchRad) * cosf(yawRad);
+	
+	// 获取当前目标点（控件中心）
+	XMFLOAT3 currentTarget = GetTarget();
+	
+	// 设置新的摄像机位置
+	_position = DirectX::XMFLOAT3(currentTarget.x + x, currentTarget.y + y, currentTarget.z + z);
+	
+	// 重新计算视图矩阵
+	SetViewMatrix();
+}
+
+/*------------------------------------------------------- UIChart3D::UIAxes3D Implementation -------------------------------------------------------*/
+UIChart3D::UIAxes3D::UIAxes3D(){
+}
+
+void UIChart3D::UIAxes3D::Draw(const UICameraCtrl& camera) {
+    // 获取命令列表
+    auto* dx = UIDXFoundation::GetSingletonInstance();
+    auto& dr = dx->GetDeviceResources();
+    auto* cmd = dr->GetCommandList();
+
+    // 保存当前的viewport和scissor状态
+    D3D12_VIEWPORT originalViewport = dr->GetScreenViewport();
+    D3D12_RECT originalScissor = dr->GetScissorRect();
+
+    // 将渲染限制在控件 viewport/scissor 内
+	const D3D12_VIEWPORT vp = camera.GetViewport();
+	const RECT sc = camera.GetScissorRect();
+    cmd->RSSetViewports(1, &vp);
+    cmd->RSSetScissorRects(1, &sc);
+
+	// 计算世界空间的宽高
+    float worldHeight = camera.GetWorldHeight();
+    float worldWidth  = camera.GetWorldWidth();
+
+    // 计算50像素对应的世界坐标距离
+    float marginX = (50.0f / vp.Width) * worldWidth;  // 50像素的X方向边距
+    float marginY = (50.0f / vp.Height) * worldHeight;  // 50像素的Y方向边距
+
+    // 使用 UIDXFoundation 共享的 PrimitiveBatch
+    using DirectX::VertexPositionColor;
+    auto& pBatch = dx->GetPrimitiveBatch();
+
+	pBatch->Begin(cmd);
+
+	// 坐标轴原点位于控件左下角，留50像素边距
+	XMFLOAT3 cameraTarget = camera.GetTarget();
+
+	float originX = cameraTarget.x + worldWidth * 0.5f - marginX;
+	float originY = cameraTarget.y - worldHeight * 0.5f + marginY;
+    XMVECTOR axisOrigin = XMVectorSet(originX, originY, 0.f, 0.f);
+    
+    // 计算轴的最大长度，占满控件空间（减去边距）
+    float maxAxisLenX = worldWidth - 2.0f * marginX;   // X轴可用的最大长度
+    float maxAxisLenY = worldHeight - 2.0f * marginY;  // Y轴可用的最大长度
+    float maxAxisLenZ = std::max(maxAxisLenX, maxAxisLenY); // Z轴为xy的斜边
+    
+	// 坐标轴端点 - 尽量占满空间，沿X取负以实现屏幕左右镜像
+	XMVECTOR Xpos = axisOrigin + XMVectorSet(-maxAxisLenX, 0.f, 0.f, 0.f);             // X轴屏幕向右
+    XMVECTOR Ypos = axisOrigin + XMVectorSet(0.f, maxAxisLenY, 0.f, 0.f);              // Y轴向上，占90%空间
+	XMVECTOR Zpos = axisOrigin + XMVectorSet(0.f, 0.f, maxAxisLenZ, 0.f); 			   // Z轴屏幕右上
+
+    // X axis (Red) - 从原点向右
+    pBatch->DrawLine(VertexPositionColor(axisOrigin, DirectX::Colors::Red), VertexPositionColor(Xpos, DirectX::Colors::Red));
+    // Y axis (Green) - 从原点向上
+    pBatch->DrawLine(VertexPositionColor(axisOrigin, DirectX::Colors::Green), VertexPositionColor(Ypos, DirectX::Colors::Green));
+    // Z axis (Blue) - 从原点向右上
+    pBatch->DrawLine(VertexPositionColor(axisOrigin, DirectX::Colors::Blue), VertexPositionColor(Zpos, DirectX::Colors::Blue));
+
+	// // 测试坐标轴方向
+	//XMFLOAT3 cameraTarget = camera.GetTarget();
+	
+	XMVECTOR p0 = XMVectorSet(cameraTarget.x, cameraTarget.y, cameraTarget.z, 0.f);  // 控件中心点
+	XMVECTOR p1 = XMVectorSet(cameraTarget.x + 5, cameraTarget.y, cameraTarget.z, 0.f);  // X轴：世界+X = 屏幕左
+	XMVECTOR p2 = XMVectorSet(cameraTarget.x, cameraTarget.y + 5, cameraTarget.z, 0.f);  // Y轴：世界+Y = 屏幕上
+
+	pBatch->DrawLine(VertexPositionColor(p0, DirectX::Colors::Red), VertexPositionColor(p1, DirectX::Colors::Blue));
+	pBatch->DrawLine(VertexPositionColor(p0, DirectX::Colors::Red), VertexPositionColor(p2, DirectX::Colors::Green));
+
+	pBatch->End();    // 恢复原始的viewport和scissor状态
+    cmd->RSSetViewports(1, &originalViewport);
+    cmd->RSSetScissorRects(1, &originalScissor);
+}
+
+/*------------------------------------------------------- UIChart3D Main Implementation -------------------------------------------------------*/
 UIChart3D::UIChart3D() {
-	_drawRect = Shape2D::NULL_RECT;
-	
-	// initialize coordinate system (fixed position and orientation)
-	_coordSys.origin = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
-	_coordSys.axisLength = 5.0f;
-	_coordSys.xAxisDir = DirectX::XMFLOAT3(1.0f, 0.0f, 0.0f);
-	_coordSys.yAxisDir = DirectX::XMFLOAT3(0.0f, 1.0f, 0.0f);
-	_coordSys.zAxisDir = DirectX::XMFLOAT3(0.0f, 0.0f, 1.0f);
-	
-	// initialize data transform
-	_dataTransform.xMin = -10.0; _dataTransform.xMax = 10.0;
-	_dataTransform.yMin = -10.0; _dataTransform.yMax = 10.0;
-	_dataTransform.zMin = -10.0; _dataTransform.zMax = 10.0;
-	_dataTransform.scale = 1.0f;
-	
-	// add test curve
-	AddTestCurve();
+    // Camera and axes are now direct member variables, no need for explicit initialization
+}
+
+UIChart3D::~UIChart3D() {
+    // No cleanup needed for direct member variables
 }
 
 void UIChart3D::CalcArea() {
-	_drawRect = _clientRC;
+	_cameraCtrl.SetCtrlRect(GetAbsoluteRect());
 }
 
 void UIChart3D::Draw() {
-	if (!_isShow) {
-		return;
-	}
-	
-	//auto p_dx = UIDXFoundation::GetSingletonInstance();
-	
-	// draw coordinate axes
-	DrawAxes();
-	
-	// draw curves
-	DrawCurves();
+	XMMATRIX transformMatrix = GetInheritedTransformMatrix();
+
+	LONG& x_ = _abusolutePoint.x;
+	LONG& y_ = _abusolutePoint.y;
+
+	// draw border
+	RECT rc = _clientRC;
+	OffsetRect(&rc, x_, y_);
+	UIRect(rc, _z)(UIColor::PrimaryBlue, transformMatrix);
+
+	auto* dx = UIDXFoundation::GetSingletonInstance();
+	dx->SetEffect3DCtrl(&_cameraCtrl);
+	_axes3D.Draw(_cameraCtrl);
 }
 
-void UIChart3D::DrawAxes() {
-	auto p_dx = UIDXFoundation::GetSingletonInstance();
-	
-	// For now, use the 2D+Z approach to draw axis lines in 3D space
-	// This is a simplified implementation using existing public methods
-	
-	float z = 0.0f; // depth
-	
-	// Draw X axis (red) - horizontal line
-	DirectX::XMFLOAT2 xStart(100.0f, 300.0f);
-	DirectX::XMFLOAT2 xEnd(200.0f, 300.0f);
-	p_dx->Draw3DLine(xStart, xEnd, z, UIColor::Red, 2.0f, DirectX::XMMatrixIdentity());
-	
-	// Draw Y axis (green) - vertical line  
-	DirectX::XMFLOAT2 yStart(100.0f, 300.0f);
-	DirectX::XMFLOAT2 yEnd(100.0f, 200.0f);
-	p_dx->Draw3DLine(yStart, yEnd, z, UIColor::Green, 2.0f, DirectX::XMMatrixIdentity());
-	
-	// Draw Z axis (blue) - diagonal line simulating depth
-	DirectX::XMFLOAT2 zStart(100.0f, 300.0f);
-	DirectX::XMFLOAT2 zEnd(150.0f, 250.0f);
-	p_dx->Draw3DLine(zStart, zEnd, z, UIColor::Blue, 2.0f, DirectX::XMMatrixIdentity());
-}
-
-void UIChart3D::DrawCurves() {
-	auto p_dx = UIDXFoundation::GetSingletonInstance();
-	
-	// draw each curve using the 2D+Z approach
-	for (auto& curve : _curves) {
-		if (!curve.isVisible || curve.points.size() < 2) continue;
+bool UIChart3D::OnLButtonDown(POINT pt) {
+	// 转换为相对于控件的坐标
+	POINT point = pt;
+	point.x -= _abusolutePoint.x;
+	point.y -= _abusolutePoint.y;
 		
-		// draw curve as connected line segments
-		for (size_t i = 0; i < curve.points.size() - 1; ++i) {
-			// map 3D points to 2D screen coordinates with simulated depth
-			DirectX::XMFLOAT2 p1_2d = MapPoint3DTo2D(curve.points[i]);
-			DirectX::XMFLOAT2 p2_2d = MapPoint3DTo2D(curve.points[i + 1]);
+	_lastMousePos = point;
+	return true;
+}
+
+bool UIChart3D::OnMouseMove(POINT pt) {
+	// check if left button is down
+	// judge the mouse is out of the control range
+	if (IsKeyDown()(VK_LBUTTON)) {
+		POINT point = pt;
+		point.x -= _abusolutePoint.x;
+		point.y -= _abusolutePoint.y;
+		
+		// 计算鼠标移动距离
+		int deltaX = point.x - _lastMousePos.x;
+		int deltaY = point.y - _lastMousePos.y;
+		
+		// 只有在有实际移动时才进行旋转
+		if (deltaX != 0 || deltaY != 0 || _lastMousePos.x != 0 || _lastMousePos.y != 0) {
+			// 转换为旋转角度（进一步降低灵敏度）
+			float sensitivity = 0.1f;
+			float deltaYaw = deltaX * sensitivity;
+			float deltaPitch = -deltaY * sensitivity;  // Y轴反向
 			
-			float z1 = (float)curve.points[i].z * 0.1f; // scale Z for depth
-			float z2 = (float)curve.points[i + 1].z * 0.1f;
+			// 旋转摄像机
+			_cameraCtrl.RotateCamera(deltaYaw, deltaPitch);
 			
-			// Draw line with depth simulation
-			p_dx->Draw3DLine(p1_2d, p2_2d, (z1 + z2) * 0.5f, curve.color, 1.5f, DirectX::XMMatrixIdentity());
+			// 刷新显示
+			UIRefresh();
 		}
+		
+		// 更新上次鼠标位置
+		_lastMousePos = point;
 	}
+
+	return true;
 }
-
-DirectX::XMFLOAT3 UIChart3D::DataToWorld(double dataX, double dataY, double dataZ) {
-	// normalize data to [0,1] range
-	float normalizedX = (float)((dataX - _dataTransform.xMin) / (_dataTransform.xMax - _dataTransform.xMin));
-	float normalizedY = (float)((dataY - _dataTransform.yMin) / (_dataTransform.yMax - _dataTransform.yMin));
-	float normalizedZ = (float)((dataZ - _dataTransform.zMin) / (_dataTransform.zMax - _dataTransform.zMin));
-	
-	// map to world coordinates relative to origin
-	DirectX::XMFLOAT3 worldPos;
-	worldPos.x = _coordSys.origin.x + 
-				normalizedX * _coordSys.axisLength * _coordSys.xAxisDir.x +
-				normalizedY * _coordSys.axisLength * _coordSys.yAxisDir.x +
-				normalizedZ * _coordSys.axisLength * _coordSys.zAxisDir.x;
-	
-	worldPos.y = _coordSys.origin.y + 
-				normalizedX * _coordSys.axisLength * _coordSys.xAxisDir.y +
-				normalizedY * _coordSys.axisLength * _coordSys.yAxisDir.y +
-				normalizedZ * _coordSys.axisLength * _coordSys.zAxisDir.y;
-	
-	worldPos.z = _coordSys.origin.z + 
-				normalizedX * _coordSys.axisLength * _coordSys.xAxisDir.z +
-				normalizedY * _coordSys.axisLength * _coordSys.yAxisDir.z +
-				normalizedZ * _coordSys.axisLength * _coordSys.zAxisDir.z;
-	
-	return worldPos;
-}
-
-DirectX::XMFLOAT2 UIChart3D::MapPoint3DTo2D(const Point3D& point3D) {
-	// Simple isometric projection mapping
-	// Scale and offset to fit in control area
-	float centerX = (_drawRect.left + _drawRect.right) * 0.5f;
-	float centerY = (_drawRect.top + _drawRect.bottom) * 0.5f;
-	
-	// Normalize data coordinates
-	float normalizedX = (float)((point3D.x - _dataTransform.xMin) / (_dataTransform.xMax - _dataTransform.xMin) - 0.5);
-	float normalizedY = (float)((point3D.y - _dataTransform.yMin) / (_dataTransform.yMax - _dataTransform.yMin) - 0.5);
-	float normalizedZ = (float)((point3D.z - _dataTransform.zMin) / (_dataTransform.zMax - _dataTransform.zMin) - 0.5);
-	
-	// Simple isometric projection
-	float scale = 80.0f; // scale factor
-	float screenX = centerX + (normalizedX - normalizedY) * scale;
-	float screenY = centerY + (normalizedX + normalizedY) * 0.5f * scale - normalizedZ * scale;
-	
-	return DirectX::XMFLOAT2(screenX, screenY);
-}
-
-void UIChart3D::AddTestCurve() {
-	Curve3D testCurve;
-	testCurve.name = L"TestSpiralCurve";
-	testCurve.color = UIColor::Red;
-	testCurve.isVisible = true;
-	
-	// generate spiral curve test data
-	for (int i = 0; i < 50; ++i) {
-		double t = i * 0.3;
-		testCurve.points.push_back(Point3D(
-			cos(t) * 5.0,      // x: 5*cos(t) 
-			sin(t) * 5.0,      // y: 5*sin(t)
-			t * 2.0            // z: 2*t (spiral rising)
-		));
-	}
-	
-	_curves.push_back(testCurve);
-}
-
-void UIChart3D::Clear() {
-	_curves.clear();
-}
-
-void UIChart3D::DrawGrid() {
-	// TODO: implement grid drawing if needed
-}
-
-void UIChart3D::DrawAxisLabels() {
-	// TODO: implement axis labels if needed
-}
-
-

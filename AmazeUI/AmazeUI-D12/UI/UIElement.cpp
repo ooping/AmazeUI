@@ -294,20 +294,26 @@ SIZE UIFont::GetDrawAreaSize(std::wstring text) {
     /
    eye(0,2,-5)
 
-   Right-handed coordinate system:
+   Left-handed coordinate system:
    - X-axis: positive direction is to the right
    - Y-axis: positive direction is upward
    - Z-axis: positive direction is into the screen
 */
 void UICameraBase::SetViewMatrix() {
-	_view = Matrix::CreateLookAt(Vector3(_position.x, _position.y, _position.z), // eye
-								 Vector3(_target.x, _target.y, _target.z),       // at
-								 Vector3(_up.x, _up.y, _up.z));                  // up
-								
+	// _view = Matrix::CreateLookAt(Vector3(_position.x, _position.y, _position.z), // eye
+	// 							 Vector3(_target.x, _target.y, _target.z),       // at
+	// 							 Vector3(_up.x, _up.y, _up.z));                  // up								
+
+	XMVECTOR eye = XMVectorSet(_position.x, _position.y, _position.z, 1.0f);
+    XMVECTOR focus = XMVectorSet(_target.x, _target.y, _target.z, 1.0f);
+    XMVECTOR up = XMVectorSet(_up.x, _up.y, _up.z, 0.0f);
+    
+    _view = XMMatrixLookAtLH(eye, focus, up);  // 左手坐标系
 }
 	
 void UICameraBase::SetProjectionMatrix() {
-	_projection3D = Matrix::CreatePerspectiveFieldOfView(_fov, _aspectRatio, _nearPlane, _farPlane);
+	//_projection3D = Matrix::CreatePerspectiveFieldOfView(_fov, _aspectRatio, _nearPlane, _farPlane);
+	_projection3D = XMMatrixPerspectiveFovLH(_fov, _aspectRatio, _nearPlane, _farPlane);
 }
 
 // let the camera can see the whole screen
@@ -315,9 +321,10 @@ void UICameraUI::SetCameraFor3D(float width, float height) {
 	_aspectRatio = width / height;
 	SetProjectionMatrix();
 
-	_position = XMFLOAT3(0.0f, 0.0f, -height / 2.0f);
+	float distance = (height / 2) / tanf(_fov / 2.0f);
+	_position = XMFLOAT3(0.0f, 0.0f, -distance); // retreat the camera to see the whole screen
 	_target = XMFLOAT3(0.0f, 0.0f, 0.0f);
-	_up = XMFLOAT3(0.0f, -1.0f, 0.0f);
+	_up = XMFLOAT3(0.0f, 1.0f, 0.0f);
 	//
 	SetViewMatrix();
 }
@@ -336,11 +343,11 @@ XMFLOAT3 UICameraUI::ConvertScreen2DTo3D(const XMFLOAT3& screenPos) {
     
     // calculate target depth (interpolation from near plane to far plane)
     float depth = _nearPlane + screenPos.z * (_farPlane - _nearPlane);
-    
+    float totalDepth = -_position.z + depth;
+
     // calculate in view space
     float tanHalfFovY = tanf(_fov / 2.0f);
-    float totalDepth = viewportHeight / 2 + depth;
-    float viewX = ndcX * totalDepth * _aspectRatio * tanHalfFovY;
+    float viewX = ndcX * _aspectRatio * totalDepth * tanHalfFovY;
     float viewY = ndcY * totalDepth * tanHalfFovY;
     float viewZ = totalDepth; // view space Z includes camera retreat distance
 	// 
@@ -458,7 +465,7 @@ XMMATRIX UIZPlaneTransform::GetTransformMatrix(bool isRotationZ, float xByZ, flo
 
 	// xy axis rotation matrix, in the same z plane
 	if (isRotationX || isRotationY) {
-		XMFLOAT3 xyPivot = UICameraUI::GetSingletonInstance()->ConvertScreen2DTo3D(XMFLOAT3(isRotationY?xByY:0.f, isRotationX?yByX:0.f, z));
+		XMFLOAT3 xyPivot = UICameraUI::GetSingletonInstance()->ConvertScreen2DTo3D(XMFLOAT3(isRotationY ? xByY : 0.f, isRotationX ? yByX : 0.f, z));
 		XMVECTOR pivotPoint = XMLoadFloat3(&xyPivot);
 
 		// move to origin

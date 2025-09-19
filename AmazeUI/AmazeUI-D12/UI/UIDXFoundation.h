@@ -132,20 +132,20 @@ public:
     void CreateResources();
 	void ResetResources();
 
-    // Messages
-    void OnActivated();
-    void OnDeactivated();
-    void OnSuspending();
-    void OnResuming();
-    void NewAudioDevice();
-
 	void HandleWindowSizeChanged(int width, int height);
 
 	void Render();
 	void Render3D();
 
+	RECT GetOutputSize() const;
 	LONG GetOutputWidth() const;
 	LONG GetOutputHeight() const;
+
+	ID3D12Device* GetD3DDevice() const;
+	std::unique_ptr<UIDeviceResources>& GetDeviceResources();
+	std::unique_ptr<DirectX::PrimitiveBatch<DirectX::VertexPositionColor>>& GetPrimitiveBatch();
+
+	void SetEffect3DCtrl(UICameraBase* pCamera3DCtrl);
 
 private:
     void Clear();
@@ -181,6 +181,8 @@ private:
     std::unique_ptr<DirectX::Model>                                         p_model;
     DirectX::Model::EffectCollection                                        _modelEffectsGame;
     std::unique_ptr<DirectX::EffectTextureFactory>                          p_modelResources;
+
+	std::unique_ptr<DirectX::BasicEffect> 									p_lineEffect3DCtrl;
 
     Microsoft::WRL::ComPtr<ID3D12Resource>                                  _texture1;
 

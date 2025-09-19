@@ -138,7 +138,7 @@ RECT UIWindowBase::GetRelativeRect() {
 	return relativeRect;
 }
 
-RECT UIWindowBase::GetAbusoluteRect() {
+RECT UIWindowBase::GetAbsoluteRect() {
 	RECT abusoluteRect = _clientRC;
 	OffsetRect(&abusoluteRect, _abusolutePoint.x, _abusolutePoint.y);
 	return abusoluteRect;
@@ -320,7 +320,7 @@ UIWindowBase* UIContainer::GetMinZChild(const POINT& pt) {
 			continue;
 		}
 
-		if (ContainsPoint()(pt, _winList[i].p_win->GetAbusoluteRect())==true) {
+		if (ContainsPoint()(pt, _winList[i].p_win->GetAbsoluteRect())==true) {
 			hoverIndexList.push_back(i);
 		}
 	}
@@ -351,7 +351,7 @@ POINT UIContainer::GetBindWindowAbusolutePoint() {
 
 RECT UIContainer::GetBindWindowAbusoluteRect() {
 	if (_isBindDUI==true) {
-		return _pBindDUIWin->GetAbusoluteRect();
+		return _pBindDUIWin->GetAbsoluteRect();
 	}
 
 	return NULL_RECT;
@@ -448,8 +448,8 @@ bool UIContainer::HandleMessagePre(UINT message, WPARAM wParam, LPARAM lParam) {
 					continue;
 				}
 
-				if (ContainsPoint()(pt, _winList[i].p_win->GetAbusoluteRect())==false) {
-					if (ContainsPoint()(prePoint, _winList[i].p_win->GetAbusoluteRect())==true) {
+				if (ContainsPoint()(pt, _winList[i].p_win->GetAbsoluteRect())==false) {
+					if (ContainsPoint()(prePoint, _winList[i].p_win->GetAbsoluteRect())==true) {
 						leaveIndexList.push_back(i);
 					}
 				}
@@ -859,7 +859,7 @@ bool UIFrame::HandleMessageFromHookWindow(UINT message, WPARAM wParam, LPARAM lP
 			pt.x = LOWORD(lParam);
 			pt.y = HIWORD(lParam);
 
-			if (ContainsPoint()(pt, _pHookWindowForPopup->GetAbusoluteRect())==false) {
+			if (ContainsPoint()(pt, _pHookWindowForPopup->GetAbsoluteRect())==false) {
 				if (message==WM_LBUTTONDOWN || message==WM_RBUTTONDOWN) {
 					_pHookWindowForPopup->ShowWindow(false);
 					_pHookWindowForPopup = nullptr;

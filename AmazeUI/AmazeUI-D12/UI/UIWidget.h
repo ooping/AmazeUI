@@ -1043,80 +1043,66 @@ private:
 class UIChart3D : public UIControlBase<UIChart3D> {
 	friend UIControlBase;
 
-	// 3D point structure
-	struct Point3D {
-		double x, y, z;
-		Point3D(double x = 0.0, double y = 0.0, double z = 0.0) : x(x), y(y), z(z) {}
+	/*------------------------------------------------------- Camera - Independent 3D camera system -------------------------------------------------------*/
+	// Independent 3D camera system for Chart3D control, similar to Unity3D Scene View axes
+	class UICameraCtrl : public UICameraBase {
+		RECT _scissorRect;
+		D3D12_VIEWPORT _viewport;
+		
+		float _worldWidth;
+		float _worldHeight;
+
+		// Mouse rotation support
+		float _yaw = 0.0f;    // 左右旋转角度
+		float _pitch = 0.0f;  // 上下旋转角度
+		float _viewDistance = 5.0f; // 摄像机到目标的距离
+
+	public:
+		UICameraCtrl();
+		~UICameraCtrl() = default;
+
+		// Setup methods
+		void SetCtrlRect(const RECT& ctrlRC);
+
+		// Mouse rotation
+		void RotateCamera(float deltaYaw, float deltaPitch);
+
+		RECT GetScissorRect() const;
+		D3D12_VIEWPORT GetViewport() const;
+		float GetWorldWidth() const;
+		float GetWorldHeight() const;
 	};
 
-	// 3D curve data
-	struct Curve3D {
-		std::vector<Point3D> points;
-		std::wstring name;
-		UIColor color;
-		bool isVisible;
-		
-		Curve3D() : name(L""), color(UIColor::Red), isVisible(true) {}
-	};
+	/*------------------------------------------------------- UIAxes3D - 3D coordinate axes renderer -------------------------------------------------------*/
+	// 3D coordinate axes renderer
+	class UIAxes3D {
+	public:
+		UIAxes3D();
+		~UIAxes3D() = default;
 
-	// coordinate system parameters
-	struct CoordinateSystem {
-		DirectX::XMFLOAT3 origin;          // origin position in world coordinates
-		float axisLength;                  // axis length in world units
-		DirectX::XMFLOAT3 xAxisDir;        // X axis direction
-		DirectX::XMFLOAT3 yAxisDir;        // Y axis direction  
-		DirectX::XMFLOAT3 zAxisDir;        // Z axis direction
-		
-		CoordinateSystem() : 
-			origin(0.0f, 0.0f, 0.0f),
-			axisLength(5.0f),
-			xAxisDir(1.0f, 0.0f, 0.0f),
-			yAxisDir(0.0f, 1.0f, 0.0f),
-			zAxisDir(0.0f, 0.0f, 1.0f) {}
-	};
+		void Draw(const UICameraCtrl& camera);
 
-	// data transform parameters
-	struct DataTransform {
-		double xMin, xMax;                 // data range
-		double yMin, yMax;
-		double zMin, zMax;
-		float scale;                       // overall scale
-		
-		DataTransform() : 
-			xMin(-10.0), xMax(10.0),
-			yMin(-10.0), yMax(10.0),
-			zMin(-10.0), zMax(10.0),
-			scale(1.0f) {}
+	private:
+	
 	};
 
 public:
 	UIChart3D();
+	~UIChart3D();
 	void CalcArea();
 	void Draw();
 
-	// add test curve
-	void AddTestCurve();
-	
-	// clear all curves
-	void Clear();
+	// Mouse event handlers
+	bool OnLButtonDown(POINT pt);
+	bool OnMouseMove(POINT pt);
 
 private:
-	// core drawing methods
-	void DrawAxes();                       // draw XYZ coordinate axes
-	void DrawGrid();                       // draw grid (optional)
-	void DrawAxisLabels();                 // draw axis labels
-	void DrawCurves();                     // draw 3D curves
-	
-	// coordinate transformation
-	DirectX::XMFLOAT3 DataToWorld(double dataX, double dataY, double dataZ);
-	DirectX::XMFLOAT2 MapPoint3DTo2D(const Point3D& point3D);  // isometric projection helper
-	
-	// coordinate system and data
-	CoordinateSystem _coordSys;
-	DataTransform _dataTransform;
-	std::vector<Curve3D> _curves;
-	
-	RECT _drawRect;                        // drawing area
+	// Independent camera and axes system
+	UICameraCtrl _cameraCtrl;
+	UIAxes3D _axes3D;
+
+	// Mouse interaction state
+	POINT _lastMousePos = {0, 0};
 	
 	DirectX::XMMATRIX _inheritedTransformMatrix;
 };

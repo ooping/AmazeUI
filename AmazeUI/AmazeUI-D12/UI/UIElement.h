@@ -37,7 +37,7 @@ struct UIPoints {
 
 // line
 struct UILine {
-	UILine(LONG beginX, LONG beginY, LONG endX, LONG endY, float z, float width=1.0f);
+	UILine(LONG beginX, LONG beginY, LONG endX, LONG endY, float z, float width = 1.0f);
 	~UILine() = default;
 
 	void operator()(const UIColor& color, const DirectX::XMMATRIX& transformMatrix=DirectX::XMMatrixIdentity());
@@ -178,6 +178,9 @@ public:
 	DirectX::XMFLOAT3 GetUpVector() const { return _up; }
 	DirectX::XMFLOAT3 GetRightVector() const { return _right; }
 	DirectX::XMFLOAT3 GetForwardVector() const { return _forward; }
+
+	float  GetFov() const { return _fov; }
+	float  GetAspectRatio() const { return _aspectRatio; }
 
 protected:
 	UICameraBase() = default;

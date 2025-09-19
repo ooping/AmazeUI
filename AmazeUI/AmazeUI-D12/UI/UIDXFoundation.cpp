@@ -707,12 +707,37 @@ void UIDXFoundation::Initialize(int width, int height) {
     CreateWindowSizeDependentResourcesXTK();
 }
 
+RECT UIDXFoundation::GetOutputSize() const {
+    return p_deviceResources->_outputSize;
+}
+
 LONG UIDXFoundation::GetOutputWidth() const {
 	return GetRectWidth()(p_deviceResources->_outputSize);
 }
 
 LONG UIDXFoundation::GetOutputHeight() const {
 	return GetRectHeight()(p_deviceResources->_outputSize);
+}
+
+ID3D12Device* UIDXFoundation::GetD3DDevice() const {
+    return p_deviceResources->GetD3DDevice();
+}
+
+unique_ptr<UIDeviceResources>& UIDXFoundation::GetDeviceResources() { 
+    return p_deviceResources; 
+}
+
+void UIDXFoundation::SetEffect3DCtrl(UICameraBase* pCamera3DCtrl) {
+    p_lineEffect3DCtrl->SetWorld(Matrix::Identity);
+    p_lineEffect3DCtrl->SetView(pCamera3DCtrl->GetViewMatrix());
+    p_lineEffect3DCtrl->SetProjection(pCamera3DCtrl->GetProjectionMatrix());
+
+    auto commandList = p_deviceResources->GetCommandList();
+    p_lineEffect3DCtrl->Apply(commandList);
+}
+
+std::unique_ptr<DirectX::PrimitiveBatch<DirectX::VertexPositionColor>>& UIDXFoundation::GetPrimitiveBatch() {
+    return p_batch;
 }
 
 void UIDXFoundation::Render3D() {
@@ -1975,23 +2000,6 @@ void XM_CALLCONV UIDXFoundation::DrawGrid(FXMVECTOR xAxis, FXMVECTOR yAxis, FXMV
     PIXEndEvent(commandList);
 }
 
-// Message handlers
-void UIDXFoundation::OnActivated()
-{
-}
-
-void UIDXFoundation::OnDeactivated()
-{
-}
-
-void UIDXFoundation::OnSuspending()
-{
-}
-
-void UIDXFoundation::OnResuming()
-{
-}
-
 void UIDXFoundation::HandleWindowSizeChanged(int width, int height)
 {
     if (!p_deviceResources->HandleWindowSizeChanged(width, height)) {
@@ -1999,10 +2007,6 @@ void UIDXFoundation::HandleWindowSizeChanged(int width, int height)
     }
 
     CreateWindowSizeDependentResourcesXTK();
-}
-
-void UIDXFoundation::NewAudioDevice()
-{
 }
 
 // These are the resources that depend on the device.
@@ -2120,6 +2124,7 @@ void UIDXFoundation::CreateDeviceDependentResourcesXTK() {
 
             p_lineEffect2D = make_unique<BasicEffect>(device, EffectFlags::VertexColor, pd);
             p_lineEffect3DGame = make_unique<BasicEffect>(device, EffectFlags::VertexColor, pd);
+            p_lineEffect3DCtrl = make_unique<BasicEffect>(device, EffectFlags::VertexColor, pd);
         }
 
         {
@@ -2264,6 +2269,7 @@ void UIDXFoundation::ResetResources() {
     p_batchTexture.reset();
     p_shape.reset();
     p_model.reset();
+    p_lineEffect3DCtrl.reset();
     p_lineEffect3DGame.reset();
     p_lineEffect2D.reset();
     p_triangleEffect2D.reset();
