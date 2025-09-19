@@ -4949,8 +4949,7 @@ void UITab::SetCurCell(UINT index) {
 		}
 
 		_selectedIndex = index;
-		//PlayAnimate(MAX_FRAME1);
-		PlayAnimate(100);
+		PlayAnimate(MAX_FRAME1);
 	}
 }
 
@@ -5101,11 +5100,11 @@ void UICanvas3D::Draw() {
 		curPT.x -= _abusolutePoint.x;
 		curPT.y -= _abusolutePoint.y;
 
-		// 判断记录的_curMousePos 和 中心位置点的偏差  
+		// Calculate offset between recorded _curMousePos and center position
 		POINT center = {GetRectWidth()(_clientRC) / 2, GetRectHeight()(_clientRC) / 2};
 		POINT offset = {curPT.x - center.x, curPT.y - center.y};
 
-		// 计算偏差比例
+		// Calculate offset ratio
 		offsetX = (float)offset.x / center.x;
 		offsetY = (float)offset.y / center.y;
 	}
@@ -5198,13 +5197,13 @@ void UIChart3D::UICameraCtrl::SetCtrlRect(const RECT& ctrlRC) {
 	float offsetX = ctrlCenterX - windowCenterX;
     float offsetY = ctrlCenterY - windowCenterY;
 
-	// 计算世界空间的偏移
+	// Calculate world space offset
     float tanHalfFOV = tan(_fov * 0.5f);
     _worldHeight = 2.0f * _viewDistance * tanHalfFOV;
     _worldWidth = _worldHeight * _aspectRatio;
 
-	float worldOffsetX = -(offsetX / windowWidth) * _worldWidth;  // X轴反向修正
-    float worldOffsetY = -(offsetY / windowHeight) * _worldHeight;  // Y轴翻转
+	float worldOffsetX = (offsetX / windowWidth) * _worldWidth;
+    float worldOffsetY = -(offsetY / windowHeight) * _worldHeight;
 
 	_position = DirectX::XMFLOAT3(worldOffsetX, worldOffsetY, -_viewDistance);
     _target = DirectX::XMFLOAT3(worldOffsetX, worldOffsetY, 0.0f);
@@ -5248,26 +5247,26 @@ void UIChart3D::UICameraCtrl::RotateCamera(float deltaYaw, float deltaPitch) {
 	_yaw += deltaYaw;
 	_pitch += deltaPitch;
 	
-	// 限制pitch角度，避免翻转
+	// Limit pitch angle to avoid flipping
 	_pitch = std::max(-89.0f, std::min(89.0f, _pitch));
 	
 	//UpdateCameraPosition
-	// 将角度转换为弧度
+	// Convert angles to radians
 	float yawRad = DirectX::XMConvertToRadians(_yaw);
 	float pitchRad = DirectX::XMConvertToRadians(_pitch);
 	
-	// 计算摄像机相对于目标的位置（球坐标系）
+	// Calculate camera position relative to target (spherical coordinate system)
 	float x = _viewDistance * cosf(pitchRad) * sinf(yawRad);
 	float y = _viewDistance * sinf(pitchRad);
 	float z = -_viewDistance * cosf(pitchRad) * cosf(yawRad);
 	
-	// 获取当前目标点（控件中心）
+	// Get current target point (control center)
 	XMFLOAT3 currentTarget = GetTarget();
 	
-	// 设置新的摄像机位置
+	// Set new camera position
 	_position = DirectX::XMFLOAT3(currentTarget.x + x, currentTarget.y + y, currentTarget.z + z);
 	
-	// 重新计算视图矩阵
+	// Recalculate view matrix
 	SetViewMatrix();
 }
 
@@ -5276,70 +5275,70 @@ UIChart3D::UIAxes3D::UIAxes3D(){
 }
 
 void UIChart3D::UIAxes3D::Draw(const UICameraCtrl& camera) {
-    // 获取命令列表
+    // Get command list
     auto* dx = UIDXFoundation::GetSingletonInstance();
     auto& dr = dx->GetDeviceResources();
     auto* cmd = dr->GetCommandList();
 
-    // 保存当前的viewport和scissor状态
+    // Save current viewport and scissor state
     D3D12_VIEWPORT originalViewport = dr->GetScreenViewport();
     D3D12_RECT originalScissor = dr->GetScissorRect();
 
-    // 将渲染限制在控件 viewport/scissor 内
+    // Limit rendering to control viewport/scissor area
 	const D3D12_VIEWPORT vp = camera.GetViewport();
 	const RECT sc = camera.GetScissorRect();
     cmd->RSSetViewports(1, &vp);
     cmd->RSSetScissorRects(1, &sc);
 
-	// 计算世界空间的宽高
+	// Calculate world space dimensions
     float worldHeight = camera.GetWorldHeight();
     float worldWidth  = camera.GetWorldWidth();
 
-    // 计算50像素对应的世界坐标距离
-    float marginX = (50.0f / vp.Width) * worldWidth;  // 50像素的X方向边距
-    float marginY = (50.0f / vp.Height) * worldHeight;  // 50像素的Y方向边距
+    // Calculate world coordinate distance for 50 pixels
+    float marginX = (50.0f / vp.Width) * worldWidth;  // 50-pixel margin in X direction
+    float marginY = (50.0f / vp.Height) * worldHeight;  // 50-pixel margin in Y direction
 
-    // 使用 UIDXFoundation 共享的 PrimitiveBatch
+    // Use shared PrimitiveBatch from UIDXFoundation
     using DirectX::VertexPositionColor;
     auto& pBatch = dx->GetPrimitiveBatch();
 
 	pBatch->Begin(cmd);
 
-	// 坐标轴原点位于控件左下角，留50像素边距
+	// Coordinate axes origin at control's bottom-left corner with 50-pixel margin
 	XMFLOAT3 cameraTarget = camera.GetTarget();
 
-	float originX = cameraTarget.x + worldWidth * 0.5f - marginX;
+	float originX = cameraTarget.x - worldWidth * 0.5f + marginX;
 	float originY = cameraTarget.y - worldHeight * 0.5f + marginY;
     XMVECTOR axisOrigin = XMVectorSet(originX, originY, 0.f, 0.f);
     
-    // 计算轴的最大长度，占满控件空间（减去边距）
-    float maxAxisLenX = worldWidth - 2.0f * marginX;   // X轴可用的最大长度
-    float maxAxisLenY = worldHeight - 2.0f * marginY;  // Y轴可用的最大长度
-    float maxAxisLenZ = std::max(maxAxisLenX, maxAxisLenY); // Z轴为xy的斜边
+    // Calculate maximum axis length to fill control space (minus margins)
+    float maxAxisLenX = worldWidth - 2.0f * marginX;   // Maximum available X-axis length
+    float maxAxisLenY = worldHeight - 2.0f * marginY;  // Maximum available Y-axis length
+    float maxAxisLenZ = std::max(maxAxisLenX, maxAxisLenY); // Z-axis as diagonal of XY
     
-	// 坐标轴端点 - 尽量占满空间，沿X取负以实现屏幕左右镜像
-	XMVECTOR Xpos = axisOrigin + XMVectorSet(-maxAxisLenX, 0.f, 0.f, 0.f);             // X轴屏幕向右
-    XMVECTOR Ypos = axisOrigin + XMVectorSet(0.f, maxAxisLenY, 0.f, 0.f);              // Y轴向上，占90%空间
-	XMVECTOR Zpos = axisOrigin + XMVectorSet(0.f, 0.f, maxAxisLenZ, 0.f); 			   // Z轴屏幕右上
+	// Coordinate axis endpoints - fill available space
+	XMVECTOR Xpos = axisOrigin + XMVectorSet(maxAxisLenX, 0.f, 0.f, 0.f);             // X-axis points right on screen
+    XMVECTOR Ypos = axisOrigin + XMVectorSet(0.f, maxAxisLenY, 0.f, 0.f);              // Y-axis points up
+	XMVECTOR Zpos = axisOrigin + XMVectorSet(0.f, 0.f, maxAxisLenZ, 0.f); 			   // Z-axis points into screen
 
-    // X axis (Red) - 从原点向右
+    // X axis (Red) - from origin to right
     pBatch->DrawLine(VertexPositionColor(axisOrigin, DirectX::Colors::Red), VertexPositionColor(Xpos, DirectX::Colors::Red));
-    // Y axis (Green) - 从原点向上
+    // Y axis (Green) - from origin upward
     pBatch->DrawLine(VertexPositionColor(axisOrigin, DirectX::Colors::Green), VertexPositionColor(Ypos, DirectX::Colors::Green));
-    // Z axis (Blue) - 从原点向右上
+    // Z axis (Blue) - from origin into screen
     pBatch->DrawLine(VertexPositionColor(axisOrigin, DirectX::Colors::Blue), VertexPositionColor(Zpos, DirectX::Colors::Blue));
 
-	// // 测试坐标轴方向
+	// // Test coordinate axis directions
 	//XMFLOAT3 cameraTarget = camera.GetTarget();
 	
-	XMVECTOR p0 = XMVectorSet(cameraTarget.x, cameraTarget.y, cameraTarget.z, 0.f);  // 控件中心点
-	XMVECTOR p1 = XMVectorSet(cameraTarget.x + 5, cameraTarget.y, cameraTarget.z, 0.f);  // X轴：世界+X = 屏幕左
-	XMVECTOR p2 = XMVectorSet(cameraTarget.x, cameraTarget.y + 5, cameraTarget.z, 0.f);  // Y轴：世界+Y = 屏幕上
+	// XMVECTOR p0 = XMVectorSet(cameraTarget.x, cameraTarget.y, cameraTarget.z, 0.f);  // Control center point
+	// XMVECTOR p1 = XMVectorSet(cameraTarget.x + 5, cameraTarget.y, cameraTarget.z, 0.f);  // X-axis: world +X = screen left
+	// XMVECTOR p2 = XMVectorSet(cameraTarget.x, cameraTarget.y + 5, cameraTarget.z, 0.f);  // Y-axis: world +Y = screen up
 
-	pBatch->DrawLine(VertexPositionColor(p0, DirectX::Colors::Red), VertexPositionColor(p1, DirectX::Colors::Blue));
-	pBatch->DrawLine(VertexPositionColor(p0, DirectX::Colors::Red), VertexPositionColor(p2, DirectX::Colors::Green));
+	// pBatch->DrawLine(VertexPositionColor(p0, DirectX::Colors::Red), VertexPositionColor(p1, DirectX::Colors::Blue));
+	// pBatch->DrawLine(VertexPositionColor(p0, DirectX::Colors::Red), VertexPositionColor(p2, DirectX::Colors::Green));
 
-	pBatch->End();    // 恢复原始的viewport和scissor状态
+	pBatch->End();    // Restore original viewport and scissor state
     cmd->RSSetViewports(1, &originalViewport);
     cmd->RSSetScissorRects(1, &originalScissor);
 }
@@ -5373,8 +5372,8 @@ void UIChart3D::Draw() {
 	_axes3D.Draw(_cameraCtrl);
 }
 
-bool UIChart3D::OnLButtonDown(POINT pt) {
-	// 转换为相对于控件的坐标
+bool UIChart3D::OnRButtonDown(POINT pt) {
+	// Convert to control-relative coordinates
 	POINT point = pt;
 	point.x -= _abusolutePoint.x;
 	point.y -= _abusolutePoint.y;
@@ -5384,32 +5383,32 @@ bool UIChart3D::OnLButtonDown(POINT pt) {
 }
 
 bool UIChart3D::OnMouseMove(POINT pt) {
-	// check if left button is down
+	// check if right button is down
 	// judge the mouse is out of the control range
-	if (IsKeyDown()(VK_LBUTTON)) {
+	if (IsKeyDown()(VK_RBUTTON)) {
 		POINT point = pt;
 		point.x -= _abusolutePoint.x;
 		point.y -= _abusolutePoint.y;
 		
-		// 计算鼠标移动距离
+		// Calculate mouse movement distance
 		int deltaX = point.x - _lastMousePos.x;
 		int deltaY = point.y - _lastMousePos.y;
 		
-		// 只有在有实际移动时才进行旋转
+		// Only rotate when there is actual movement
 		if (deltaX != 0 || deltaY != 0 || _lastMousePos.x != 0 || _lastMousePos.y != 0) {
-			// 转换为旋转角度（进一步降低灵敏度）
+			// Convert to rotation angles (further reduced sensitivity)
 			float sensitivity = 0.1f;
 			float deltaYaw = deltaX * sensitivity;
-			float deltaPitch = -deltaY * sensitivity;  // Y轴反向
+			float deltaPitch = -deltaY * sensitivity;  // Y-axis inverted
 			
-			// 旋转摄像机
+			// Rotate camera
 			_cameraCtrl.RotateCamera(deltaYaw, deltaPitch);
 			
-			// 刷新显示
+			// Refresh display
 			UIRefresh();
 		}
 		
-		// 更新上次鼠标位置
+		// Update last mouse position
 		_lastMousePos = point;
 	}
 

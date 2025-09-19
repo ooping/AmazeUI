@@ -120,8 +120,11 @@ void UIWinTop::OnCreate()
 			}
 		}
 
-		UIChart3D *pChart3D = new UIChart3D();
-		pChart3D->CreateControlOnHeap(0, &_canvas100);
+		UIChart3D *pChart3D101 = new UIChart3D();
+		pChart3D101->CreateControlOnHeap(0, &_canvas100);
+
+		UIChart3D* pChart3D102 = new UIChart3D();
+		pChart3D102->CreateControlOnHeap(0, &_canvas100);
 
 		UILayoutGrid layoutGrid1;
 		layoutGrid1.InitPoint(CreatePoint()(20, 20));
@@ -139,7 +142,8 @@ void UIWinTop::OnCreate()
 		layoutGrid1.SetCell(2, 1, &_edit101);
 		layoutGrid1.SetCell(2, 2, &_combo101);
 
-		layoutGrid1.SetCell(3, 0, 15, 7, pChart3D);
+		layoutGrid1.SetCell(3, 0, 15, 3, pChart3D101);
+		layoutGrid1.SetCell(3, 4, 15, 7, pChart3D102);
 
 		//
 		layoutGrid1.SetCell(0, 8, 15, 9, &_grid101);

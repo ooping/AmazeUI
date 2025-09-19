@@ -1093,7 +1093,7 @@ public:
 	void Draw();
 
 	// Mouse event handlers
-	bool OnLButtonDown(POINT pt);
+	bool OnRButtonDown(POINT pt);
 	bool OnMouseMove(POINT pt);
 
 private:
