@@ -1573,22 +1573,22 @@ void UIGrid::DrawSelected() {
 	RECT rc;
 
 	// Draw the fix area normal background
-	if (_isFirstRowFix&&_isFirstColumnFix) {
-		rc = CreateRect()(_gridArea.left, _gridArea.top, _gridArea.right, _gridArea.top+_rowHeightList[0]);
+	if (_isFirstRowFix && _isFirstColumnFix) {
+		rc = CreateRect()(_gridArea.left, _gridArea.top, _gridArea.right, _gridArea.top + _rowHeightList[0]);
 		OffsetRect(&rc, x_, y_);
 		UIRect(rc, _z)(fixColor, 240, _inheritedTransformMatrix);
 
-		int rcTop = _gridArea.top+_rowHeightList[0]<_gridArea.bottom ? (_gridArea.top+_rowHeightList[0]):_gridArea.bottom;
+		int rcTop = _gridArea.top + _rowHeightList[0] < _gridArea.bottom ? (_gridArea.top + _rowHeightList[0]) : _gridArea.bottom;
 
-		rc = CreateRect()(_gridArea.left, rcTop, _gridArea.left+_columnWidthList[0], _gridArea.bottom);
+		rc = CreateRect()(_gridArea.left, rcTop, _gridArea.left + _columnWidthList[0], _gridArea.bottom);
 		OffsetRect(&rc, x_, y_);
 		UIRect(rc, _z)(fixColor, 240, _inheritedTransformMatrix);
 	} else if (_isFirstRowFix) {
-		rc = CreateRect()(_gridArea.left, _gridArea.top, _gridArea.right, _gridArea.top+_rowHeightList[0]);
+		rc = CreateRect()(_gridArea.left, _gridArea.top, _gridArea.right, _gridArea.top + _rowHeightList[0]);
 		OffsetRect(&rc, x_, y_);
 		UIRect(rc, _z)(fixColor, 240, _inheritedTransformMatrix);
 	} else if (_isFirstColumnFix) {
-		rc = CreateRect()(_gridArea.left, _gridArea.top, _gridArea.left+_columnWidthList[0], _gridArea.bottom);
+		rc = CreateRect()(_gridArea.left, _gridArea.top, _gridArea.left + _columnWidthList[0], _gridArea.bottom);
 		OffsetRect(&rc, x_, y_);
 		UIRect(rc, _z)(fixColor, 240, _inheritedTransformMatrix);
 	}
@@ -1628,7 +1628,7 @@ void UIGrid::DrawSelectedCELL() {
 	{	// Draw the unfix area
 		rc = _unfixGridArea;
 		OffsetRect(&rc, x_, y_);
-		UIScreenClipRectGuard uiClip(rc);
+		//UIScreenClipRectGuard uiClip(rc);
 
 		// Draw the selected cell
 		if (pSelCell->_pCtrl == NULL) {
@@ -1643,7 +1643,7 @@ void UIGrid::DrawSelectedCELL() {
 	if (_isFirstColumnFix) {
 		rc = CreateRect()(_gridArea.left, _unfixGridArea.top, _gridArea.right, _gridArea.bottom);
 		OffsetRect(&rc, x_, y_);
-		UIScreenClipRectGuard uiClip(rc);
+		//UIScreenClipRectGuard uiClip(rc);
 
 		rc = CreateRect()(_cellArray[0][0]._pos.left, pos.top + _firstRowPos, _cellArray[0][0]._pos.right, pos.bottom + _firstRowPos);
 		OffsetRect(&rc, x_, y_);
@@ -1653,7 +1653,7 @@ void UIGrid::DrawSelectedCELL() {
 	if (_isFirstRowFix) {
 		rc = CreateRect()(_unfixGridArea.left, _gridArea.top, _gridArea.right, _gridArea.bottom);
 		OffsetRect(&rc, x_, y_);
-		UIScreenClipRectGuard uiClip(rc);
+		//UIScreenClipRectGuard uiClip(rc);
 
 		rc = CreateRect()(pos.left + _firstColumnPos, _cellArray[0][0]._pos.top, pos.right + _firstColumnPos, _cellArray[0][0]._pos.bottom);
 		OffsetRect(&rc, x_, y_);
@@ -1678,7 +1678,7 @@ void UIGrid::DrawSelectedCELLS(UIColor& selectColor) {
 	{	// Draw the unfix area
 		rc = _unfixGridArea;
 		OffsetRect(&rc, x_, y_);
-		UIScreenClipRectGuard uiClip(rc);
+		//UIScreenClipRectGuard uiClip(rc);
 
 		// Draw the selected cell
 		rc = CreateRect()(posBegin.left + _firstColumnPos + 1, posBegin.top + _firstRowPos + 1, posEnd.right + _firstColumnPos, posEnd.bottom + _firstRowPos);
@@ -1691,7 +1691,7 @@ void UIGrid::DrawSelectedCELLS(UIColor& selectColor) {
 	if (_isFirstColumnFix) {
 		rc = CreateRect()(_gridArea.left, _unfixGridArea.top, _gridArea.right, _gridArea.bottom);
 		OffsetRect(&rc, x_, y_);
-		UIScreenClipRectGuard uiClip(rc);
+		//UIScreenClipRectGuard uiClip(rc);
 
 		rc = CreateRect()(_cellArray[0][0]._pos.left, posBegin.top + _firstRowPos, _cellArray[0][0]._pos.right, posEnd.bottom + _firstRowPos);
 		OffsetRect(&rc, x_, y_);
@@ -1701,7 +1701,7 @@ void UIGrid::DrawSelectedCELLS(UIColor& selectColor) {
 	if (_isFirstRowFix) {
 		rc = CreateRect()(_unfixGridArea.left, _gridArea.top, _gridArea.right, _gridArea.bottom);
 		OffsetRect(&rc, x_, y_);
-		UIScreenClipRectGuard uiClip(rc);
+		//UIScreenClipRectGuard uiClip(rc);
 
 		rc = CreateRect()(posBegin.left+_firstColumnPos, _cellArray[0][0]._pos.top, posEnd.right+_firstColumnPos, _cellArray[0][0]._pos.bottom);
 		OffsetRect(&rc, x_, y_);
@@ -1717,7 +1717,7 @@ void UIGrid::DrawSelectedROW(UIColor& selectColor) {
 	{	// Draw the unfix area
 		rc = _unfixGridArea;
 		OffsetRect(&rc, x_, y_);
-		UIScreenClipRectGuard uiClip(rc);
+		//UIScreenClipRectGuard uiClip(rc);
 
 		for (auto i = _selectedRowList.begin(); i != _selectedRowList.end(); ++i) {
 			RECT& pos = _cellArray[*i][0]._pos;
@@ -1730,7 +1730,7 @@ void UIGrid::DrawSelectedROW(UIColor& selectColor) {
 	{	// Draw the fix area
 		rc = CreateRect()(_gridArea.left, _unfixGridArea.top + 1, _gridArea.right, _gridArea.bottom);
 		OffsetRect(&rc, x_, y_);
-		UIScreenClipRectGuard uiClip(rc);
+		//UIScreenClipRectGuard uiClip(rc);
 
 		for (auto i = _selectedRowList.begin(); i != _selectedRowList.end(); ++i) {
 			RECT& pos = _cellArray[*i][0]._pos;
@@ -1749,7 +1749,7 @@ void UIGrid::DrawSelectedCOLUMN(UIColor& selectColor) {
 	{	// Draw the unfix area
 		rc = _unfixGridArea;
 		OffsetRect(&rc, x_, y_);
-		UIScreenClipRectGuard uiClip(rc);
+		//UIScreenClipRectGuard uiClip(rc);
 
 		for (auto i = _selectedColumnList.begin(); i != _selectedColumnList.end(); ++i) {
 			RECT& pos = _cellArray[0][*i]._pos;
@@ -1762,7 +1762,7 @@ void UIGrid::DrawSelectedCOLUMN(UIColor& selectColor) {
 	{	// Draw the fix area
 		rc = CreateRect()(_unfixGridArea.left+1, _gridArea.top, _gridArea.right, _gridArea.bottom);
 		OffsetRect(&rc, x_, y_);
-		UIScreenClipRectGuard uiClip(rc);
+		//UIScreenClipRectGuard uiClip(rc);
 
 		for (auto i = _selectedColumnList.begin(); i != _selectedColumnList.end(); ++i) {
 			RECT& pos = _cellArray[0][*i]._pos;
@@ -3304,7 +3304,7 @@ UIChart::CurveInfo::CurveInfo() {
 	_isLine = true;
 }
 	
-bool UIChart::CurveInfo::CalcCoordRange(double& xMin, double&xMax, double& yMin, double& yMax) {
+bool UIChart::CurveInfo::CalcCoordRange(float& xMin, float&xMax, float& yMin, float& yMax) {
 	VECTOR_POINT::iterator itor = _pointList.begin();
 	if (itor==_pointList.end()) {
 		return false;
@@ -3532,8 +3532,8 @@ void UIChart::DrawXCoord() {
 	UIFont fontHelp(_z, gDefaultFontSize);
 
 	// draw abscissa
-    double dxCoord = (_xCoordRange.second - _xCoordRange.first) / _columnNum;
-    double xCoord = _xCoordRange.first;
+    float dxCoord = (_xCoordRange.second - _xCoordRange.first) / _columnNum;
+    float xCoord = _xCoordRange.first;
 	int dxPos = (_gridRect.right - _gridRect.left) / _columnNum;
     int xPos = _gridRect.left;
     for (UINT i = 0; i < _columnNum + 1; ++i) {
@@ -3560,8 +3560,8 @@ void UIChart::DrawY1Coord() {
 
 	// draw ordinate
 	if (_isY1CoordRangeCalc) {
-		double dyCoord = (_y1CoordRange.second - _y1CoordRange.first) / _rowNum;
-		double yCoord = _y1CoordRange.first;
+		float dyCoord = (_y1CoordRange.second - _y1CoordRange.first) / _rowNum;
+		float yCoord = _y1CoordRange.first;
 		int dyPos = (_gridRect.bottom - _gridRect.top) / _rowNum;
 		int yPos = _gridRect.bottom;
 		for (UINT i = 0; i < _rowNum + 1; ++i) {
@@ -3587,8 +3587,8 @@ void UIChart::DrawY2Coord() {
 	UIFont fontHelp(_z, gDefaultFontSize);
 
 	if (_isY2CoordRangeCalc) {
-		double dyCoord = (_y2CoordRange.second-_y2CoordRange.first)/_rowNum;
-		double yCoord = _y2CoordRange.first;
+		float dyCoord = (_y2CoordRange.second-_y2CoordRange.first)/_rowNum;
+		float yCoord = _y2CoordRange.first;
 		int dyPos = (_gridRect.bottom - _gridRect.top) / _rowNum;
 		int yPos = _gridRect.bottom;
 		for (UINT i = 0; i < _rowNum + 1; ++i) {
@@ -3718,7 +3718,7 @@ void UIChart::DrawCurve(CurveInfo& curve, int yFlag) {
 			}
 
 			if (prePointInBoxFlag == true) { // the previous point is in the range
-				PointDouble IntersectionPointCoord = CalcIntersectionPoint(*preItor, *itor, 2, yFlag);
+				PointFloat IntersectionPointCoord = CalcIntersectionPoint(*preItor, *itor, 2, yFlag);
 				POINT IntersectionPointPos;
 				TransfromCoordToPos(IntersectionPointPos, IntersectionPointCoord, yFlag);
 
@@ -3737,7 +3737,7 @@ void UIChart::DrawCurve(CurveInfo& curve, int yFlag) {
 			if (prePointInBoxFlag == true) { // the previous point is in the range
 				UILine(prePointPos.x + x_, prePointPos.y + y_, curPointPos.x + x_, curPointPos.y + y_, _z)(curve._color, _inheritedTransformMatrix);
 			} else { // the previous point is out the range
-				PointDouble IntersectionPointCoord = CalcIntersectionPoint(*preItor, *itor, 1, yFlag);
+				PointFloat IntersectionPointCoord = CalcIntersectionPoint(*preItor, *itor, 1, yFlag);
 				POINT IntersectionPointPos;
 				TransfromCoordToPos(IntersectionPointPos, IntersectionPointCoord, yFlag);
 
@@ -3858,13 +3858,13 @@ void UIChart::CalcCurveDrawRange(CurveInfo& curve, int mode) {
 	VECTOR_POINT::iterator beginPointItor, endPointItor;
 	if (mode == NOTUSELASTDATA) { // do not use the last data
 _NOTUSELASTDATE:
-		beginPointItor = find_if(curve._pointList.begin(), curve._pointList.end(), [v = _xCoordRange.first](const PointDouble& p) { return p._x >= v; });
-		endPointItor = find_if(beginPointItor, curve._pointList.end(), [v = _xCoordRange.second](const PointDouble& p) { return p._x > v; });
+		beginPointItor = find_if(curve._pointList.begin(), curve._pointList.end(), [v = _xCoordRange.first](const PointFloat& p) { return p._x >= v; });
+		endPointItor = find_if(beginPointItor, curve._pointList.end(), [v = _xCoordRange.second](const PointFloat& p) { return p._x > v; });
 		--endPointItor;
 	} else if (curve._beginPointIndex < 0) { // the last data does not exist
 		if (mode == RIGHTMOVE) { // curve right move
-			beginPointItor = find_if(curve._pointList.rbegin(), curve._pointList.rend(), [v = _xCoordRange.first](const PointDouble& p) { return p._x < v; }).base();
-			endPointItor = find_if(beginPointItor, curve._pointList.end(), [v = _xCoordRange.second](const PointDouble& p) { return p._x > v; });
+			beginPointItor = find_if(curve._pointList.rbegin(), curve._pointList.rend(), [v = _xCoordRange.first](const PointFloat& p) { return p._x < v; }).base();
+			endPointItor = find_if(beginPointItor, curve._pointList.end(), [v = _xCoordRange.second](const PointFloat& p) { return p._x > v; });
 			--endPointItor;
 		} else if (mode == LEFTMOVE) { // curve left move
 			goto _NOTUSELASTDATE;
@@ -3888,34 +3888,34 @@ _NOTUSELASTDATE:
 		if (mode == RIGHTMOVE) { // curve right move
 			// use the last data to accelerate the calculation
 			VECTOR_POINT::reverse_iterator ri(beginPointItor + 1);
-			ri = find_if(ri, curve._pointList.rend(), [v = _xCoordRange.first](const PointDouble& p) { return p._x < v; });
+			ri = find_if(ri, curve._pointList.rend(), [v = _xCoordRange.first](const PointFloat& p) { return p._x < v; });
 			beginPointItor = ri.base();
 			//
 			VECTOR_POINT::reverse_iterator ri2(endPointItor + 1);
-			ri2 = find_if(ri2, curve._pointList.rend(), [v = _xCoordRange.second](const PointDouble& p) { return p._x < v; });
+			ri2 = find_if(ri2, curve._pointList.rend(), [v = _xCoordRange.second](const PointFloat& p) { return p._x < v; });
 			endPointItor = ri2.base() - 1;
 		} else if (mode == LEFTMOVE) { // curve left move
 			// use the last data to accelerate the calculation
-			beginPointItor = find_if(beginPointItor, curve._pointList.end(), [v = _xCoordRange.first](const PointDouble& p) { return p._x > v; });
+			beginPointItor = find_if(beginPointItor, curve._pointList.end(), [v = _xCoordRange.first](const PointFloat& p) { return p._x > v; });
 			// 
-			endPointItor = find_if(endPointItor, curve._pointList.end(), [v = _xCoordRange.second](const PointDouble& p) { return p._x > v; });
+			endPointItor = find_if(endPointItor, curve._pointList.end(), [v = _xCoordRange.second](const PointFloat& p) { return p._x > v; });
 			--endPointItor;
 		} else if (mode == ZOOM) { // zoom the curve
-			beginPointItor = find_if(beginPointItor, curve._pointList.end(), [v = _xCoordRange.first](const PointDouble& p) { return p._x > v; });
+			beginPointItor = find_if(beginPointItor, curve._pointList.end(), [v = _xCoordRange.first](const PointFloat& p) { return p._x > v; });
 
 			VECTOR_POINT::reverse_iterator ri2(endPointItor + 1);
-			ri2 = find_if(ri2, curve._pointList.rend(), [v = _xCoordRange.second](const PointDouble& p) { return p._x < v; });
+			ri2 = find_if(ri2, curve._pointList.rend(), [v = _xCoordRange.second](const PointFloat& p) { return p._x < v; });
 			endPointItor = ri2.base() - 1;
 		} else if (mode == SHRINK) { // shrink the curve
 			VECTOR_POINT::reverse_iterator ri(beginPointItor + 1);
-			ri = find_if(ri, curve._pointList.rend(), [v = _xCoordRange.first](const PointDouble& p) { return p._x < v; });
+			ri = find_if(ri, curve._pointList.rend(), [v = _xCoordRange.first](const PointFloat& p) { return p._x < v; });
 			beginPointItor = ri.base();	
 
-			endPointItor = find_if(endPointItor, curve._pointList.end(), [v = _xCoordRange.second](const PointDouble& p) { return p._x > v; });
+			endPointItor = find_if(endPointItor, curve._pointList.end(), [v = _xCoordRange.second](const PointFloat& p) { return p._x > v; });
 			--endPointItor;
 		} else if (mode == ADDPOINT) { // add the point
 			// use the last data to accelerate the calculation
-			endPointItor = find_if(endPointItor, curve._pointList.end(), [v = _xCoordRange.second](const PointDouble& p) { return p._x > v; });
+			endPointItor = find_if(endPointItor, curve._pointList.end(), [v = _xCoordRange.second](const PointFloat& p) { return p._x > v; });
 			--endPointItor;
 		}
 	}
@@ -3935,7 +3935,7 @@ _NOTUSELASTDATE:
 	}
 }
 
-void UIChart::CalcCoordSymmetry(RANGE_DOUBLE& rangeCoord) {
+void UIChart::CalcCoordSymmetry(RANGE_FLOAT& rangeCoord) {
 	if (rangeCoord.first <= 0 && rangeCoord.second >= 0) {
 		if (rangeCoord.second > -rangeCoord.first) {
 			rangeCoord.first = -rangeCoord.second;
@@ -3949,15 +3949,15 @@ void UIChart::CalcCoordSymmetry(RANGE_DOUBLE& rangeCoord) {
 	}
 }
 
-bool UIChart::IsCoordPointInCoordRange(PointDouble& pointCoord, int yFlag) {
-	RANGE_DOUBLE yCoordRange = (yFlag == 1) ? _y1CoordRange : _y2CoordRange;
+bool UIChart::IsCoordPointInCoordRange(PointFloat& pointCoord, int yFlag) {
+	RANGE_FLOAT yCoordRange = (yFlag == 1) ? _y1CoordRange : _y2CoordRange;
 
 	return ((pointCoord._x >= _xCoordRange.first && pointCoord._x <= _xCoordRange.second) &&
 			(pointCoord._y >= yCoordRange.first && pointCoord._y <= yCoordRange.second));
 }
 
-bool UIChart::IsCoordPointInbox(PointDouble& pointCoord, PointDouble& p1, PointDouble& p2, bool nearYFlag) {
-	RANGE_DOUBLE xCoordRange, yCoordRange;
+bool UIChart::IsCoordPointInbox(PointFloat& pointCoord, PointFloat& p1, PointFloat& p2, bool nearYFlag) {
+	RANGE_FLOAT xCoordRange, yCoordRange;
 	xCoordRange.first = p1._x < p2._x ? p1._x : p2._x;
 	xCoordRange.second = p1._x > p2._x ? p1._x : p2._x;
 	yCoordRange.first = p1._y < p2._y ? p1._y : p2._y;
@@ -3989,7 +3989,7 @@ bool UIChart::IsPointNearCurveLine(POINT& point, CurveInfo& curve, int yFlag) {
 	bool prePointInBoxFlag;
 	POINT prePointPos, curPointPos;
 
-	PointDouble pointCoord;
+	PointFloat pointCoord;
 	TransfromPosToCoord(point, pointCoord, yFlag);
 	
 	// calculate the range to be judged
@@ -4088,23 +4088,23 @@ bool UIChart::IsPointNearCurvePoint(POINT& point, CurveInfo& curve, int yFlag) {
 	return false;
 }
 
-void UIChart::TransfromCoordToPos(POINT& pointPos, PointDouble& pointCoord, int yFlag) {
+void UIChart::TransfromCoordToPos(POINT& pointPos, PointFloat& pointCoord, int yFlag) {
 	pointPos.x = _gridRect.left + static_cast<long>((pointCoord._x - _xCoordRange.first) / _coordToPosScaleX);
 
 	pointPos.y = yFlag == 1 ? _gridRect.bottom - static_cast<long>((pointCoord._y - _y1CoordRange.first) / _coordToPosScaleY1) :
 							  _gridRect.bottom - static_cast<long>((pointCoord._y - _y2CoordRange.first) / _coordToPosScaleY2);
 }
 
-bool UIChart::TransfromPosToCoord(POINT& pointPos, PointDouble& pointCoord, int yFlag)
+bool UIChart::TransfromPosToCoord(POINT& pointPos, PointFloat& pointCoord, int yFlag)
 {
 	// Judge whether in the box
 	if (!IsPosPointInbox(pointPos, _gridRect)) {
 		return false;
 	}
 
-	pointCoord._x = _xCoordRange.first + static_cast<double>(pointPos.x - _gridRect.left) * _coordToPosScaleX;
-	pointCoord._y = yFlag == 1 ? _y1CoordRange.first + static_cast<double>(_gridRect.bottom - pointPos.y) * _coordToPosScaleY1 :
-							   _y2CoordRange.first + static_cast<double>(_gridRect.bottom - pointPos.y) * _coordToPosScaleY2;
+	pointCoord._x = _xCoordRange.first + static_cast<float>(pointPos.x - _gridRect.left) * _coordToPosScaleX;
+	pointCoord._y = yFlag == 1 ? _y1CoordRange.first + static_cast<float>(_gridRect.bottom - pointPos.y) * _coordToPosScaleY1 :
+							   _y2CoordRange.first + static_cast<float>(_gridRect.bottom - pointPos.y) * _coordToPosScaleY2;
 
 	return true;
 }
@@ -4119,11 +4119,11 @@ bool UIChart::TransfromPosToCoord(POINT& pointPos, PointDouble& pointCoord, int 
  ---|-------------|----
   6	|		7	  | 8
 */
-UIChart::PointDouble UIChart::CalcIntersectionPoint(PointDouble& prePoint, PointDouble& curPoint, int outBoxIndex, int yFlag) {
-	PointDouble intersectPoint;
-	PointDouble outBoxPoint;
+UIChart::PointFloat UIChart::CalcIntersectionPoint(PointFloat& prePoint, PointFloat& curPoint, int outBoxIndex, int yFlag) {
+	PointFloat intersectPoint;
+	PointFloat outBoxPoint;
 
-	RANGE_DOUBLE yCoordRange = (yFlag == 1) ? _y1CoordRange : _y2CoordRange;
+	RANGE_FLOAT yCoordRange = (yFlag == 1) ? _y1CoordRange : _y2CoordRange;
 
 	if (outBoxIndex == 1) {
 		outBoxPoint = prePoint;
@@ -4144,8 +4144,8 @@ UIChart::PointDouble UIChart::CalcIntersectionPoint(PointDouble& prePoint, Point
 	}
 
 	// Find the K B value
-	double k = (curPoint._y - prePoint._y) / (curPoint._x - prePoint._x);
-	double b = curPoint._y - k * (curPoint._x);
+	float k = (curPoint._y - prePoint._y) / (curPoint._x - prePoint._x);
+	float b = curPoint._y - k * (curPoint._x);
 
 	// judge the regional
 	if ((outBoxPoint._x >= _xCoordRange.first) && (outBoxPoint._x <= _xCoordRange.second)) {
@@ -4182,8 +4182,8 @@ UIChart::PointDouble UIChart::CalcIntersectionPoint(PointDouble& prePoint, Point
 }
 
 // calculate the intersection of line and box's left line (coordinate)
-bool UIChart::CalcLeftIntersectionPoint(PointDouble& pointCoord, double& k, double& b, int yFlag) {
-	RANGE_DOUBLE yCoordRange = (yFlag == 1) ? _y1CoordRange : _y2CoordRange;
+bool UIChart::CalcLeftIntersectionPoint(PointFloat& pointCoord, float& k, float& b, int yFlag) {
+	RANGE_FLOAT yCoordRange = (yFlag == 1) ? _y1CoordRange : _y2CoordRange;
 
 	pointCoord._x = _xCoordRange.first;
 	pointCoord._y = k * (pointCoord._x) + b;
@@ -4191,8 +4191,8 @@ bool UIChart::CalcLeftIntersectionPoint(PointDouble& pointCoord, double& k, doub
 }
 
 // calculate the intersection of line and box's top line (coordinate)
-bool UIChart::CalcTopIntersectionPoint(PointDouble& pointCoord, double& k, double& b, int yFlag) {
-	RANGE_DOUBLE yCoordRange = (yFlag == 1) ? _y1CoordRange : _y2CoordRange;
+bool UIChart::CalcTopIntersectionPoint(PointFloat& pointCoord, float& k, float& b, int yFlag) {
+	RANGE_FLOAT yCoordRange = (yFlag == 1) ? _y1CoordRange : _y2CoordRange;
 
 	pointCoord._y = yCoordRange.second;
 	pointCoord._x = (pointCoord._y - b) / k;
@@ -4200,8 +4200,8 @@ bool UIChart::CalcTopIntersectionPoint(PointDouble& pointCoord, double& k, doubl
 }
 
 // calculate the intersection of line and box's right line (coordinate)
-bool UIChart::CalcRightIntersectionPoint(PointDouble& pointCoord, double& k, double& b, int yFlag) {
-	RANGE_DOUBLE yCoordRange = (yFlag == 1) ? _y1CoordRange : _y2CoordRange;
+bool UIChart::CalcRightIntersectionPoint(PointFloat& pointCoord, float& k, float& b, int yFlag) {
+	RANGE_FLOAT yCoordRange = (yFlag == 1) ? _y1CoordRange : _y2CoordRange;
 
 	pointCoord._x = _xCoordRange.second;
 	pointCoord._y = k * (pointCoord._x) + b;
@@ -4209,8 +4209,8 @@ bool UIChart::CalcRightIntersectionPoint(PointDouble& pointCoord, double& k, dou
 }
 
 // calculate the intersection of line and box's bottom line (coordinate)
-bool UIChart::CalcBottomIntersectionPoint(PointDouble& pointCoord, double& k, double& b, int yFlag) {
-	RANGE_DOUBLE yCoordRange = (yFlag == 1) ? _y1CoordRange : _y2CoordRange;
+bool UIChart::CalcBottomIntersectionPoint(PointFloat& pointCoord, float& k, float& b, int yFlag) {
+	RANGE_FLOAT yCoordRange = (yFlag == 1) ? _y1CoordRange : _y2CoordRange;
 
 	pointCoord._y = yCoordRange.first;
 	pointCoord._x = (pointCoord._y - b) / k;
@@ -4218,11 +4218,11 @@ bool UIChart::CalcBottomIntersectionPoint(PointDouble& pointCoord, double& k, do
 }
 
 void UIChart::CalcXYCoordRange() {
-	vector<double> xMinList, xMaxList;
-	vector<double> y1MinList, y1MaxList;
-	vector<double> y2MinList, y2MaxList;
+	vector<float> xMinList, xMaxList;
+	vector<float> y1MinList, y1MaxList;
+	vector<float> y2MinList, y2MaxList;
 
-	double xMin, xMax, yMin, yMax;
+	float xMin, xMax, yMin, yMax;
 	for (auto itor = _curveList1.begin(); itor != _curveList1.end(); ++itor) {
 		if (!itor->CalcCoordRange(xMin, xMax, yMin, yMax)) {
 			continue;
@@ -4304,11 +4304,11 @@ void UIChart::AddCurve1(UIString textName) {
 	AddCurve(1, textName);
 }
 
-void UIChart::AddCurve1(UIString textName, double xValue, double yValue) {
+void UIChart::AddCurve1(UIString textName, float xValue, float yValue) {
 	AddCurve(1, textName, xValue, yValue);
 }
 
-void UIChart::AddCurve1(UIString textName, vector<double>& xList, vector<double>& yList, bool isXCoordInOrder) {
+void UIChart::AddCurve1(UIString textName, vector<float>& xList, vector<float>& yList, bool isXCoordInOrder) {
 	AddCurve(1, textName, xList, yList, isXCoordInOrder);
 }
 
@@ -4316,11 +4316,11 @@ void UIChart::AddCurve2(UIString textName) {
 	AddCurve(2, textName);
 }
 
-void UIChart::AddCurve2(UIString textName, double xValue, double yValue) {
+void UIChart::AddCurve2(UIString textName, float xValue, float yValue) {
 	AddCurve(2, textName, xValue, yValue);
 }
 
-void UIChart::AddCurve2(UIString textName, vector<double>& xList, vector<double>& yList, bool isXCoordInOrder) {
+void UIChart::AddCurve2(UIString textName, vector<float>& xList, vector<float>& yList, bool isXCoordInOrder) {
 	AddCurve(2, textName, xList, yList, isXCoordInOrder);
 }
 
@@ -4332,19 +4332,19 @@ void UIChart::SetCurve2Color(UIString textName, UIColor color) {
 	SetCurveColor(2, textName, color);
 }
 
-void UIChart::SetXCoordLimit(double min, double max) {
+void UIChart::SetXCoordLimit(float min, float max) {
 	_xCoordMinLimit = min;
 	_xCoordMaxLimit = max;
 	_isXCoordLimit = true;
 }
 
-void UIChart::SetY1CoordLimit(double min, double max) {
+void UIChart::SetY1CoordLimit(float min, float max) {
 	_y1CoordMinLimit = min;
 	_y1CoordMaxLimit = max;
 	_isY1CoordLimit = true;
 }
 
-void UIChart::SetY2CoordLimit(double min, double max) {
+void UIChart::SetY2CoordLimit(float min, float max) {
 	_y2CoordMinLimit = min;
 	_y2CoordMaxLimit = max;
 	_isY2CoordLimit = true;
@@ -4388,7 +4388,7 @@ void UIChart::SaveCurCoordRange() {
 	}
 }
 
-void UIChart::SetXYCoordRange(double xMin, double xMax, double y1Min, double y1Max, double y2Min, double y2Max) {
+void UIChart::SetXYCoordRange(float xMin, float xMax, float y1Min, float y1Max, float y2Min, float y2Max) {
 	SaveCurCoordRange();
 
 	_xCoordRange.first = xMin;
@@ -4404,7 +4404,7 @@ void UIChart::SetXYCoordRange(double xMin, double xMax, double y1Min, double y1M
 	CalcCurveListDrawRange(NOTUSELASTDATA);
 }
 
-void UIChart::GetXYCoordRange(double& xMin, double& xMax, double& y1Min, double& y1Max, double& y2Min, double& y2Max) {
+void UIChart::GetXYCoordRange(float& xMin, float& xMax, float& y1Min, float& y1Max, float& y2Min, float& y2Max) {
 	xMin = _xCoordRange.first;
 	xMax = _xCoordRange.second;
 	y1Min = _y1CoordRange.first;
@@ -4459,10 +4459,10 @@ bool UIChart::OnLButtonUp(POINT) {
 		}
 
 		bool xFlag = false;
-		double xMin = 0, xMax = 0, y1Min = 0, y1Max = 0;
+		float xMin = 0, xMax = 0, y1Min = 0, y1Max = 0;
 		if (_isY1CoordRangeCalc) {
 			// calculate the zoom rect
-			PointDouble startPointCoord, endPointCoord;
+			PointFloat startPointCoord, endPointCoord;
 			TransfromPosToCoord(_lPointBeginPos, startPointCoord, 1);
 			TransfromPosToCoord(_lPointEndPos, endPointCoord, 1);
 
@@ -4474,10 +4474,10 @@ bool UIChart::OnLButtonUp(POINT) {
 			xFlag = true;
 		}
 
-		double y2Min = 0, y2Max = 0;
+		float y2Min = 0, y2Max = 0;
 		if (_isY2CoordRangeCalc) {
 			// calculate the zoom rect
-			PointDouble startPointCoord, endPointCoord;
+			PointFloat startPointCoord, endPointCoord;
 			TransfromPosToCoord(_lPointBeginPos, startPointCoord, 2);
 			TransfromPosToCoord(_lPointEndPos, endPointCoord, 2);
 
@@ -4548,12 +4548,12 @@ bool UIChart::OnMouseMove(POINT pt) {
 		if (_isMove) {
 			if (IsPosPointInbox(point, _gridRect)) {
 				if (_rPointPosMove.x != point.x || _rPointPosMove.y != point.y) {
-					double dxPos = point.x - _rPointPosMove.x;
-					double dyPos = point.y - _rPointPosMove.y;
+					float dxPos = (float)(point.x - _rPointPosMove.x);
+					float dyPos = (float)(point.y - _rPointPosMove.y);
 
-					double dxCoord = dxPos * _coordToPosScaleX;
-					double dy1Coord = dyPos * _coordToPosScaleY1;
-					double dy2Coord = dyPos * _coordToPosScaleY2;
+					float dxCoord = dxPos * _coordToPosScaleX;
+					float dy1Coord = dyPos * _coordToPosScaleY1;
+					float dy2Coord = dyPos * _coordToPosScaleY2;
 
 					// new coord range
 					_xCoordRange.first -= dxCoord;
@@ -4608,8 +4608,8 @@ bool UIChart::OnMouseMove(POINT pt) {
 	}	
 
 	// show the mouse position
-	PointDouble coordPoint1;
-	PointDouble coordPoint2;
+	PointFloat coordPoint1;
+	PointFloat coordPoint2;
 	TransfromPosToCoord(point, coordPoint1, 1);
 	TransfromPosToCoord(point, coordPoint2, 2);
 	_mouseCoordStr = format(L"{:.2f}, {:.2f}, {:.2f}", coordPoint1._x, coordPoint1._y, coordPoint2._y);
@@ -4630,7 +4630,7 @@ void UIChart::AddCurve(int yFlag, wstring textName) {
 	}
 }
 
-void UIChart::AddCurve(int yFlag, wstring textName, double xValue, double yValue) {
+void UIChart::AddCurve(int yFlag, wstring textName, float xValue, float yValue) {
 	CURVE_LIST& curveList = yFlag == 1 ? _curveList1 : _curveList2;
 
 	CURVE_LIST::iterator itor = find(curveList.begin(), curveList.end(), textName);
@@ -4643,7 +4643,7 @@ void UIChart::AddCurve(int yFlag, wstring textName, double xValue, double yValue
 				curve._isXCoordInOrder = false;
 		}
 
-		curve._pointList.push_back(PointDouble(xValue, yValue));
+		curve._pointList.push_back(PointFloat(xValue, yValue));
 
 		// check whether the draw range is calculated
 		if ((yFlag == 1 && _isY1CoordRangeCalc) || (yFlag == 2 && _isY2CoordRangeCalc)) {
@@ -4652,7 +4652,7 @@ void UIChart::AddCurve(int yFlag, wstring textName, double xValue, double yValue
 	}
 }
 
-void UIChart::AddCurve(int yFlag, wstring textName, vector<double>& xList, vector<double>& yList, bool isXCoordInOrder) {
+void UIChart::AddCurve(int yFlag, wstring textName, vector<float>& xList, vector<float>& yList, bool isXCoordInOrder) {
 	CURVE_LIST& curveList = yFlag == 1 ? _curveList1 : _curveList2;
 
 	CURVE_LIST::iterator itor = find(curveList.begin(), curveList.end(), textName);
@@ -4663,7 +4663,7 @@ void UIChart::AddCurve(int yFlag, wstring textName, vector<double>& xList, vecto
 		curve._isXCoordInOrder = isXCoordInOrder;
 		curve._name = textName;
 		for (UINT i = 0; i < xList.size(); ++i) {
-			curve._pointList.push_back(PointDouble(xList[i], yList[i]));
+			curve._pointList.push_back(PointFloat(xList[i], yList[i]));
 		}
 		curveList.push_back(curve);
 
@@ -4949,7 +4949,8 @@ void UITab::SetCurCell(UINT index) {
 		}
 
 		_selectedIndex = index;
-		PlayAnimate(MAX_FRAME1);
+		//PlayAnimate(MAX_FRAME1);
+		PlayAnimate(100);
 	}
 }
 
@@ -5166,186 +5167,8 @@ bool UICanvas3D::OnMouseLeave(POINT) {
 }
 
 /*------------------------------------------------------- UIChart3D -------------------------------------------------------*/
-/*------------------------------------------------------- UIChart3D::Camera Implementation -------------------------------------------------------*/
-UIChart3D::UICameraCtrl::UICameraCtrl() {
-	_farPlane = 1000.0f;
-}
-
-void UIChart3D::UICameraCtrl::SetCtrlRect(const RECT& ctrlRC) {
-	RECT windowRect = UIDXFoundation::GetSingletonInstance()->GetOutputSize();
-	LONG windowWidth = GetRectWidth()(windowRect);
-	LONG windowHeight = GetRectHeight()(windowRect);
-	if (windowWidth == 0 || windowHeight == 0) {
-		return;
-	}
-
-	// Update aspect ratio based on control rectangle
-	LONG ctrlWidth = GetRectWidth()(ctrlRC);
-	LONG ctrlHeight = GetRectHeight()(ctrlRC);
-	if (ctrlWidth == 0 || ctrlHeight == 0) {
-		return;
-	}
-
-	_aspectRatio = static_cast<float>(ctrlWidth) / ctrlHeight;
-	SetProjectionMatrix();
-
-	float ctrlCenterX = ctrlRC.left + ctrlWidth * 0.5f;
-    float ctrlCenterY = ctrlRC.top + ctrlHeight * 0.5f;
-    float windowCenterX = windowWidth * 0.5f;
-    float windowCenterY = windowHeight * 0.5f;
-
-	float offsetX = ctrlCenterX - windowCenterX;
-    float offsetY = ctrlCenterY - windowCenterY;
-
-	// Calculate world space offset
-    float tanHalfFOV = tan(_fov * 0.5f);
-    _worldHeight = 2.0f * _viewDistance * tanHalfFOV;
-    _worldWidth = _worldHeight * _aspectRatio;
-
-	float worldOffsetX = (offsetX / windowWidth) * _worldWidth;
-    float worldOffsetY = -(offsetY / windowHeight) * _worldHeight;
-
-	_position = DirectX::XMFLOAT3(worldOffsetX, worldOffsetY, -_viewDistance);
-    _target = DirectX::XMFLOAT3(worldOffsetX, worldOffsetY, 0.0f);
-	_up = DirectX::XMFLOAT3(0.0f, 1.0f, 0.0f);
-	_right = DirectX::XMFLOAT3(1.0f, 0.0f, 0.0f);
-	_forward = DirectX::XMFLOAT3(0.0f, 0.0f, 1.0f);
-
-	SetViewMatrix();
-
-	// Setup viewport and scissor rects
-	_viewport.TopLeftX = static_cast<float>(ctrlRC.left);
-	_viewport.TopLeftY = static_cast<float>(ctrlRC.top);
-	_viewport.Width = static_cast<float>(ctrlWidth);
-	_viewport.Height = static_cast<float>(ctrlHeight);
-	_viewport.MinDepth = 0.0f;
-	_viewport.MaxDepth = 1.0f;
-
-	_scissorRect.left = ctrlRC.left;
-	_scissorRect.top = ctrlRC.top;
-	_scissorRect.right = ctrlRC.right;
-	_scissorRect.bottom = ctrlRC.bottom;
-}
-
-RECT UIChart3D::UICameraCtrl::GetScissorRect() const { 
-	return _scissorRect; 
-}
-
-D3D12_VIEWPORT UIChart3D::UICameraCtrl::GetViewport() const { 
-	return _viewport; 
-}
-
-float UIChart3D::UICameraCtrl::GetWorldWidth() const {
-	return _worldWidth;
-}
-
-float UIChart3D::UICameraCtrl::GetWorldHeight() const {
-	return _worldHeight;
-}
-
-void UIChart3D::UICameraCtrl::RotateCamera(float deltaYaw, float deltaPitch) {
-	_yaw += deltaYaw;
-	_pitch += deltaPitch;
-	
-	// Limit pitch angle to avoid flipping
-	_pitch = std::max(-89.0f, std::min(89.0f, _pitch));
-	
-	//UpdateCameraPosition
-	// Convert angles to radians
-	float yawRad = DirectX::XMConvertToRadians(_yaw);
-	float pitchRad = DirectX::XMConvertToRadians(_pitch);
-	
-	// Calculate camera position relative to target (spherical coordinate system)
-	float x = _viewDistance * cosf(pitchRad) * sinf(yawRad);
-	float y = _viewDistance * sinf(pitchRad);
-	float z = -_viewDistance * cosf(pitchRad) * cosf(yawRad);
-	
-	// Get current target point (control center)
-	XMFLOAT3 currentTarget = GetTarget();
-	
-	// Set new camera position
-	_position = DirectX::XMFLOAT3(currentTarget.x + x, currentTarget.y + y, currentTarget.z + z);
-	
-	// Recalculate view matrix
-	SetViewMatrix();
-}
-
-/*------------------------------------------------------- UIChart3D::UIAxes3D Implementation -------------------------------------------------------*/
-UIChart3D::UIAxes3D::UIAxes3D(){
-}
-
-void UIChart3D::UIAxes3D::Draw(const UICameraCtrl& camera) {
-    // Get command list
-    auto* dx = UIDXFoundation::GetSingletonInstance();
-    auto& dr = dx->GetDeviceResources();
-    auto* cmd = dr->GetCommandList();
-
-    // Save current viewport and scissor state
-    D3D12_VIEWPORT originalViewport = dr->GetScreenViewport();
-    D3D12_RECT originalScissor = dr->GetScissorRect();
-
-    // Limit rendering to control viewport/scissor area
-	const D3D12_VIEWPORT vp = camera.GetViewport();
-	const RECT sc = camera.GetScissorRect();
-    cmd->RSSetViewports(1, &vp);
-    cmd->RSSetScissorRects(1, &sc);
-
-	// Calculate world space dimensions
-    float worldHeight = camera.GetWorldHeight();
-    float worldWidth  = camera.GetWorldWidth();
-
-    // Calculate world coordinate distance for 50 pixels
-    float marginX = (50.0f / vp.Width) * worldWidth;  // 50-pixel margin in X direction
-    float marginY = (50.0f / vp.Height) * worldHeight;  // 50-pixel margin in Y direction
-
-    // Use shared PrimitiveBatch from UIDXFoundation
-    using DirectX::VertexPositionColor;
-    auto& pBatch = dx->GetPrimitiveBatch();
-
-	pBatch->Begin(cmd);
-
-	// Coordinate axes origin at control's bottom-left corner with 50-pixel margin
-	XMFLOAT3 cameraTarget = camera.GetTarget();
-
-	float originX = cameraTarget.x - worldWidth * 0.5f + marginX;
-	float originY = cameraTarget.y - worldHeight * 0.5f + marginY;
-    XMVECTOR axisOrigin = XMVectorSet(originX, originY, 0.f, 0.f);
-    
-    // Calculate maximum axis length to fill control space (minus margins)
-    float maxAxisLenX = worldWidth - 2.0f * marginX;   // Maximum available X-axis length
-    float maxAxisLenY = worldHeight - 2.0f * marginY;  // Maximum available Y-axis length
-    float maxAxisLenZ = std::max(maxAxisLenX, maxAxisLenY); // Z-axis as diagonal of XY
-    
-	// Coordinate axis endpoints - fill available space
-	XMVECTOR Xpos = axisOrigin + XMVectorSet(maxAxisLenX, 0.f, 0.f, 0.f);             // X-axis points right on screen
-    XMVECTOR Ypos = axisOrigin + XMVectorSet(0.f, maxAxisLenY, 0.f, 0.f);              // Y-axis points up
-	XMVECTOR Zpos = axisOrigin + XMVectorSet(0.f, 0.f, maxAxisLenZ, 0.f); 			   // Z-axis points into screen
-
-    // X axis (Red) - from origin to right
-    pBatch->DrawLine(VertexPositionColor(axisOrigin, DirectX::Colors::Red), VertexPositionColor(Xpos, DirectX::Colors::Red));
-    // Y axis (Green) - from origin upward
-    pBatch->DrawLine(VertexPositionColor(axisOrigin, DirectX::Colors::Green), VertexPositionColor(Ypos, DirectX::Colors::Green));
-    // Z axis (Blue) - from origin into screen
-    pBatch->DrawLine(VertexPositionColor(axisOrigin, DirectX::Colors::Blue), VertexPositionColor(Zpos, DirectX::Colors::Blue));
-
-	// // Test coordinate axis directions
-	//XMFLOAT3 cameraTarget = camera.GetTarget();
-	
-	// XMVECTOR p0 = XMVectorSet(cameraTarget.x, cameraTarget.y, cameraTarget.z, 0.f);  // Control center point
-	// XMVECTOR p1 = XMVectorSet(cameraTarget.x + 5, cameraTarget.y, cameraTarget.z, 0.f);  // X-axis: world +X = screen left
-	// XMVECTOR p2 = XMVectorSet(cameraTarget.x, cameraTarget.y + 5, cameraTarget.z, 0.f);  // Y-axis: world +Y = screen up
-
-	// pBatch->DrawLine(VertexPositionColor(p0, DirectX::Colors::Red), VertexPositionColor(p1, DirectX::Colors::Blue));
-	// pBatch->DrawLine(VertexPositionColor(p0, DirectX::Colors::Red), VertexPositionColor(p2, DirectX::Colors::Green));
-
-	pBatch->End();    // Restore original viewport and scissor state
-    cmd->RSSetViewports(1, &originalViewport);
-    cmd->RSSetScissorRects(1, &originalScissor);
-}
-
-/*------------------------------------------------------- UIChart3D Main Implementation -------------------------------------------------------*/
 UIChart3D::UIChart3D() {
-    // Camera and axes are now direct member variables, no need for explicit initialization
+	AddDataPoint(PointFloat(60.0f, 60.0f, 0.0f), UIColor::Red);
 }
 
 UIChart3D::~UIChart3D() {
@@ -5353,7 +5176,64 @@ UIChart3D::~UIChart3D() {
 }
 
 void UIChart3D::CalcArea() {
-	_cameraCtrl.SetCtrlRect(GetAbsoluteRect());
+	RECT ctrlRC = GetAbsoluteRect();
+
+	// Set camera
+	if (!_cameraCtrl.SetUpCamera(ctrlRC)) {
+		return;
+	}
+
+	// Calculate 3D axes coordinates
+	CalcAxes3D();
+}
+
+void UIChart3D::CalcAxes3D() {
+	RECT ctrlRC = GetAbsoluteRect();
+	
+	// Calculate 3D axes coordinates
+	LONG ctrlWidth = GetRectWidth()(ctrlRC);
+	LONG ctrlHeight = GetRectHeight()(ctrlRC);
+	LONG availablePixels = std::min(ctrlWidth, ctrlHeight) - 100;  // Reserve 50 pixels margin on each side
+
+	// Calculate world space dimensions
+    float worldHeight = _cameraCtrl.GetWorldHeight();
+    float worldWidth  = _cameraCtrl.GetWorldWidth();
+
+	// Calculate world coordinate distance for 50 pixels margin
+    float marginX = (((ctrlWidth - availablePixels) / 2.0f) /  ctrlWidth) * worldWidth;
+    float marginY = (((ctrlHeight - availablePixels) / 2.0f) / ctrlHeight) * worldHeight;
+
+	// Calculate original world coordinate point (axes origin)
+	float p0X = _cameraCtrl._target.x - (worldWidth / 2.0f) + marginX;
+	float p0Y = _cameraCtrl._target.y - (worldHeight / 2.0f) + marginY;
+	float p0Z = 0.0f;
+
+	// Set axes origin
+	_axesOrigin = {p0X, p0Y, p0Z};
+
+	// Calculate world length for axes
+	float worldLength = availablePixels * (worldHeight / ctrlHeight);
+	_axisLengths = {worldLength, worldLength, worldLength};
+
+	// Calculate axes endpoints
+	_xAxisEnd = {_axesOrigin._x + worldLength, _axesOrigin._y, _axesOrigin._z};
+	_yAxisEnd = {_axesOrigin._x, _axesOrigin._y + worldLength, _axesOrigin._z};
+	_zAxisEnd = {_axesOrigin._x, _axesOrigin._y, _axesOrigin._z + worldLength};
+}
+
+void UIChart3D::DrawAxes3D() {
+	auto* dx = UIDXFoundation::GetSingletonInstance();
+
+	// Convert PointFloat to DirectX::XMFLOAT3 for drawing (temporary conversion for compatibility)
+	DirectX::XMFLOAT3 dxOrigin{_axesOrigin._x, _axesOrigin._y, _axesOrigin._z};
+	DirectX::XMFLOAT3 dxXAxisEnd{_xAxisEnd._x, _xAxisEnd._y, _xAxisEnd._z};
+	DirectX::XMFLOAT3 dxYAxisEnd{_yAxisEnd._x, _yAxisEnd._y, _yAxisEnd._z};
+	DirectX::XMFLOAT3 dxZAxisEnd{_zAxisEnd._x, _zAxisEnd._y, _zAxisEnd._z};
+
+	// Draw the three main coordinate axes using pre-calculated coordinates
+	dx->Draw3DWorldCtrlLine(dxOrigin, dxXAxisEnd, UIColor::Red, &_cameraCtrl);    // X-axis (Red)
+	dx->Draw3DWorldCtrlLine(dxOrigin, dxYAxisEnd, UIColor::Green, &_cameraCtrl);  // Y-axis (Green)
+	dx->Draw3DWorldCtrlLine(dxOrigin, dxZAxisEnd, UIColor::Blue, &_cameraCtrl);   // Z-axis (Blue)
 }
 
 void UIChart3D::Draw() {
@@ -5367,9 +5247,25 @@ void UIChart3D::Draw() {
 	OffsetRect(&rc, x_, y_);
 	UIRect(rc, _z)(UIColor::PrimaryBlue, transformMatrix);
 
-	auto* dx = UIDXFoundation::GetSingletonInstance();
+	// Get command list
+    auto* dx = UIDXFoundation::GetSingletonInstance();
+    auto& dr = dx->GetDeviceResources();
+    auto* cmd = dr->GetCommandList();
+
+    // Save current viewport and scissor state
+    D3D12_VIEWPORT originalViewport = UICameraUI::GetSingletonInstance()->GetViewport();
+
+    // Limit rendering to control viewport/scissor area
+    cmd->RSSetViewports(1, &_cameraCtrl.GetViewport());
 	dx->SetEffect3DCtrl(&_cameraCtrl);
-	_axes3D.Draw(_cameraCtrl);
+
+	// Draw 3D axes using pre-calculated coordinates
+	DrawAxes3D();
+	
+	// Draw data points as high-quality spheres
+	DrawDataPoints();
+
+	cmd->RSSetViewports(1, &originalViewport);
 }
 
 bool UIChart3D::OnRButtonDown(POINT pt) {
@@ -5413,4 +5309,115 @@ bool UIChart3D::OnMouseMove(POINT pt) {
 	}
 
 	return true;
+}
+
+// Coordinate system setup functions
+void UIChart3D::SetDataCoordRange(float xMin, float xMax, float yMin, float yMax, float zMin, float zMax) {
+	_xDataRange = {xMin, xMax};
+	_yDataRange = {yMin, yMax};
+	_zDataRange = {zMin, zMax};
+	
+	// Recalculate axes after range change
+	CalcAxes3D();
+}
+
+// Coordinate transformation functions
+UIChart3D::PointFloat UIChart3D::DataToWorld(const PointFloat& dataCoord) const {
+	// Convert data coordinates to normalized coordinates [0,1]
+	float normalizedX = (dataCoord._x - _xDataRange.first) / (_xDataRange.second - _xDataRange.first);
+	float normalizedY = (dataCoord._y - _yDataRange.first) / (_yDataRange.second - _yDataRange.first);
+	float normalizedZ = (dataCoord._z - _zDataRange.first) / (_zDataRange.second - _zDataRange.first);
+	
+	// Convert normalized coordinates to world coordinates
+	PointFloat worldCoord;
+	worldCoord._x = _axesOrigin._x + normalizedX * _axisLengths._x;
+	worldCoord._y = _axesOrigin._y + normalizedY * _axisLengths._y;
+	worldCoord._z = _axesOrigin._z + normalizedZ * _axisLengths._z;
+	
+	return worldCoord;
+}
+
+UIChart3D::PointFloat UIChart3D::WorldToData(const PointFloat& worldCoord) const {
+	// Convert world coordinates to normalized coordinates [0,1]
+	float normalizedX = (worldCoord._x - _axesOrigin._x) / _axisLengths._x;
+	float normalizedY = (worldCoord._y - _axesOrigin._y) / _axisLengths._y;
+	float normalizedZ = (worldCoord._z - _axesOrigin._z) / _axisLengths._z;
+	
+	// Convert normalized coordinates to data coordinates
+	PointFloat dataCoord;
+	dataCoord._x = _xDataRange.first + normalizedX * (_xDataRange.second - _xDataRange.first);
+	dataCoord._y = _yDataRange.first + normalizedY * (_yDataRange.second - _yDataRange.first);
+	dataCoord._z = _zDataRange.first + normalizedZ * (_zDataRange.second - _zDataRange.first);
+	
+	return dataCoord;
+}
+
+POINT UIChart3D::WorldToScreen(const PointFloat& worldCoord) {
+	// Apply view-projection transformation
+	// This is a simplified implementation - in real scenario, you would use proper matrix multiplication
+	
+	// For now, implement basic isometric projection
+	float screenX = worldCoord._x - 0.5f * worldCoord._z;
+	float screenY = worldCoord._y - 0.5f * worldCoord._z;
+	
+	// Convert to screen coordinates relative to control
+	RECT ctrlRC = GetAbsoluteRect();
+	float centerX = (ctrlRC.left + ctrlRC.right) * 0.5f;
+	float centerY = (ctrlRC.top + ctrlRC.bottom) * 0.5f;
+	
+	POINT screenPos;
+	screenPos.x = static_cast<LONG>(centerX + screenX * 100.0f);  // Scale factor 100
+	screenPos.y = static_cast<LONG>(centerY - screenY * 100.0f);  // Y-axis inverted for screen
+	
+	return screenPos;
+}
+
+UIChart3D::PointFloat UIChart3D::ScreenToWorld(const POINT& screenPos, float depth) {
+	// Convert screen coordinates back to world coordinates
+	// This is the inverse of WorldToScreen
+	
+	RECT ctrlRC = GetAbsoluteRect();
+	float centerX = (ctrlRC.left + ctrlRC.right) * 0.5f;
+	float centerY = (ctrlRC.top + ctrlRC.bottom) * 0.5f;
+	
+	// Convert to normalized screen coordinates
+	float normX = (screenPos.x - centerX) / 100.0f;  // Scale factor 100
+	float normY = -(screenPos.y - centerY) / 100.0f; // Y-axis inverted
+	
+	// Apply inverse isometric projection (assuming depth)
+	PointFloat worldCoord;
+	worldCoord._x = normX + 0.5f * depth;
+	worldCoord._y = normY + 0.5f * depth;
+	worldCoord._z = depth;
+	
+	return worldCoord;
+}
+
+// Data point management functions
+void UIChart3D::AddDataPoint(const PointFloat& dataCoord, const UIColor& color, float pixelRadius, float alpha) {
+	_dataPoints.emplace_back(dataCoord, color, pixelRadius, alpha);
+}
+
+void UIChart3D::AddDataPoint(float x, float y, float z, const UIColor& color, float pixelRadius, float alpha) {
+	_dataPoints.emplace_back(PointFloat(x, y, z), color, pixelRadius, alpha);
+}
+
+void UIChart3D::ClearDataPoints() {
+	_dataPoints.clear();
+}
+
+void UIChart3D::DrawDataPoints() {
+	auto* dx = UIDXFoundation::GetSingletonInstance();
+	
+	for (const auto& dataPoint : _dataPoints) {
+		// Convert data coordinates to world coordinates
+		PointFloat worldPos = DataToWorld(dataPoint.position);
+		
+		// Convert to DirectX::XMFLOAT3 for API compatibility
+		DirectX::XMFLOAT3 dxWorldPos{worldPos._x, worldPos._y, worldPos._z};
+		
+		// Draw high-quality sphere with pixel-based radius
+		dx->Draw3DWorldCtrlSphereFromPixelRadius(dxWorldPos, dataPoint.pixelRadius, 
+												dataPoint.color, dataPoint.alpha, 16);
+	}
 }

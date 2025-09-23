@@ -5,12 +5,13 @@ using namespace DirectX;
 using namespace Shape2D;
 using namespace SimpleMath;
 
-UIScreenClipRectGuard::UIScreenClipRectGuard(const RECT& clipRC) {
-	UIDXFoundation::GetSingletonInstance()->BeginScreenClipRect(clipRC);
+UIScreenClipRectGuard::UIScreenClipRectGuard(const RECT& clipRC, bool execute) {
+	_execute = execute;
+	UIDXFoundation::GetSingletonInstance()->BeginScreenClipRect(clipRC, _execute);
 }
 
 UIScreenClipRectGuard::~UIScreenClipRectGuard() {
-	UIDXFoundation::GetSingletonInstance()->EndScreenClipRect();
+	UIDXFoundation::GetSingletonInstance()->EndScreenClipRect(_execute);
 }
 
 UIPoint::UIPoint(LONG x, LONG y, float z) {
@@ -308,25 +309,36 @@ void UICameraBase::SetViewMatrix() {
     XMVECTOR focus = XMVectorSet(_target.x, _target.y, _target.z, 1.0f);
     XMVECTOR up = XMVectorSet(_up.x, _up.y, _up.z, 0.0f);
     
-    _view = XMMatrixLookAtLH(eye, focus, up);  // 左手坐标系
+    _view = XMMatrixLookAtLH(eye, focus, up);  // left-handed coordinate system
 }
-	
+
 void UICameraBase::SetProjectionMatrix() {
 	//_projection3D = Matrix::CreatePerspectiveFieldOfView(_fov, _aspectRatio, _nearPlane, _farPlane);
+
 	_projection3D = XMMatrixPerspectiveFovLH(_fov, _aspectRatio, _nearPlane, _farPlane);
 }
 
-// let the camera can see the whole screen
-void UICameraUI::SetCameraFor3D(float width, float height) {
-	_aspectRatio = width / height;
+bool UICameraBase::SetUpCamera(const RECT& viewRC) {
+	if (GetRectWidth()(viewRC) == 0 || GetRectHeight()(viewRC) == 0) {
+		return false;
+	}
+
+	//float distance = (height / 2) / tanf(_fov / 2.0f);
+	SetViewMatrix();
+
+	_aspectRatio = (float)GetRectWidth()(viewRC) / (float)GetRectHeight()(viewRC);
 	SetProjectionMatrix();
 
-	float distance = (height / 2) / tanf(_fov / 2.0f);
-	_position = XMFLOAT3(0.0f, 0.0f, -distance); // retreat the camera to see the whole screen
-	_target = XMFLOAT3(0.0f, 0.0f, 0.0f);
-	_up = XMFLOAT3(0.0f, 1.0f, 0.0f);
-	//
-	SetViewMatrix();
+	_viewport = D3D12_VIEWPORT{
+		(float)viewRC.left,
+		(float)viewRC.top,
+		(float)GetRectWidth()(viewRC),
+		(float)GetRectHeight()(viewRC),
+		D3D12_MIN_DEPTH,
+		D3D12_MAX_DEPTH
+	};
+
+	return true;
 }
 
 // convert screen 2D to 3D
@@ -334,9 +346,9 @@ void UICameraUI::SetCameraFor3D(float width, float height) {
 // z: the z depth in the window [0,1]
 XMFLOAT3 UICameraUI::ConvertScreen2DTo3D(const XMFLOAT3& screenPos) {
     // get device resources and viewport size
-    float viewportWidth = static_cast<float>(UIDXFoundation::GetSingletonInstance()->GetOutputWidth());
-    float viewportHeight = static_cast<float>(UIDXFoundation::GetSingletonInstance()->GetOutputHeight());
-    
+    float viewportWidth = static_cast<float>(_viewport.Width);
+    float viewportHeight = static_cast<float>(_viewport.Height);
+
     // convert screen 2D to NDC[-1,1]
     float ndcX = (2.0f * screenPos.x / viewportWidth) - 1.0f;
     float ndcY = 1.0f - (2.0f * screenPos.y / viewportHeight);
@@ -384,8 +396,8 @@ XMFLOAT3 UICameraUI::ConvertScreen2DTo3D(const XMFLOAT3& screenPos) {
 // worldPos: the 3D world position
 XMFLOAT3 UICameraUI::Convert3DToScreen2D(const XMFLOAT3& worldPos) {
     // get device resources and viewport size
-    float viewportWidth = static_cast<float>(UIDXFoundation::GetSingletonInstance()->GetOutputWidth());
-    float viewportHeight = static_cast<float>(UIDXFoundation::GetSingletonInstance()->GetOutputHeight());
+    float viewportWidth = static_cast<float>(_viewport.Width);
+    float viewportHeight = static_cast<float>(_viewport.Height);
 
 	// build world space to view space transform matrix
     XMVECTOR rightVec = XMLoadFloat3(&_right);
@@ -432,18 +444,43 @@ XMFLOAT3 UICameraUI::Convert3DToScreen2D(const XMFLOAT3& worldPos) {
 	return screenPos;
 }
 
-// void UICameraGame::SetCamera(const XMFLOAT3& position, const XMFLOAT3& target, const XMFLOAT3& up) {
-// 	_position = position;
-// 	_target = target;
-// 	_up = up;
+bool UICameraCtrl::SetUpCamera(const RECT& ctrlRC) {
+	if (!UICameraBase::SetUpCamera(ctrlRC)) {
+		return false;
+	}
 
-// 	SetViewMatrix();
-// }
+	// Calculate world space offset
+    float tanHalfFOV = tan(_fov * 0.5f);
+    _worldHeight = 2.0f * _viewDistance * tanHalfFOV;
+    _worldWidth = _worldHeight * _aspectRatio;
 
-void UICameraGame::SetAspectRatioAndProjectionMatrix(float aspectRatio) {
-	_aspectRatio = aspectRatio;
-	SetProjectionMatrix();
+	return true;
 }
+
+void UICameraCtrl::RotateCamera(float deltaYaw, float deltaPitch) {
+	_yaw += deltaYaw;
+	_pitch += deltaPitch;
+	
+	// Limit pitch angle to avoid flipping
+	_pitch = std::max(-89.0f, std::min(89.0f, _pitch));
+	
+	// Update camera position
+	// Convert angles to radians
+	float yawRad = DirectX::XMConvertToRadians(_yaw);
+	float pitchRad = DirectX::XMConvertToRadians(_pitch);
+	
+	// Calculate camera position relative to target (spherical coordinate system)
+	float x = _viewDistance * cosf(pitchRad) * sinf(yawRad);
+	float y = _viewDistance * sinf(pitchRad);
+	float z = -_viewDistance * cosf(pitchRad) * cosf(yawRad);
+	
+	// Set new camera position
+	_position = DirectX::XMFLOAT3(_target.x + x, _target.y + y, _target.z + z);
+	
+	// Recalculate view matrix
+	SetViewMatrix();
+}
+
 
 XMMATRIX UIZPlaneTransform::GetTransformMatrix(bool isRotationZ, float xByZ, float yByZ, float zAngle,
 											   bool isRotationX, float yByX, float xAngle,

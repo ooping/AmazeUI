@@ -50,8 +50,8 @@ public:
 	ID3D12GraphicsCommandList*  GetCommandList() const          { return _commandList.Get(); }
 	DXGI_FORMAT                 GetBackBufferFormat() const     { return _backBufferFormat; }
 	DXGI_FORMAT                 GetDepthBufferFormat() const    { return _depthBufferFormat; }
-	D3D12_VIEWPORT              GetScreenViewport() const       { return _screenViewport; }
-	D3D12_RECT                  GetScissorRect() const          { return _scissorRect; }
+	//D3D12_VIEWPORT              GetScreenViewport() const       { return _screenViewport; }
+	//D3D12_RECT                  GetScissorRect() const          { return _scissorRect; }
 	UINT                        GetCurrentFrameIndex() const    { return _backBufferIndex; }
 	UINT                        GetBackBufferCount() const      { return _backBufferCount; }
 	DXGI_COLOR_SPACE_TYPE       GetColorSpace() const           { return _colorSpace; }
@@ -96,8 +96,8 @@ private:
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>        _rtvDescriptorHeap;
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>        _dsvDescriptorHeap;
 	UINT                                                _rtvDescriptorSize;
-	D3D12_VIEWPORT                                      _screenViewport;
-	D3D12_RECT                                          _scissorRect;
+	//D3D12_VIEWPORT                                      _screenViewport;
+	//D3D12_RECT                                          _scissorRect;
 
 	// Direct3D properties.
 	DXGI_FORMAT                                         _backBufferFormat;
@@ -145,8 +145,6 @@ public:
 	std::unique_ptr<UIDeviceResources>& GetDeviceResources();
 	std::unique_ptr<DirectX::PrimitiveBatch<DirectX::VertexPositionColor>>& GetPrimitiveBatch();
 
-	void SetEffect3DCtrl(UICameraBase* pCamera3DCtrl);
-
 private:
     void Clear();
 
@@ -182,15 +180,15 @@ private:
     DirectX::Model::EffectCollection                                        _modelEffectsGame;
     std::unique_ptr<DirectX::EffectTextureFactory>                          p_modelResources;
 
+	std::unique_ptr<DirectX::BasicEffect> 									p_pointEffect3DCtrl;
 	std::unique_ptr<DirectX::BasicEffect> 									p_lineEffect3DCtrl;
+	std::unique_ptr<DirectX::BasicEffect> 									p_triangleEffect3DCtrl;
 
     Microsoft::WRL::ComPtr<ID3D12Resource>                                  _texture1;
 
 	DirectX::SimpleMath::Matrix 											_orthoMatrix2D;
 	// 3D
 	DirectX::SimpleMath::Matrix 											_world;
-
-
 
     // Descriptors
     enum Descriptors {
@@ -200,6 +198,17 @@ private:
 		Offset1 = 10,
 		Offset2 = 1000
     };
+
+/*************************************************** clip rect ***************************************************/
+public:
+	void BeginScreenClipRect(const RECT& clipRC, bool execute = false);
+	void EndScreenClipRect(bool execute = false);
+	RECT GetCurrentClipRect() const;
+	void ExecuteClipRect(const RECT& clipRC);
+	void ResetClipRect();
+
+private:
+	std::stack<RECT> _clipRectStack;
 
 /*************************************************** Texture ***************************************************/
 public:
@@ -301,18 +310,6 @@ public:
 					 const RECT& srcRect, const DirectX::XMFLOAT2& dstStart, const DirectX::XMFLOAT2& dstEnd, 
 					 float z, UCHAR alpha);
 
-#if 0
-	void Draw2DText(const std::wstring& text, const DirectX::XMFLOAT2& position, float z, const UIColor& color, float fontSize);
-	void Draw2DText(const std::wstring& text, const RECT& rc, int posFlag, float z, const UIColor& color, float fontSize);
-	SIZE GetTextSize(const std::wstring& text, float fontSize);
-#endif
-
-	// 2D clip rect
-	void BeginScreenClipRect(const RECT& clipRC);
-	void EndScreenClipRect();
-	RECT GetCurrentClipRect() const;
-	void ExecuteClipRect(const RECT& clipRC);
-
 private:
 	void Draw2DImage(size_t textureIndex, 
 					 RECT srcRect, DirectX::XMFLOAT2 dstStart, DirectX::XMFLOAT2 dstEnd, 
@@ -324,8 +321,6 @@ private:
 	void Calculate2DPoint(const DirectX::XMFLOAT2& point, DirectX::XMFLOAT2& p);
 	void Calculate2DLinePoints(const DirectX::XMFLOAT2& start, const DirectX::XMFLOAT2& end, DirectX::XMFLOAT2& p1, DirectX::XMFLOAT2& p2);
 	void Calculate2DRectPoints(const DirectX::XMFLOAT2& start, const DirectX::XMFLOAT2& end, DirectX::XMFLOAT2& ps, DirectX::XMFLOAT2& pe);
-
-	std::stack<RECT> _clipRectStack;
 
 /*************************************************** 3D UI APIs ***************************************************/
 public:
@@ -361,20 +356,38 @@ private:
 					 float z, UCHAR alpha, 
 					 const DirectX::XMMATRIX& transformMatrix);
 
-/*************************************************** 3D Game APIs ***************************************************/
+/*************************************************** 3D Controls APIs ***************************************************/
+// Set the viewport and effect corresponding to UICameraCtrl to render 3D controls
+// draw point/line/ball/ in 3D world space
+public:
+	void SetEffect3DCtrl(UICameraBase* pCamera3DCtrl);
+
+	void Draw3DWorldCtrlPoint(const DirectX::XMFLOAT3& point, const UIColor& color, UICameraCtrl* pCameraCtrl);
+	void Draw3DWorldCtrlLine(const DirectX::XMFLOAT3& start, const DirectX::XMFLOAT3& end, const UIColor& colorS, const UIColor& colorE, UICameraCtrl* pCameraCtrl);
+	void Draw3DWorldCtrlLine(const DirectX::XMFLOAT3& start, const DirectX::XMFLOAT3& end, const UIColor& color, UICameraCtrl* pCameraCtrl);
+	void Draw3DWorldCtrlBall(const DirectX::XMFLOAT3& center, float radius, const UIColor& color, float alpha = 1.0f);
+
+	// New high-quality sphere rendering functions
+	void Draw3DWorldCtrlSphere(const DirectX::XMFLOAT3& center, float worldRadius, const UIColor& color, float alpha = 1.0f, size_t tessellation = 16);
+	void Draw3DWorldCtrlSphereFromPixelRadius(const DirectX::XMFLOAT3& center, float pixelRadius, const UIColor& color, float alpha = 1.0f, size_t tessellation = 16);
+
+	// Helper function to convert pixel radius to world radius
+	float PixelRadiusToWorldRadius(float pixelRadius, const DirectX::XMFLOAT3& worldPosition);
 
 
 /*************************************************** Batch Rendering System ***************************************************/
 private:
 	struct BatchData {
 		int _batchID;														// 1: p_batch   2: p_batchTexture
-
+		
 		// as key
 		DirectX::BasicEffect* _effect;										// p_batch & p_batchTexture
+		RECT _clipRect;														// p_batch & p_batchTexture
 		D3D12_GPU_DESCRIPTOR_HANDLE _srvDescriptor;							// p_batchTexture
 		D3D12_GPU_DESCRIPTOR_HANDLE _samplerDescriptor;						// p_batchTexture
 		UCHAR _alpha;														// p_batchTexture
-		RECT _clipRect;														// p_batch & p_batchTexture
+		UICameraBase* _pCamera;												// p_batch & p_batchTexture
+
 
 		// data
 		D3D_PRIMITIVE_TOPOLOGY _topology;									// p_batch & p_batchTexture
@@ -387,11 +400,16 @@ private:
 			if (_batchID != other._batchID) {
 				return false;
 			}
+
 			if (_effect != other._effect) {
 				return false;
 			}
 
 			if (memcmp(&_clipRect, &other._clipRect, sizeof(RECT)) != 0) {
+				return false;
+			}
+
+			if (_pCamera != other._pCamera) {
 				return false;
 			}
 
@@ -414,12 +432,12 @@ private:
 	// Batch registration functions
 	void RegisterBatchData(D3D_PRIMITIVE_TOPOLOGY topology, 
 						   const std::vector<DirectX::VertexPositionColor>& vertices, const std::vector<uint16_t>& indices, 
-						   std::unique_ptr<DirectX::BasicEffect>& effect, const RECT& clipRect);
+						   std::unique_ptr<DirectX::BasicEffect>& effect, const RECT& clipRect, UICameraBase* pCamera);
 	void RegisterBatchTextureData(D3D_PRIMITIVE_TOPOLOGY topology, 
 								  const std::vector<DirectX::VertexPositionTexture>& vertices, const std::vector<uint16_t>& indices,
 						   		  std::unique_ptr<DirectX::BasicEffect>& effect, 
 						   		  D3D12_GPU_DESCRIPTOR_HANDLE srvDescriptor, D3D12_GPU_DESCRIPTOR_HANDLE samplerDescriptor, UCHAR alpha,
-						   		  const RECT& clipRect);
+						   		  const RECT& clipRect, UICameraBase* pCamera);
 
 	// Batch execution functions
 	void ExecuteAllBatches();
@@ -430,4 +448,6 @@ private:
 	void ClearAllBatches();
 
 	std::vector<BatchData> _batchDataList;
+
+	UICameraBase* _pCurrentCamera = nullptr;
 };

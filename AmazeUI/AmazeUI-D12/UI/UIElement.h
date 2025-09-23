@@ -4,13 +4,15 @@
 
 // clipping region RAII handler
 struct UIScreenClipRectGuard {
-	UIScreenClipRectGuard(const RECT& clipRC);
+	UIScreenClipRectGuard(const RECT& clipRC, bool execute = false);
 	~UIScreenClipRectGuard();
 
 private:
 	UIScreenClipRectGuard() = delete;	
 	UIScreenClipRectGuard(const UIScreenClipRectGuard& other) = delete;
 	UIScreenClipRectGuard& operator=(const UIScreenClipRectGuard& other) = delete;
+
+	bool _execute = false;
 };
 
 // point
@@ -165,6 +167,22 @@ struct UIFont {
 
 class UICameraBase {
 public:
+	// Camera vectors
+	DirectX::XMFLOAT3 _position = {0.0f, 0.0f, -5.0f};
+	DirectX::XMFLOAT3 _target = {0.0f, 0.0f, 0.0f};
+	DirectX::XMFLOAT3 _up = {0.0f, 1.0f, 0.0f};
+	DirectX::XMFLOAT3 _right = {1.0f, 0.0f, 0.0f};
+	DirectX::XMFLOAT3 _forward = {0.0f, 0.0f, 1.0f};
+
+	// Camera properties
+	float _fov = DirectX::XM_PIDIV2;
+	float _aspectRatio = 1.0f;	// should be set according to view width/height
+	float _nearPlane = 0.01f;
+	float _farPlane = 10000.0f;
+
+	// Setup methods
+	virtual bool SetUpCamera(const RECT& viewRC);
+
 	// Update camera matrices
 	void SetViewMatrix();
 	void SetProjectionMatrix();	
@@ -172,82 +190,64 @@ public:
 	const DirectX::SimpleMath::Matrix& GetViewMatrix() const { return _view; }
 	const DirectX::SimpleMath::Matrix& GetProjectionMatrix() const { return _projection3D; }
 
-	// Camera properties
-	DirectX::XMFLOAT3 GetPosition() const { return _position; }
-	DirectX::XMFLOAT3 GetTarget() const { return _target; }
-	DirectX::XMFLOAT3 GetUpVector() const { return _up; }
-	DirectX::XMFLOAT3 GetRightVector() const { return _right; }
-	DirectX::XMFLOAT3 GetForwardVector() const { return _forward; }
-
-	float  GetFov() const { return _fov; }
-	float  GetAspectRatio() const { return _aspectRatio; }
+	const D3D12_VIEWPORT& GetViewport() const { return _viewport; }
 
 protected:
-	UICameraBase() = default;
-	~UICameraBase() = default;
-
-	// Camera vectors
-	DirectX::XMFLOAT3 _position;
-	DirectX::XMFLOAT3 _target;
-	DirectX::XMFLOAT3 _up;
-	DirectX::XMFLOAT3 _right;
-	DirectX::XMFLOAT3 _forward;
-
-	// Camera properties
-	float _fov = DirectX::XM_PIDIV2;
-	float _aspectRatio = 1.0f;
-	float _nearPlane = 0.01f;
-	float _farPlane = 1000.0f;
-
-	// Matrices
 	DirectX::SimpleMath::Matrix _view;
     DirectX::SimpleMath::Matrix _projection3D;
+
+	D3D12_VIEWPORT _viewport = {};
 };
 
 class UICameraUI : public UICameraBase, public SingletonPattern<UICameraUI> {
 	friend class SingletonPattern<UICameraUI>;
 
 public:
-	// Setup methods
-	void SetCameraFor3D(float width, float height);
-
 	// Convert screen 2D to 3D
 	DirectX::XMFLOAT3 ConvertScreen2DTo3D(const DirectX::XMFLOAT3& screenPos);
 	DirectX::XMFLOAT3 Convert3DToScreen2D(const DirectX::XMFLOAT3& viewPos);
 
 private:
-	UICameraUI() {
-		_position = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
-		_target = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
-		_up = DirectX::XMFLOAT3(0.0f, 1.0f, 0.0f);
-		_right = DirectX::XMFLOAT3(1.0f, 0.0f, 0.0f);
-		_forward = DirectX::XMFLOAT3(0.0f, 0.0f, 1.0f);
-
-		_farPlane = 10000.0f;
-	}
+	UICameraUI() = default;
 	~UICameraUI() = default;
 };
 
 class UICameraGame : public UICameraBase, public SingletonPattern<UICameraGame> {
 	friend class SingletonPattern<UICameraGame>;
 
-public:
-	// Setup methods
-	//void SetCamera(const DirectX::XMFLOAT3& position, const DirectX::XMFLOAT3& target, const DirectX::XMFLOAT3& up);
-	void SetAspectRatioAndProjectionMatrix(float aspectRatio);
-
-private:
-	UICameraGame() {
-		_position = DirectX::XMFLOAT3(0.0f, 2.0f, -5.0f);
-		_target = DirectX::XMFLOAT3(0.0f, 1.0f, 0.0f);
-		_up = DirectX::XMFLOAT3(0.0f, 1.0f, 0.0f);
-		_right = DirectX::XMFLOAT3(1.0f, 0.0f, 0.0f);
-		_forward = DirectX::XMFLOAT3(0.0f, 0.0f, 1.0f);
-
-		_farPlane = 1000.0f;
-	}
+	UICameraGame() = default;
 	~UICameraGame() = default;
 };
+
+// Independent 3D camera system for Chart3D control, similar to Unity3D Scene View axes
+class UICameraCtrl : public UICameraBase {
+	float _worldWidth;
+	float _worldHeight;
+
+	// Mouse rotation support
+	float _yaw = 0.0f;    // Left-right rotation angle
+	float _pitch = 0.0f;  // Up-down rotation angle
+	float _viewDistance = 5.0f; // Camera distance to target
+
+public:
+	UICameraCtrl() = default;
+	~UICameraCtrl() = default;
+
+	// Setup methods
+	bool SetUpCamera(const RECT& viewRC);
+
+	// Mouse rotation
+	void RotateCamera(float deltaYaw, float deltaPitch);
+
+	float GetWorldWidth() const { return _worldWidth; }
+	float GetWorldHeight() const { return _worldHeight; }
+};
+
+
+
+
+
+
 
 
 struct UIZPlaneTransform {

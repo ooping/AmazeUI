@@ -158,9 +158,9 @@ void UIWinTop::OnCreate()
 		rc.top += 20;
 		rc.bottom -= 50;
 		_chart201.CreateControl(0, &_canvas200, rc, UILayoutCalc::SIZE_X | UILayoutCalc::SIZE_Y);
-		vector<double> xList, yList;
+		vector<float> xList, yList;
 		for (int i = 0; i < 100; ++i) {
-			xList.push_back(i);
+			xList.push_back((float)i);
 			yList.push_back(sin(i * XM_PI / 50.0f));
 		}
 		_chart201.AddCurve1("Chart 1", xList, yList);

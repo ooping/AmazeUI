@@ -753,21 +753,21 @@ class UIChart : public UIControlBase<UIChart> {
 	friend UIControlBase;
 
 	// type definition
-	typedef std::pair<double, double> RANGE_DOUBLE;
-	typedef std::vector<RANGE_DOUBLE> VECTOR_RANGE; 
+	typedef std::pair<float, float> RANGE_FLOAT;
+	typedef std::vector<RANGE_FLOAT> VECTOR_RANGE; 
 
-	struct PointDouble {
-		double _x;
-		double _y;
+	struct PointFloat {
+		float _x;
+		float _y;
 
-		PointDouble(double x=0.0, double y=0.0) : _x(x), _y(y) {}
+		PointFloat(float x=0.0f, float y=0.0f) : _x(x), _y(y) {}
 	};
-	typedef std::vector<PointDouble> VECTOR_POINT; 
+	typedef std::vector<PointFloat> VECTOR_POINT; 
 
 	struct CurveInfo {	
 		CurveInfo();
 
-		bool CalcCoordRange(double& xMin, double& xMax, double& yMin, double& yMax);		// calculate the coordinate range of the line
+		bool CalcCoordRange(float& xMin, float& xMax, float& yMin, float& yMax);			// calculate the coordinate range of the line
 		bool JudgePointNearLine(POINT& p0, POINT& p1, POINT& p2);							// judge whether the point p0 is near the line (p1,p2)
 		bool operator==(std::wstring textName);												// overload the comparison  name as key
 
@@ -791,12 +791,12 @@ public:
 
 	// add curve relative to the left axis
 	void AddCurve1(UIString textName);
-	void AddCurve1(UIString textName, double xValue, double yValue);
-	void AddCurve1(UIString textName, std::vector<double>& xList, std::vector<double>& yList, bool isXCoordInOrder=true);
+	void AddCurve1(UIString textName, float xValue, float yValue);
+	void AddCurve1(UIString textName, std::vector<float>& xList, std::vector<float>& yList, bool isXCoordInOrder=true);
 	// add curve relative to the right axis
 	void AddCurve2(UIString textName);
-	void AddCurve2(UIString textName, double xValue, double yValue);
-	void AddCurve2(UIString textName, std::vector<double>& xList, std::vector<double>& yList, bool isXCoordInOrder=true);
+	void AddCurve2(UIString textName, float xValue, float yValue);
+	void AddCurve2(UIString textName, std::vector<float>& xList, std::vector<float>& yList, bool isXCoordInOrder=true);
 	// clear all curves
 	void Clear();
 
@@ -809,13 +809,13 @@ public:
 	void SetCurve2Select(UIString textName);
 
 	// set and get curve range
-	void SetXYCoordRange(double xMin, double xMax, double y1Min, double y1Max, double y2Min, double y2Max);
-	void GetXYCoordRange(double& xMin, double& xMax, double& y1Min, double& y1Max, double& y2Min, double& y2Max);
+	void SetXYCoordRange(float xMin, float xMax, float y1Min, float y1Max, float y2Min, float y2Max);
+	void GetXYCoordRange(float& xMin, float& xMax, float& y1Min, float& y1Max, float& y2Min, float& y2Max);
 
 	// set coordinate limit
-	void SetXCoordLimit(double min, double max);
-	void SetY1CoordLimit(double min, double max);
-	void SetY2CoordLimit(double min, double max);
+	void SetXCoordLimit(float min, float max);
+	void SetY1CoordLimit(float min, float max);
+	void SetY2CoordLimit(float min, float max);
 
 	// set coordinate symmetry
 	void SetXCoordSymmetry();
@@ -833,8 +833,8 @@ private:
 	bool OnMouseMove(POINT pt);
 	//
 	void AddCurve(int yFlag, std::wstring textName);
-	void AddCurve(int yFlag, std::wstring textName, double xValue, double yValue);
-	void AddCurve(int yFlag, std::wstring textName, std::vector<double>& xList, std::vector<double>& yList, bool isXCoordInOrder=true);
+	void AddCurve(int yFlag, std::wstring textName, float xValue, float yValue);
+	void AddCurve(int yFlag, std::wstring textName, std::vector<float>& xList, std::vector<float>& yList, bool isXCoordInOrder=true);
 	void SetCurveColor(int yFlag, std::wstring textName, UIColor& color);
 	void SetCurveSelect(int yFlag, std::wstring textName);
 
@@ -856,16 +856,16 @@ private:
 	void SaveCurCoordRange();														// save current coordinate range
 	void CalcCurveListDrawRange(int mode = LEFTMOVE);
 	void CalcCurveDrawRange(CurveInfo& curve, int mode = LEFTMOVE);
-	void CalcCoordSymmetry(RANGE_DOUBLE& rangeCoord);								// calculate coordinate symmetry
+	void CalcCoordSymmetry(RANGE_FLOAT& rangeCoord);								// calculate coordinate symmetry
 
 	// coordinate value and real position conversion
-	void TransfromCoordToPos(POINT& pointPos, PointDouble& pointCoord, int yFlag);
-	bool TransfromPosToCoord(POINT& pointPos, PointDouble& pointCoord, int yFlag);
+	void TransfromCoordToPos(POINT& pointPos, PointFloat& pointCoord, int yFlag);
+	bool TransfromPosToCoord(POINT& pointPos, PointFloat& pointCoord, int yFlag);
 
 	// point range judgment
 	bool IsPosPointInbox(POINT& pointPos, const RECT& rect);
-	bool IsCoordPointInbox(PointDouble& pointCoord, PointDouble& p1, PointDouble& p2, bool nearYFlag=false);
-	bool IsCoordPointInCoordRange(PointDouble& pointCoord, int yFlag);
+	bool IsCoordPointInbox(PointFloat& pointCoord, PointFloat& p1, PointFloat& p2, bool nearYFlag=false);
+	bool IsCoordPointInCoordRange(PointFloat& pointCoord, int yFlag);
 
 	// judge whether the point is near the curve
 	bool IsPointNearCurve(POINT& point, int yFlag);
@@ -873,11 +873,11 @@ private:
 	bool IsPointNearCurveLine(POINT& point, CurveInfo& curve, int yFlag);
 
 	// calculate intersection point
-	PointDouble CalcIntersectionPoint(PointDouble& prePoint, PointDouble& curPoint, int outBoxIndex, int yFlag);
-	inline bool CalcLeftIntersectionPoint(PointDouble& pointCoord, double& k, double& b, int yFlag);
-	inline bool CalcTopIntersectionPoint(PointDouble& pointCoord, double& k, double& b, int yFlag);
-	inline bool CalcRightIntersectionPoint(PointDouble& pointCoord, double& k, double& b, int yFlag);
-	inline bool CalcBottomIntersectionPoint(PointDouble& pointCoord, double& k, double& b, int yFlag);
+	PointFloat CalcIntersectionPoint(PointFloat& prePoint, PointFloat& curPoint, int outBoxIndex, int yFlag);
+	inline bool CalcLeftIntersectionPoint(PointFloat& pointCoord, float& k, float& b, int yFlag);
+	inline bool CalcTopIntersectionPoint(PointFloat& pointCoord, float& k, float& b, int yFlag);
+	inline bool CalcRightIntersectionPoint(PointFloat& pointCoord, float& k, float& b, int yFlag);
+	inline bool CalcBottomIntersectionPoint(PointFloat& pointCoord, float& k, float& b, int yFlag);
 
 	// internal calculation mode
 	enum CalcModeInside {
@@ -897,11 +897,11 @@ private:
 	CURVE_LIST _curveList1;													// curve list left y-axis
 	CURVE_LIST _curveList2;													// curve list right y-axis
 	
-	double _coordToPosScaleX;												// ratio: coordinate/positon, for efficiency
-	double _coordToPosScaleY1;												
-	double _coordToPosScaleY2;
+	float _coordToPosScaleX;												// ratio: coordinate/positon, for efficiency
+	float _coordToPosScaleY1;												
+	float _coordToPosScaleY2;
 
-	RANGE_DOUBLE _xCoordRange, _y1CoordRange, _y2CoordRange;				// record x y-axis coordinate range
+	RANGE_FLOAT _xCoordRange, _y1CoordRange, _y2CoordRange;				// record x y-axis coordinate range
 	VECTOR_RANGE _xCoordHistory, _y1CoordHistory, _y2CoordHistory;			// record history coordinate range
 	bool _isY1CoordRangeCalc;												// xy coordinate range calculation flag
 	bool _isY2CoordRangeCalc;												// xy coordinate range calculation flag
@@ -920,9 +920,9 @@ private:
 	bool _isRoomEnoughDraw;													// space enough to draw flag
 
 	bool _isXCoordLimit, _isY1CoordLimit, _isY2CoordLimit;					// external calculation condition
-	double _xCoordMinLimit, _xCoordMaxLimit;
-	double _y1CoordMinLimit, _y1CoordMaxLimit;
-	double _y2CoordMinLimit, _y2CoordMaxLimit;
+	float _xCoordMinLimit, _xCoordMaxLimit;
+	float _y1CoordMinLimit, _y1CoordMaxLimit;
+	float _y2CoordMinLimit, _y2CoordMaxLimit;
 	bool _isXCoordSymmetry, _isY1CoordSymmetry, _isY2CoordSymmetry;
 
 	DirectX::XMMATRIX _inheritedTransformMatrix;
@@ -1043,48 +1043,54 @@ private:
 class UIChart3D : public UIControlBase<UIChart3D> {
 	friend UIControlBase;
 
-	/*------------------------------------------------------- Camera - Independent 3D camera system -------------------------------------------------------*/
-	// Independent 3D camera system for Chart3D control, similar to Unity3D Scene View axes
-	class UICameraCtrl : public UICameraBase {
-		RECT _scissorRect;
-		D3D12_VIEWPORT _viewport;
+	struct PointFloat {
+		float _x;
+		float _y;
+		float _z;
+
+		PointFloat(float x=0.0f, float y=0.0f, float z=0.0f) : _x(x), _y(y), _z(z) {}
 		
-		float _worldWidth;
-		float _worldHeight;
+		// Arithmetic operators for easy calculation
+		PointFloat operator+(const PointFloat& other) const {
+			return PointFloat(_x + other._x, _y + other._y, _z + other._z);
+		}
+		PointFloat operator-(const PointFloat& other) const {
+			return PointFloat(_x - other._x, _y - other._y, _z - other._z);
+		}
+		PointFloat operator*(float scale) const {
+			return PointFloat(_x * scale, _y * scale, _z * scale);
+		}
 
-		// Mouse rotation support
-		float _yaw = 0.0f;    // 左右旋转角度
-		float _pitch = 0.0f;  // 上下旋转角度
-		float _viewDistance = 5.0f; // 摄像机到目标的距离
-
-	public:
-		UICameraCtrl();
-		~UICameraCtrl() = default;
-
-		// Setup methods
-		void SetCtrlRect(const RECT& ctrlRC);
-
-		// Mouse rotation
-		void RotateCamera(float deltaYaw, float deltaPitch);
-
-		RECT GetScissorRect() const;
-		D3D12_VIEWPORT GetViewport() const;
-		float GetWorldWidth() const;
-		float GetWorldHeight() const;
+		DirectX::XMFLOAT3 ToXMFLOAT3() const {
+			return DirectX::XMFLOAT3(_x, _y, _z);
+		}
 	};
 
-	/*------------------------------------------------------- UIAxes3D - 3D coordinate axes renderer -------------------------------------------------------*/
-	// 3D coordinate axes renderer
-	class UIAxes3D {
-	public:
-		UIAxes3D();
-		~UIAxes3D() = default;
+	typedef std::pair<float, float> RANGE_FLOAT_3D;
 
-		void Draw(const UICameraCtrl& camera);
-
-	private:
-	
-	};
+	/* Usage Example:
+	   // 1. Setup data coordinate ranges
+	   chart3d.SetDataCoordRange(0.0f, 100.0f, -50.0f, 50.0f, 0.0f, 200.0f);
+	   chart3d.SetAxisLength(2.0f, 2.0f, 2.0f);  // World space axis lengths
+	   
+	   // 2. Add data points with high-quality spheres
+	   chart3d.AddDataPoint(25.0f, 10.0f, 100.0f, UIColor::Red, 10.0f);    // Red sphere, 10 pixel radius
+	   chart3d.AddDataPoint(50.0f, -20.0f, 150.0f, UIColor::Green, 8.0f);  // Green sphere, 8 pixel radius
+	   chart3d.AddDataPoint(75.0f, 30.0f, 50.0f, UIColor::Blue, 12.0f);    // Blue sphere, 12 pixel radius
+	   
+	   // 3. Convert data coordinates to world coordinates
+	   PointFloat worldPoint = chart3d.DataToWorld({25.0f, 10.0f, 100.0f});
+	   
+	   // 4. Convert world coordinates to screen coordinates for mouse interaction
+	   POINT screenPos = chart3d.WorldToScreen(worldPoint);
+	   
+	   // 5. Reverse conversion for mouse picking
+	   PointFloat pickedWorld = chart3d.ScreenToWorld(mousePos, 0.5f);
+	   PointFloat pickedData = chart3d.WorldToData(pickedWorld);
+	   
+	   // 6. Clear all data points when needed
+	   chart3d.ClearDataPoints();
+	*/
 
 public:
 	UIChart3D();
@@ -1096,14 +1102,60 @@ public:
 	bool OnRButtonDown(POINT pt);
 	bool OnMouseMove(POINT pt);
 
+	// Coordinate system setup
+	void SetDataCoordRange(float xMin, float xMax, float yMin, float yMax, float zMin, float zMax);
+
+	// Coordinate transformation functions
+	PointFloat DataToWorld(const PointFloat& dataCoord) const;
+	PointFloat WorldToData(const PointFloat& worldCoord) const;
+	POINT WorldToScreen(const PointFloat& worldCoord);
+	PointFloat ScreenToWorld(const POINT& screenPos, float depth = 0.0f);
+	
+	// Data point management
+	struct DataPoint3D {
+		PointFloat position;    // Data coordinates
+		UIColor color;         // Point color
+		float pixelRadius;     // Desired radius in pixels
+		float alpha;           // Transparency (0.0 - 1.0)
+		
+		DataPoint3D(const PointFloat& pos, const UIColor& col = UIColor::Red, float radius = 8.0f, float a = 1.0f)
+			: position(pos), color(col), pixelRadius(radius), alpha(a) {}
+	};
+	
+	void AddDataPoint(const PointFloat& dataCoord, const UIColor& color = UIColor::Red, float pixelRadius = 8.0f, float alpha = 1.0f);
+	void AddDataPoint(float x, float y, float z, const UIColor& color = UIColor::Red, float pixelRadius = 8.0f, float alpha = 1.0f);
+	void ClearDataPoints();
+	size_t GetDataPointCount() const { return _dataPoints.size(); }
+
 private:
-	// Independent camera and axes system
+	// 3D axes calculation and drawing functions
+	void CalcAxes3D();
+	void DrawAxes3D();
+	void DrawDataPoints();  // Draw all data points as high-quality spheres
+
+	// Independent camera system
 	UICameraCtrl _cameraCtrl;
-	UIAxes3D _axes3D;
+
+	// Pre-calculated axes coordinates in world space (calculated in CalcArea)
+	PointFloat _axesOrigin = {0.0f, 0.0f, 0.0f};      // Origin point in world coordinates
+	PointFloat _xAxisEnd = {1.0f, 0.0f, 0.0f};        // X axis end point in world coordinates
+	PointFloat _yAxisEnd = {0.0f, 1.0f, 0.0f};        // Y axis end point in world coordinates
+	PointFloat _zAxisEnd = {0.0f, 0.0f, 1.0f};        // Z axis end point in world coordinates
+
+	PointFloat _axisLengths = {1.0f, 1.0f, 1.0f};  // World coordinate axis lengths
+
+	// 3D coordinate system definition
+	RANGE_FLOAT_3D _xDataRange = {0.0f, 1.0f};  // Data coordinate range for X axis
+	RANGE_FLOAT_3D _yDataRange = {0.0f, 1.0f};  // Data coordinate range for Y axis  
+	RANGE_FLOAT_3D _zDataRange = {0.0f, 1.0f};  // Data coordinate range for Z axis
+
+	// Data points storage
+	std::vector<DataPoint3D> _dataPoints;
 
 	// Mouse interaction state
 	POINT _lastMousePos = {0, 0};
-	
+
+
 	DirectX::XMMATRIX _inheritedTransformMatrix;
 };
 

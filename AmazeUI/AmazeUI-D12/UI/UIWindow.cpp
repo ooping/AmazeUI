@@ -178,7 +178,7 @@ void UIWindowBase::MoveWindow(const RECT& relativeRect) {
 	OffsetRect(&_clientRC, -relativeRect.left, -relativeRect.top);
 
 	//
-	this->HandleMessage(WM_SIZE, 0, (GetRectHeight()(relativeRect)<<16)+GetRectWidth()(relativeRect));
+	this->HandleMessage(WM_SIZE, 0, (GetRectHeight()(relativeRect) << 16)+GetRectWidth()(relativeRect));
 }
 
 UIContainer* UIWindowBase::GetUIContainer() {
