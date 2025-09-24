@@ -1043,10 +1043,11 @@ bool UIDXFoundation::ConvertImageTransparencyByDDS(const wstring& filePath, cons
     return true;
 }
 
-// create texture
-bool CreateTextureFromImageData(ID3D12Device* device, ResourceUploadBatch& resourceUpload, ComPtr<ID3D12Resource>& texture, vector<uint8_t>& imageData, UINT& width, UINT& height)
-{
-    // create texture description
+// Texture creation helper function
+bool UIDXFoundation::CreateTextureFromImageData(ID3D12Device* device, DirectX::ResourceUploadBatch& resourceUpload, 
+                                                ComPtr<ID3D12Resource>& texture, const std::vector<uint8_t>& imageData, UINT width, UINT height) {
+    
+    // Create texture description
     D3D12_RESOURCE_DESC textureDesc = {};
     textureDesc.MipLevels = 1;
     textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -1058,7 +1059,7 @@ bool CreateTextureFromImageData(ID3D12Device* device, ResourceUploadBatch& resou
     textureDesc.SampleDesc.Quality = 0;
     textureDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
     
-    // create texture resource
+    // Create texture resource
     CD3DX12_HEAP_PROPERTIES defaultHeapProperties(D3D12_HEAP_TYPE_DEFAULT);
     HRESULT hr = device->CreateCommittedResource(
         &defaultHeapProperties,
@@ -1068,17 +1069,18 @@ bool CreateTextureFromImageData(ID3D12Device* device, ResourceUploadBatch& resou
         nullptr,
         IID_PPV_ARGS(texture.ReleaseAndGetAddressOf())
     );
+    
     if (FAILED(hr)) {
         return false;
     }
 
-    // create subresource data
+    // Create subresource data
     D3D12_SUBRESOURCE_DATA subResData = {};
     subResData.pData = imageData.data();
-    subResData.RowPitch = width * 4;
+    subResData.RowPitch = width * 4;  // RGBA = 4 bytes per pixel
     subResData.SlicePitch = subResData.RowPitch * height;
 
-    // upload texture data
+    // Upload texture data
     resourceUpload.Upload(
         texture.Get(),
         0,
@@ -1086,7 +1088,7 @@ bool CreateTextureFromImageData(ID3D12Device* device, ResourceUploadBatch& resou
         1
     );
 
-    // transition resource to pixel shader resource state
+    // Transition resource to pixel shader resource state
     resourceUpload.Transition(
         texture.Get(),
         D3D12_RESOURCE_STATE_COPY_DEST,
@@ -1873,129 +1875,157 @@ void UIDXFoundation::Draw3DWorldCtrlLine(const XMFLOAT3& start, const XMFLOAT3& 
     Draw3DWorldCtrlLine(start, end, color, color, pCameraCtrl);
 }
 
-void UIDXFoundation::Draw3DWorldCtrlBall(const XMFLOAT3& center, float radius, const UIColor& color, float alpha) {
-    auto commandList = p_deviceResources->GetCommandList();
+void UIDXFoundation::Draw3DWorldCtrlThickLine(const XMFLOAT3& start, const XMFLOAT3& end, float lineWidth, const UIColor& color, UICameraCtrl* pCameraCtrl) {
+    const int segments = 8; // 圆柱体分段数
     
-    // Apply triangle effect for ball rendering (using triangles to approximate sphere)
-    p_triangleEffect3DCtrl->Apply(commandList);
+    XMVECTOR startVec = XMLoadFloat3(&start);
+    XMVECTOR endVec = XMLoadFloat3(&end);
+    XMVECTOR direction = XMVector3Normalize(XMVectorSubtract(endVec, startVec));
     
-    // For simplicity, draw a simple octahedron as ball approximation
-    // This is a basic implementation - can be improved with more subdivisions
+    // 找到两个垂直于线段的向量
+    XMVECTOR up = XMVectorSet(0, 1, 0, 0);
+    if (abs(XMVectorGetY(direction)) > 0.9f) {
+        up = XMVectorSet(1, 0, 0, 0); // 如果线段接近垂直，使用X轴
+    }
+    
+    XMVECTOR right = XMVector3Normalize(XMVector3Cross(direction, up));
+    up = XMVector3Cross(right, direction);
+    
+    // 将像素线宽转换为世界坐标线宽
+    float worldRadius = CalculateWorldLengthFromPixelLength(lineWidth * 0.5f, start, pCameraCtrl);
     
     vector<VertexPositionColor> vertices;
     vector<uint16_t> indices;
     
-    // Create 6 vertices of octahedron
-    XMVECTOR centerVec = XMLoadFloat3(&center);
-    XMVECTOR colorVec = color.ToXMVECTORF32();
-    colorVec = XMVectorSetW(colorVec, alpha);
+    XMFLOAT4 uniformColor4;
+    XMStoreFloat4(&uniformColor4, color.ToXMVECTORF32());
     
-    // Top, bottom, and 4 middle vertices
-    XMFLOAT3 top, bottom, front, back, left, right;
-    XMStoreFloat3(&top, XMVectorAdd(centerVec, XMVectorSet(0, radius, 0, 0)));
-    XMStoreFloat3(&bottom, XMVectorAdd(centerVec, XMVectorSet(0, -radius, 0, 0)));
-    XMStoreFloat3(&front, XMVectorAdd(centerVec, XMVectorSet(0, 0, radius, 0)));
-    XMStoreFloat3(&back, XMVectorAdd(centerVec, XMVectorSet(0, 0, -radius, 0)));
-    XMStoreFloat3(&left, XMVectorAdd(centerVec, XMVectorSet(-radius, 0, 0, 0)));
-    XMStoreFloat3(&right, XMVectorAdd(centerVec, XMVectorSet(radius, 0, 0, 0)));
-    
-    vertices = {
-        {{top.x, top.y, top.z}, colorVec},         // 0
-        {{bottom.x, bottom.y, bottom.z}, colorVec}, // 1
-        {{front.x, front.y, front.z}, colorVec},   // 2
-        {{back.x, back.y, back.z}, colorVec},      // 3
-        {{left.x, left.y, left.z}, colorVec},      // 4
-        {{right.x, right.y, right.z}, colorVec}    // 5
-    };
-    
-    // Create triangles for octahedron (8 triangular faces)
-    indices = {
-        // Top 4 triangles
-        0, 2, 5,  // top-front-right
-        0, 5, 3,  // top-right-back
-        0, 3, 4,  // top-back-left
-        0, 4, 2,  // top-left-front
-        // Bottom 4 triangles
-        1, 5, 2,  // bottom-right-front
-        1, 3, 5,  // bottom-back-right
-        1, 4, 3,  // bottom-left-back
-        1, 2, 4   // bottom-front-left
-    };
-    
-    // Draw ball approximation
-    p_batch->Begin(commandList);
-    p_batch->DrawIndexed(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST,
-                         indices.data(), indices.size(),
-                         vertices.data(), vertices.size());
-    p_batch->End();
-}
-
-void UIDXFoundation::Draw3DWorldCtrlSphere(const XMFLOAT3& center, float worldRadius, const UIColor& color, float alpha, size_t tessellation) {
-    auto commandList = p_deviceResources->GetCommandList();
-    
-    // Create a sphere geometry
-    auto sphere = GeometricPrimitive::CreateSphere(worldRadius * 2.0f, tessellation, true, false, p_deviceResources->GetD3DDevice());
-    
-    // Set up the effect for sphere rendering
-    XMVECTOR colorVec = XMVectorSet(color._r / 255.0f, color._g / 255.0f, color._b / 255.0f, alpha);
-    p_shapeEffectGame->SetDiffuseColor(colorVec);
-    p_shapeEffectGame->SetAmbientLightColor(XMVECTOR{0.3f, 0.3f, 0.3f, 1.0f});
-    
-    // Create transformation matrix for positioning and scaling
-    XMMATRIX world = XMMatrixTranslation(center.x, center.y, center.z);
-    p_shapeEffectGame->SetWorld(world);
-    
-    // Apply current camera matrices
-    p_shapeEffectGame->SetView(UICameraGame::GetSingletonInstance()->GetViewMatrix());
-    p_shapeEffectGame->SetProjection(UICameraGame::GetSingletonInstance()->GetProjectionMatrix());
-    
-    // Apply effect and draw
-    p_shapeEffectGame->Apply(commandList);
-    sphere->Draw(commandList);
-}
-
-void UIDXFoundation::Draw3DWorldCtrlSphereFromPixelRadius(const XMFLOAT3& center, float pixelRadius, const UIColor& color, float alpha, size_t tessellation) {
-    // Convert pixel radius to world radius
-    float worldRadius = PixelRadiusToWorldRadius(pixelRadius, center);
-    
-    // Use the world radius sphere function
-    Draw3DWorldCtrlSphere(center, worldRadius, color, alpha, tessellation);
-}
-
-float UIDXFoundation::PixelRadiusToWorldRadius(float pixelRadius, const XMFLOAT3& worldPosition) {
-    // Get current camera view and projection matrices
-    XMMATRIX view = UICameraGame::GetSingletonInstance()->GetViewMatrix();
-    XMMATRIX proj = UICameraGame::GetSingletonInstance()->GetProjectionMatrix();
-    XMMATRIX viewProj = XMMatrixMultiply(view, proj);
-    
-    // Transform world position to clip space
-    XMVECTOR worldPosVec = XMLoadFloat3(&worldPosition);
-    XMVECTOR clipPosVec = XMVector3Transform(worldPosVec, viewProj);
-    
-    // Get the Z component (depth) for perspective scaling
-    float clipZ = XMVectorGetZ(clipPosVec);
-    float clipW = XMVectorGetW(clipPosVec);
-    
-    // Prevent division by zero
-    if (abs(clipW) < 0.0001f) {
-        return pixelRadius * 0.01f; // fallback small radius
+    // 生成圆柱体顶点
+    for (int i = 0; i < segments; ++i) {
+        float angle = (float)i * XM_2PI / segments;
+        float cosAngle = cosf(angle);
+        float sinAngle = sinf(angle);
+        
+        XMVECTOR offset = XMVectorAdd(
+            XMVectorScale(right, worldRadius * cosAngle),
+            XMVectorScale(up, worldRadius * sinAngle)
+        );
+        
+        // 起点圆周顶点
+        XMFLOAT3 startVertex;
+        XMStoreFloat3(&startVertex, XMVectorAdd(startVec, offset));
+        vertices.emplace_back(startVertex, uniformColor4);
+        
+        // 终点圆周顶点
+        XMFLOAT3 endVertex;
+        XMStoreFloat3(&endVertex, XMVectorAdd(endVec, offset));
+        vertices.emplace_back(endVertex, uniformColor4);
     }
     
-    //// Get viewport dimensions
-    //auto viewport = p_deviceResources->GetScreenViewport();
-    //float viewportWidth = viewport.Width;
-    //float viewportHeight = viewport.Height;
-    //
-    //// Calculate world radius based on perspective projection
-    //// This is an approximation - for accurate results you'd need more complex calculations
-    //float ndcRadius = (pixelRadius * 2.0f) / min(viewportWidth, viewportHeight);
-    //float worldRadius = ndcRadius * abs(clipW) * 0.5f; // Approximate scaling factor
+    // 生成圆柱体侧面三角形索引
+    for (int i = 0; i < segments; ++i) {
+        int current = i * 2;
+        int next = ((i + 1) % segments) * 2;
+        
+        // 第一个三角形
+        indices.push_back(static_cast<uint16_t>(current));     // 当前起点
+        indices.push_back(static_cast<uint16_t>(current + 1)); // 当前终点
+        indices.push_back(static_cast<uint16_t>(next));        // 下一个起点
+        
+        // 第二个三角形
+        indices.push_back(static_cast<uint16_t>(current + 1)); // 当前终点
+        indices.push_back(static_cast<uint16_t>(next + 1));    // 下一个终点
+        indices.push_back(static_cast<uint16_t>(next));        // 下一个起点
+    }
     
-    //return worldRadius;
-
-    return 0;
+    RegisterBatchData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, 
+                      p_triangleEffect3DCtrl, GetCurrentClipRect(), pCameraCtrl);
 }
 
+void UIDXFoundation::Draw3DWorldCtrlCircle(const XMFLOAT3& center, float pixelRadius, const UIColor& color, UCHAR alpha, UICameraCtrl* pCameraCtrl) {
+    // Calculate camera-facing billboard
+    Matrix view = pCameraCtrl->GetViewMatrix();
+    XMVECTOR right = XMVectorSet(view.m[0][0], view.m[1][0], view.m[2][0], 0);
+    XMVECTOR up = XMVectorSet(view.m[0][1], view.m[1][1], view.m[2][1], 0);
+    
+    // Convert pixel radius to world radius at given depth
+    float worldRadius = CalculateWorldLengthFromPixelLength(pixelRadius, center, pCameraCtrl);
+    XMVECTOR centerVec = XMLoadFloat3(&center);
+    
+    // Create very smooth circular geometry using even more triangles
+    const int segments = 64; // Double the segments for ultra-smooth circle
+    vector<VertexPositionColor> vertices;
+    vector<uint16_t> indices;
+    
+    // Use uniform color for all vertices (no gradient)
+    XMFLOAT4 uniformColor4;
+    XMStoreFloat4(&uniformColor4, color.ToXMVECTORF32(alpha));
+    
+    // Add center vertex
+    XMFLOAT3 centerPos;
+    XMStoreFloat3(&centerPos, centerVec);
+    vertices.emplace_back(centerPos, uniformColor4);
+    
+    // Add circle vertices with uniform color
+    for (int i = 0; i < segments; ++i) {
+        float angle = (float)i * XM_2PI / segments;
+        float cosAngle = cosf(angle);
+        float sinAngle = sinf(angle);
+        
+        XMVECTOR pos = XMVectorAdd(centerVec, 
+                                   XMVectorAdd(XMVectorScale(right, worldRadius * cosAngle),
+                                               XMVectorScale(up, worldRadius * sinAngle)));
+        
+        XMFLOAT3 vertexPos;
+        XMStoreFloat3(&vertexPos, pos);
+        vertices.emplace_back(vertexPos, uniformColor4);
+    }
+    
+    // Create triangle indices (center + circle edge)
+    for (int i = 0; i < segments; ++i) {
+        indices.push_back(0);                                    // Center vertex
+        indices.push_back(static_cast<uint16_t>(i + 1));         // Current edge vertex
+        indices.push_back(static_cast<uint16_t>(((i + 1) % segments) + 1)); // Next edge vertex
+    }
+    
+    // Register batch data for triangle color rendering
+    RegisterBatchData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices,
+                      p_triangleEffect3DCtrl, GetCurrentClipRect(), pCameraCtrl);
+}
+
+// Helper function to calculate world length from pixel length
+float UIDXFoundation::CalculateWorldLengthFromPixelLength(float pixelLength, const XMFLOAT3& worldPosition, UICameraCtrl* pCamera) {
+    // Get camera matrices
+    XMMATRIX view = pCamera->GetViewMatrix();
+    XMMATRIX proj = pCamera->GetProjectionMatrix();
+
+    // Get viewport information
+    D3D12_VIEWPORT viewport = pCamera->GetViewport();
+
+    // Extract projection matrix elements using DirectX math functions
+    XMFLOAT4X4 projMatrix;
+    XMStoreFloat4x4(&projMatrix, proj);
+
+    if (abs(projMatrix._34) > 0.0001f) {
+        // Transform world position to view space
+        XMVECTOR worldPosVec = XMLoadFloat3(&worldPosition);
+        XMVECTOR viewPosVec = XMVector3Transform(worldPosVec, view);
+        float viewZ = XMVectorGetZ(viewPosVec);
+        
+        // Prevent distance too close causing anomalies
+        if (abs(viewZ) < 0.1f) {
+            return pixelLength * 0.01f; // fallback value
+        }
+
+        // perspective projection
+        float tanHalfFovY = 1.0f / projMatrix._22;
+        float worldUnitsPerPixel = (2.0f * abs(viewZ) * tanHalfFovY) / viewport.Height;
+        return pixelLength * worldUnitsPerPixel;
+    } else {
+        // orthographic projection
+        return pixelLength / viewport.Width * pCamera->GetWorldWidth();
+    }
+}
 
 // Helper method to clear the back buffers.
 void UIDXFoundation::Clear() {
@@ -2234,6 +2264,7 @@ void UIDXFoundation::CreateDeviceDependentResourcesXTK() {
 
             p_triangleTexturedEffect2DUI = make_unique<BasicEffect>(device, EffectFlags::Texture, pd);
             p_triangleTexturedEffect3DUI = make_unique<BasicEffect>(device, EffectFlags::Texture, pd);
+            p_triangleTexturedEffect3DCtrl = make_unique<BasicEffect>(device, EffectFlags::Texture, pd);
         }
 
         {
@@ -2341,6 +2372,7 @@ void UIDXFoundation::ResetResources() {
     p_triangleEffect3DUI.reset();
     p_triangleEffect3DCtrl.reset();
     p_triangleTexturedEffect3DUI.reset();
+    p_triangleTexturedEffect3DCtrl.reset();
     p_shapeEffectGame.reset();
     _modelEffectsGame.clear();
     p_modelResources.reset();
@@ -3223,15 +3255,11 @@ void UIDXFoundation::ExecuteColorBatch(const BatchData& batch, ID3D12GraphicsCom
     }
 
     // Check if this is a 3D control effect and set matrices for the current effect only
-    if (batch._effect == p_lineEffect3DCtrl.get() || 
-        batch._effect == p_pointEffect3DCtrl.get() ||
-        batch._effect == p_triangleEffect3DCtrl.get()) {
-        Matrix viewMatrix = batch._pCamera->GetViewMatrix();
-        Matrix projMatrix = batch._pCamera->GetProjectionMatrix();
-
+    if (batch._effect == p_lineEffect3DCtrl.get() || batch._effect == p_pointEffect3DCtrl.get() ||
+        batch._effect == p_triangleEffect3DCtrl.get() || batch._effect == p_triangleTexturedEffect3DCtrl.get()) {
         batch._effect->SetWorld(Matrix::Identity);
-        batch._effect->SetView(viewMatrix);
-        batch._effect->SetProjection(projMatrix);
+        batch._effect->SetView(batch._pCamera->GetViewMatrix());
+        batch._effect->SetProjection(batch._pCamera->GetProjectionMatrix());
     }
 
     // Apply effect for this batch

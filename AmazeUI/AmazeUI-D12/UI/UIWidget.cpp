@@ -4949,8 +4949,7 @@ void UITab::SetCurCell(UINT index) {
 		}
 
 		_selectedIndex = index;
-		//PlayAnimate(MAX_FRAME1);
-		PlayAnimate(100);
+		PlayAnimate(MAX_FRAME1);
 	}
 }
 
@@ -5168,7 +5167,6 @@ bool UICanvas3D::OnMouseLeave(POINT) {
 
 /*------------------------------------------------------- UIChart3D -------------------------------------------------------*/
 UIChart3D::UIChart3D() {
-	AddDataPoint(PointFloat(60.0f, 60.0f, 0.0f), UIColor::Red);
 }
 
 UIChart3D::~UIChart3D() {
@@ -5234,6 +5232,9 @@ void UIChart3D::DrawAxes3D() {
 	dx->Draw3DWorldCtrlLine(dxOrigin, dxXAxisEnd, UIColor::Red, &_cameraCtrl);    // X-axis (Red)
 	dx->Draw3DWorldCtrlLine(dxOrigin, dxYAxisEnd, UIColor::Green, &_cameraCtrl);  // Y-axis (Green)
 	dx->Draw3DWorldCtrlLine(dxOrigin, dxZAxisEnd, UIColor::Blue, &_cameraCtrl);   // Z-axis (Blue)
+
+
+	dx->Draw3DWorldCtrlThickLine(dxOrigin, dxXAxisEnd, 5.0f, UIColor::Red, &_cameraCtrl);    // X-axis (Red)
 }
 
 void UIChart3D::Draw() {
@@ -5261,9 +5262,12 @@ void UIChart3D::Draw() {
 
 	// Draw 3D axes using pre-calculated coordinates
 	DrawAxes3D();
+
+	//dx->Draw3DWorldCtrlPoint({_xAxisEnd._x, _yAxisEnd._y, 0.0f}, UIColor::Red, &_cameraCtrl);
+	dx->Draw3DWorldCtrlCircle({_xAxisEnd._x, _xAxisEnd._y, 0.0f}, 5, UIColor::Black, 255, &_cameraCtrl);
 	
 	// Draw data points as high-quality spheres
-	DrawDataPoints();
+	//DrawDataPoints();
 
 	cmd->RSSetViewports(1, &originalViewport);
 }
@@ -5275,13 +5279,22 @@ bool UIChart3D::OnRButtonDown(POINT pt) {
 	point.y -= _abusolutePoint.y;
 		
 	_lastMousePos = point;
+	_moveFlag = true;  // Set right button down flag
 	return true;
 }
 
+bool UIChart3D::OnRButtonUp(POINT) {
+	_moveFlag = false;  // Clear right button down flag
+	return true;
+}
+
+void UIChart3D::OnMouseLeave(POINT) {
+	_moveFlag = false;  // Clear right button down flag when mouse leaves
+}
+
 bool UIChart3D::OnMouseMove(POINT pt) {
-	// check if right button is down
-	// judge the mouse is out of the control range
-	if (IsKeyDown()(VK_RBUTTON)) {
+	// Only allow movement when right button is down
+	if (_moveFlag) {
 		POINT point = pt;
 		point.x -= _abusolutePoint.x;
 		point.y -= _abusolutePoint.y;
@@ -5393,31 +5406,4 @@ UIChart3D::PointFloat UIChart3D::ScreenToWorld(const POINT& screenPos, float dep
 	return worldCoord;
 }
 
-// Data point management functions
-void UIChart3D::AddDataPoint(const PointFloat& dataCoord, const UIColor& color, float pixelRadius, float alpha) {
-	_dataPoints.emplace_back(dataCoord, color, pixelRadius, alpha);
-}
 
-void UIChart3D::AddDataPoint(float x, float y, float z, const UIColor& color, float pixelRadius, float alpha) {
-	_dataPoints.emplace_back(PointFloat(x, y, z), color, pixelRadius, alpha);
-}
-
-void UIChart3D::ClearDataPoints() {
-	_dataPoints.clear();
-}
-
-void UIChart3D::DrawDataPoints() {
-	auto* dx = UIDXFoundation::GetSingletonInstance();
-	
-	for (const auto& dataPoint : _dataPoints) {
-		// Convert data coordinates to world coordinates
-		PointFloat worldPos = DataToWorld(dataPoint.position);
-		
-		// Convert to DirectX::XMFLOAT3 for API compatibility
-		DirectX::XMFLOAT3 dxWorldPos{worldPos._x, worldPos._y, worldPos._z};
-		
-		// Draw high-quality sphere with pixel-based radius
-		dx->Draw3DWorldCtrlSphereFromPixelRadius(dxWorldPos, dataPoint.pixelRadius, 
-												dataPoint.color, dataPoint.alpha, 16);
-	}
-}

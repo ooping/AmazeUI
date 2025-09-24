@@ -1100,7 +1100,9 @@ public:
 
 	// Mouse event handlers
 	bool OnRButtonDown(POINT pt);
+	bool OnRButtonUp(POINT pt);
 	bool OnMouseMove(POINT pt);
+	void OnMouseLeave(POINT pt);
 
 	// Coordinate system setup
 	void SetDataCoordRange(float xMin, float xMax, float yMin, float yMax, float zMin, float zMax);
@@ -1110,28 +1112,11 @@ public:
 	PointFloat WorldToData(const PointFloat& worldCoord) const;
 	POINT WorldToScreen(const PointFloat& worldCoord);
 	PointFloat ScreenToWorld(const POINT& screenPos, float depth = 0.0f);
-	
-	// Data point management
-	struct DataPoint3D {
-		PointFloat position;    // Data coordinates
-		UIColor color;         // Point color
-		float pixelRadius;     // Desired radius in pixels
-		float alpha;           // Transparency (0.0 - 1.0)
-		
-		DataPoint3D(const PointFloat& pos, const UIColor& col = UIColor::Red, float radius = 8.0f, float a = 1.0f)
-			: position(pos), color(col), pixelRadius(radius), alpha(a) {}
-	};
-	
-	void AddDataPoint(const PointFloat& dataCoord, const UIColor& color = UIColor::Red, float pixelRadius = 8.0f, float alpha = 1.0f);
-	void AddDataPoint(float x, float y, float z, const UIColor& color = UIColor::Red, float pixelRadius = 8.0f, float alpha = 1.0f);
-	void ClearDataPoints();
-	size_t GetDataPointCount() const { return _dataPoints.size(); }
 
 private:
 	// 3D axes calculation and drawing functions
 	void CalcAxes3D();
 	void DrawAxes3D();
-	void DrawDataPoints();  // Draw all data points as high-quality spheres
 
 	// Independent camera system
 	UICameraCtrl _cameraCtrl;
@@ -1149,12 +1134,9 @@ private:
 	RANGE_FLOAT_3D _yDataRange = {0.0f, 1.0f};  // Data coordinate range for Y axis  
 	RANGE_FLOAT_3D _zDataRange = {0.0f, 1.0f};  // Data coordinate range for Z axis
 
-	// Data points storage
-	std::vector<DataPoint3D> _dataPoints;
-
 	// Mouse interaction state
 	POINT _lastMousePos = {0, 0};
-
+	bool _moveFlag = false;  // Right button down flag
 
 	DirectX::XMMATRIX _inheritedTransformMatrix;
 };

@@ -183,6 +183,7 @@ private:
 	std::unique_ptr<DirectX::BasicEffect> 									p_pointEffect3DCtrl;
 	std::unique_ptr<DirectX::BasicEffect> 									p_lineEffect3DCtrl;
 	std::unique_ptr<DirectX::BasicEffect> 									p_triangleEffect3DCtrl;
+	std::unique_ptr<DirectX::BasicEffect>                                   p_triangleTexturedEffect3DCtrl;
 
     Microsoft::WRL::ComPtr<ID3D12Resource>                                  _texture1;
 
@@ -227,6 +228,9 @@ private:
 
 	RECT Get2DTextureRect(ID3D12Resource* texture);
 	RECT Get2DTextureRect(const ComPtr<ID3D12Resource>& texture);
+
+	bool CreateTextureFromImageData(ID3D12Device* device, DirectX::ResourceUploadBatch& resourceUpload, 
+									ComPtr<ID3D12Resource>& texture, const std::vector<uint8_t>& imageData, UINT width, UINT height);
 
 	struct TextureResource {
         ComPtr<ID3D12Resource> _texture;
@@ -365,14 +369,11 @@ public:
 	void Draw3DWorldCtrlPoint(const DirectX::XMFLOAT3& point, const UIColor& color, UICameraCtrl* pCameraCtrl);
 	void Draw3DWorldCtrlLine(const DirectX::XMFLOAT3& start, const DirectX::XMFLOAT3& end, const UIColor& colorS, const UIColor& colorE, UICameraCtrl* pCameraCtrl);
 	void Draw3DWorldCtrlLine(const DirectX::XMFLOAT3& start, const DirectX::XMFLOAT3& end, const UIColor& color, UICameraCtrl* pCameraCtrl);
-	void Draw3DWorldCtrlBall(const DirectX::XMFLOAT3& center, float radius, const UIColor& color, float alpha = 1.0f);
+	void Draw3DWorldCtrlThickLine(const DirectX::XMFLOAT3& start, const DirectX::XMFLOAT3& end, float lineWidth, const UIColor& color, UICameraCtrl* pCameraCtrl);
+	void Draw3DWorldCtrlCircle(const DirectX::XMFLOAT3& center, float pixelRadius, const UIColor& color, UCHAR alpha, UICameraCtrl* pCameraCtrl);
 
-	// New high-quality sphere rendering functions
-	void Draw3DWorldCtrlSphere(const DirectX::XMFLOAT3& center, float worldRadius, const UIColor& color, float alpha = 1.0f, size_t tessellation = 16);
-	void Draw3DWorldCtrlSphereFromPixelRadius(const DirectX::XMFLOAT3& center, float pixelRadius, const UIColor& color, float alpha = 1.0f, size_t tessellation = 16);
-
-	// Helper function to convert pixel radius to world radius
-	float PixelRadiusToWorldRadius(float pixelRadius, const DirectX::XMFLOAT3& worldPosition);
+	// Helper functions for world coordinate conversion
+	float CalculateWorldLengthFromPixelLength(float pixelLength, const DirectX::XMFLOAT3& worldPosition, UICameraCtrl* pCamera);
 
 
 /*************************************************** Batch Rendering System ***************************************************/
@@ -387,7 +388,6 @@ private:
 		D3D12_GPU_DESCRIPTOR_HANDLE _samplerDescriptor;						// p_batchTexture
 		UCHAR _alpha;														// p_batchTexture
 		UICameraBase* _pCamera;												// p_batch & p_batchTexture
-
 
 		// data
 		D3D_PRIMITIVE_TOPOLOGY _topology;									// p_batch & p_batchTexture
