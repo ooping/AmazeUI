@@ -2063,6 +2063,73 @@ float UIDXFoundation::CalculateWorldLengthFromPixelLength(float pixelLength, con
     }
 }
 
+void UIDXFoundation::Draw3DWorldTextFT(const std::wstring& text, const DirectX::XMFLOAT3& worldPosition,
+                                       const UIColor& color, float fontSize, UICameraBase* pCamera) {
+    float x = worldPosition.x;
+    float y = worldPosition.y;
+    float z = worldPosition.z;
+
+    FTSizeFont ftSizeFont;
+    GetFTSizeFont(fontSize, ftSizeFont);
+
+    // 计算基线偏移的世界坐标
+    float baselineOffset = ftSizeFont._ftFontAscent;
+    
+    // render each character
+    for (wchar_t ch : text) {      
+        // get or create texture
+        size_t textureIndex;
+        if (!GetCharTextureResourceFT(ch, fontSize, color, textureIndex)) {
+            continue; // skip characters that cannot be loaded
+        }
+
+        // get character resource
+        CharTextureResource& resource = _charTextureResources[textureIndex];
+        
+        // 使用像素到世界坐标转换来精确计算位置
+        // 字符的左侧偏移
+        float charX = x + CalculateWorldLengthFromPixelLength((float)resource._left, worldPosition, pCamera);
+        // 字符的顶部位置 = 基线位置 - (基线到字符顶部的距离)
+        float charY = y - CalculateWorldLengthFromPixelLength((float)(baselineOffset - resource._top), worldPosition, pCamera);
+        
+        // 传递fontSize作为scale参数，让Draw3DWorldCharTextureFT内部进行正确的像素到世界坐标转换
+        Draw3DWorldCharTextureFT(textureIndex, XMFLOAT3(charX, charY, z), 1, 255, pCamera);
+        
+        // 更新笔位置（世界空间）
+        x += CalculateWorldLengthFromPixelLength((float)resource._advance, worldPosition, pCamera);
+    }
+}
+
+void UIDXFoundation::Draw3DWorldCharTextureFT(size_t textureIndex, DirectX::XMFLOAT3 worldPosition, float scale, UCHAR alpha, UICameraBase* pCamera) {
+    // 获取纹理资源
+    CharTextureResource& resource = _charTextureResources[textureIndex];
+    
+    // scale参数已经是世界单位，直接使用字符尺寸
+    float charWorldWidth = CalculateWorldLengthFromPixelLength(resource._width * scale, worldPosition, pCamera);
+    float charWorldHeight = CalculateWorldLengthFromPixelLength(resource._height * scale, worldPosition, pCamera);
+    
+    // 创建世界空间的顶点数据 - 修正Y坐标排列，确保正确的上下位置
+    vector<VertexPositionTexture> vertices = {
+        // 左上角 (UV: 0, 0)
+        { {worldPosition.x, worldPosition.y, worldPosition.z}, XMFLOAT2(0.f, 0.f) },
+        // 右上角 (UV: 1, 0) 
+        { {worldPosition.x + charWorldWidth, worldPosition.y, worldPosition.z}, XMFLOAT2(1.f, 0.f) },
+        // 左下角 (UV: 0, 1)
+        { {worldPosition.x, worldPosition.y - charWorldHeight, worldPosition.z}, XMFLOAT2(0.f, 1.f) },
+        // 右下角 (UV: 1, 1)
+        { {worldPosition.x + charWorldWidth, worldPosition.y - charWorldHeight, worldPosition.z}, XMFLOAT2(1.f, 1.f) }
+    };
+    
+    // 定义索引数据
+    vector<uint16_t> indices = { 0, 1, 2, 1, 3, 2 };
+
+    // 使用传入的相机而不是固定的UI相机，这样每个控件可以有自己的视角
+    RegisterBatchTextureData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, p_triangleTexturedEffect3D, 
+                             resource._gpuDescriptor, p_states->LinearClamp(), alpha, GetCurrentClipRect(), pCamera);
+}
+
+
+
 // Helper method to clear the back buffers.
 void UIDXFoundation::Clear() {
     auto commandList = p_deviceResources->GetCommandList();
@@ -3254,14 +3321,13 @@ void UIDXFoundation::ExecuteAllBatches() {
     }
 }
 
-void UIDXFoundation::ExecuteColorBatch(const BatchData& batch, ID3D12GraphicsCommandList* commandList) {
-    if (batch._colorVertices.empty() || batch._indices.empty()) {
-        return;
-    }
+void UIDXFoundation::UpdateBatchState(const BatchData& batch, ID3D12GraphicsCommandList* commandList) {
+    bool cameraChanged = (_pCurrentCamera != batch._pCamera);
+    bool effectChanged = (_pCurrentEffect != batch._pEffect);
 
-    if (_pCurrentCamera != batch._pCamera || 
-        (_pCurrentCamera == batch._pCamera && _pCurrentEffect != batch._pEffect)) {
-        if (batch._pEffect != p_pointEffect2D.get() && batch._pEffect != p_lineEffect2D.get() && batch._pEffect != p_triangleEffect2D.get()) {
+    if (cameraChanged || effectChanged) {
+        if (batch._pEffect != p_pointEffect2D.get() && batch._pEffect != p_lineEffect2D.get() && 
+            batch._pEffect != p_triangleEffect2D.get() && batch._pEffect != p_triangleTexturedEffect2D.get()) {
             batch._pEffect->SetWorld(Matrix::Identity);
             batch._pEffect->SetView(batch._pCamera->GetViewMatrix());
             batch._pEffect->SetProjection(batch._pCamera->GetProjectionMatrix());
@@ -3270,14 +3336,21 @@ void UIDXFoundation::ExecuteColorBatch(const BatchData& batch, ID3D12GraphicsCom
         _pCurrentEffect = batch._pEffect;
     }
     
-    // Set viewport only if camera changed
-    if (_pCurrentCamera != batch._pCamera) {
+    if (cameraChanged) {
         if (memcmp(&_pCurrentCamera->GetViewport(), &batch._pCamera->GetViewport(), sizeof(D3D12_VIEWPORT)) != 0) {
             commandList->RSSetViewports(1, &batch._pCamera->GetViewport());
         }
 
         _pCurrentCamera = batch._pCamera;
     }
+}
+
+void UIDXFoundation::ExecuteColorBatch(const BatchData& batch, ID3D12GraphicsCommandList* commandList) {
+    if (batch._colorVertices.empty() || batch._indices.empty()) {
+        return;
+    }
+
+    UpdateBatchState(batch, commandList);
 
     // Apply effect for this batch
     batch._pEffect->Apply(commandList);
@@ -3300,25 +3373,7 @@ void UIDXFoundation::ExecuteTextureBatch(const BatchData& batch, ID3D12GraphicsC
         return;
     }
 
-    if (_pCurrentCamera != batch._pCamera || 
-        (_pCurrentCamera == batch._pCamera && _pCurrentEffect != batch._pEffect)) {
-        if (batch._pEffect != p_triangleTexturedEffect2D.get()) {
-            batch._pEffect->SetWorld(Matrix::Identity);
-            batch._pEffect->SetView(batch._pCamera->GetViewMatrix());
-            batch._pEffect->SetProjection(batch._pCamera->GetProjectionMatrix());
-        }
-
-        _pCurrentEffect = batch._pEffect;
-    }
-    
-    // Set viewport only if camera changed
-    if (_pCurrentCamera != batch._pCamera) {
-        if (memcmp(&_pCurrentCamera->GetViewport(), &batch._pCamera->GetViewport(), sizeof(D3D12_VIEWPORT)) != 0) {
-            commandList->RSSetViewports(1, &batch._pCamera->GetViewport());
-        }
-
-        _pCurrentCamera = batch._pCamera;
-    }
+    UpdateBatchState(batch, commandList);
     
     // Set texture and alpha for this batch
     XMVECTORF32 colorAlpha = { 1.0f, 1.0f, 1.0f, batch._alpha / 255.0f };

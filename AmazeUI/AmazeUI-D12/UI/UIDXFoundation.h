@@ -254,6 +254,9 @@ public:
 	void Draw3DTextMultiLineFT(const std::wstring& text, const RECT& rc, int posFlag, float z, const UIColor& color, float fontSize, float lineSpacing = 1.2f,
 					  		   const DirectX::XMMATRIX& transformMatrix = DirectX::XMMatrixIdentity());
 
+	void Draw3DWorldTextFT(const std::wstring& text, const DirectX::XMFLOAT3& worldPosition, 
+						   const UIColor& color, float fontSize, UICameraBase* pCamera);
+
 private:
 	void CreateResourcesFT();
 	void ResetResourcesFT();
@@ -262,6 +265,8 @@ private:
 
 	void Draw2DCharTextureFT(size_t textureIndex, DirectX::XMFLOAT2 position, float z, float scale, UCHAR alpha);
 	void Draw3DCharTextureFT(size_t textureIndex, DirectX::XMFLOAT2 position, float z, float scale, UCHAR alpha, const DirectX::XMMATRIX& transformMatrix);
+
+	void Draw3DWorldCharTextureFT(size_t textureIndex, DirectX::XMFLOAT3 worldPosition, float scale, UCHAR alpha, UICameraBase* pCamera);
 
 	struct FTSizeFont;
 	bool GetFTSizeFont(float fontSize, FTSizeFont& ftSizeFont);
@@ -368,21 +373,6 @@ public:
 	void Draw3DWorldTriangle(const DirectX::XMFLOAT3& p1, const DirectX::XMFLOAT3& p2, const DirectX::XMFLOAT3& p3, 
 							 const UIColor& color1, const UIColor& color2, const UIColor& color3, UCHAR alpha, UICameraBase* pCamera);
 
-	// Legacy API support (backward compatibility)
-	void Draw3DWorldCtrlPoint(const DirectX::XMFLOAT3& point, const UIColor& color, UICameraCtrl* pCameraCtrl) {
-		Draw3DWorldPoint(point, color, static_cast<UICameraBase*>(pCameraCtrl));
-	}
-	void Draw3DWorldCtrlLine(const DirectX::XMFLOAT3& start, const DirectX::XMFLOAT3& end, const UIColor& color, UICameraCtrl* pCameraCtrl) {
-		Draw3DWorldLine(start, end, color, static_cast<UICameraBase*>(pCameraCtrl));
-	}
-	void Draw3DWorldCtrlCircle(const DirectX::XMFLOAT3& center, float pixelRadius, const UIColor& color, UCHAR alpha, UICameraCtrl* pCameraCtrl) {
-		Draw3DWorldCircle(center, pixelRadius, color, alpha, static_cast<UICameraBase*>(pCameraCtrl));
-	}
-	void Draw3DWorldCtrlTriangle(const DirectX::XMFLOAT3& p1, const DirectX::XMFLOAT3& p2, const DirectX::XMFLOAT3& p3, const UIColor& color, UCHAR alpha, UICameraCtrl* pCameraCtrl) {
-		Draw3DWorldTriangle(p1, p2, p3, color, alpha, static_cast<UICameraBase*>(pCameraCtrl));
-	}
-
-
 	// Helper functions for world coordinate conversion
 	float CalculateWorldLengthFromPixelLength(float pixelLength, const DirectX::XMFLOAT3& worldPosition, UICameraBase* pCamera);
 
@@ -408,30 +398,17 @@ private:
 
 		// Helper function to compare if two BatchData have the same key
 		bool IsSameKey(const BatchData& other) const {
-			if (_batchID != other._batchID) {
+			if (_batchID != other._batchID || 
+				_pEffect != other._pEffect || 
+				memcmp(&_clipRect, &other._clipRect, sizeof(RECT)) != 0 ||
+				_pCamera != other._pCamera) {
 				return false;
 			}
-
-			if (_pEffect != other._pEffect) {
-				return false;
-			}
-
-			if (memcmp(&_clipRect, &other._clipRect, sizeof(RECT)) != 0) {
-				return false;
-			}
-
-			if (_pCamera != other._pCamera) {
-				return false;
-			}
-
+			
 			if (_batchID == 2) {
-				if (_srvDescriptor.ptr != other._srvDescriptor.ptr) {
-					return false;
-				}
-				if (_samplerDescriptor.ptr != other._samplerDescriptor.ptr) {
-					return false;
-				}
-				if (_alpha != other._alpha) {
+				if (_srvDescriptor.ptr != other._srvDescriptor.ptr || 
+					_samplerDescriptor.ptr != other._samplerDescriptor.ptr ||
+					_alpha != other._alpha) {
 					return false;
 				}
 			}
@@ -454,6 +431,7 @@ private:
 	void ExecuteAllBatches();
 	void ExecuteColorBatch(const BatchData& batch, ID3D12GraphicsCommandList* commandList);
 	void ExecuteTextureBatch(const BatchData& batch, ID3D12GraphicsCommandList* commandList);
+	void UpdateBatchState(const BatchData& batch, ID3D12GraphicsCommandList* commandList);
 
 	// Batch clear functions
 	void ClearAllBatches();

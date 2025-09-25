@@ -5229,9 +5229,9 @@ void UIChart3D::DrawAxes3D() {
 	DirectX::XMFLOAT3 dxZAxisEnd{_zAxisEnd._x, _zAxisEnd._y, _zAxisEnd._z};
 
 	// Draw the three main coordinate axes using pre-calculated coordinates
-	dx->Draw3DWorldCtrlLine(dxOrigin, dxXAxisEnd, UIColor::Red, &_cameraCtrl);    // X-axis (Red)
-	dx->Draw3DWorldCtrlLine(dxOrigin, dxYAxisEnd, UIColor::Green, &_cameraCtrl);  // Y-axis (Green)
-	dx->Draw3DWorldCtrlLine(dxOrigin, dxZAxisEnd, UIColor::Blue, &_cameraCtrl);   // Z-axis (Blue)
+	dx->Draw3DWorldLine(dxOrigin, dxXAxisEnd, UIColor::Red, &_cameraCtrl);    // X-axis (Red)
+	dx->Draw3DWorldLine(dxOrigin, dxYAxisEnd, UIColor::Green, &_cameraCtrl);  // Y-axis (Green)
+	dx->Draw3DWorldLine(dxOrigin, dxZAxisEnd, UIColor::Blue, &_cameraCtrl);   // Z-axis (Blue)
 }
 
 void UIChart3D::Draw() {
@@ -5258,6 +5258,8 @@ void UIChart3D::Draw() {
 
 	// Draw 3D axes using pre-calculated coordinates
 	DrawAxes3D();
+
+	dx->Draw3DWorldTextFT(L"Player, 1.4089", {_xAxisEnd._x / 2, _yAxisEnd._y / 2, 0.0f}, UIColor::Black, 24.0f, &_cameraCtrl);
 
 	//dx->Draw3DWorldCtrlPoint({_xAxisEnd._x, _yAxisEnd._y, 0.0f}, UIColor::Red, &_cameraCtrl);
 	//dx->Draw3DWorldCtrlCircle({_xAxisEnd._x, _xAxisEnd._y, 0.0f}, 5, UIColor::Black, 255, &_cameraCtrl);
