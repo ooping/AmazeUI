@@ -192,6 +192,10 @@ public:
 
 	const D3D12_VIEWPORT& GetViewport() const { return _viewport; }
 
+	// Convert screen 2D to 3D
+	DirectX::XMFLOAT3 ConvertScreen2DTo3D(const DirectX::XMFLOAT3& screenPos);
+	DirectX::XMFLOAT3 Convert3DToScreen2D(const DirectX::XMFLOAT3& viewPos);
+
 protected:
 	DirectX::SimpleMath::Matrix _view;
     DirectX::SimpleMath::Matrix _projection3D;
@@ -201,11 +205,6 @@ protected:
 
 class UICameraUI : public UICameraBase, public SingletonPattern<UICameraUI> {
 	friend class SingletonPattern<UICameraUI>;
-
-public:
-	// Convert screen 2D to 3D
-	DirectX::XMFLOAT3 ConvertScreen2DTo3D(const DirectX::XMFLOAT3& screenPos);
-	DirectX::XMFLOAT3 Convert3DToScreen2D(const DirectX::XMFLOAT3& viewPos);
 
 private:
 	UICameraUI() = default;

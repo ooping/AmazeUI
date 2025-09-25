@@ -5232,9 +5232,6 @@ void UIChart3D::DrawAxes3D() {
 	dx->Draw3DWorldCtrlLine(dxOrigin, dxXAxisEnd, UIColor::Red, &_cameraCtrl);    // X-axis (Red)
 	dx->Draw3DWorldCtrlLine(dxOrigin, dxYAxisEnd, UIColor::Green, &_cameraCtrl);  // Y-axis (Green)
 	dx->Draw3DWorldCtrlLine(dxOrigin, dxZAxisEnd, UIColor::Blue, &_cameraCtrl);   // Z-axis (Blue)
-
-
-	dx->Draw3DWorldCtrlThickLine(dxOrigin, dxXAxisEnd, 5.0f, UIColor::Red, &_cameraCtrl);    // X-axis (Red)
 }
 
 void UIChart3D::Draw() {
@@ -5258,13 +5255,12 @@ void UIChart3D::Draw() {
 
     // Limit rendering to control viewport/scissor area
     cmd->RSSetViewports(1, &_cameraCtrl.GetViewport());
-	dx->SetEffect3DCtrl(&_cameraCtrl);
 
 	// Draw 3D axes using pre-calculated coordinates
 	DrawAxes3D();
 
 	//dx->Draw3DWorldCtrlPoint({_xAxisEnd._x, _yAxisEnd._y, 0.0f}, UIColor::Red, &_cameraCtrl);
-	dx->Draw3DWorldCtrlCircle({_xAxisEnd._x, _xAxisEnd._y, 0.0f}, 5, UIColor::Black, 255, &_cameraCtrl);
+	//dx->Draw3DWorldCtrlCircle({_xAxisEnd._x, _xAxisEnd._y, 0.0f}, 5, UIColor::Black, 255, &_cameraCtrl);
 	
 	// Draw data points as high-quality spheres
 	//DrawDataPoints();

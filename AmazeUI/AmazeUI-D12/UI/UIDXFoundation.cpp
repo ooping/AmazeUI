@@ -746,8 +746,8 @@ void UIDXFoundation::Render3D() {
         // Draw 3D object
         // Draw teapot
         XMMATRIX local = _world * Matrix::CreateTranslation(-2.f, -2.f, 4.f);
-        p_shapeEffectGame->SetWorld(local);
-        p_shapeEffectGame->Apply(commandList);
+        p_shapeEffect3D->SetWorld(local);
+        p_shapeEffect3D->Apply(commandList);
         p_shape->Draw(commandList);
 
         //Draw model
@@ -758,9 +758,9 @@ void UIDXFoundation::Render3D() {
         const XMVECTORF32 translate = { 3.f, -2.f, 4.f };
         XMVECTOR rotate = Quaternion::CreateFromYawPitchRoll(XM_PI / 2.f, 0.f, -XM_PI / 2.f);
         local = _world * XMMatrixTransformation(g_XMZero, Quaternion::Identity, scale, g_XMZero, rotate, translate);
-        Model::UpdateEffectMatrices(_modelEffectsGame, local, UICameraGame::GetSingletonInstance()->GetViewMatrix(), UICameraGame::GetSingletonInstance()->GetProjectionMatrix());
+        Model::UpdateEffectMatrices(_modelEffects3D, local, UICameraGame::GetSingletonInstance()->GetViewMatrix(), UICameraGame::GetSingletonInstance()->GetProjectionMatrix());
         
-        p_model->Draw(commandList, _modelEffectsGame.begin());
+        p_model->Draw(commandList, _modelEffects3D.begin());
     }
 }
 
@@ -1576,10 +1576,8 @@ void UIDXFoundation::Draw2DImage(size_t textureIndex,
     // define index data
     vector<uint16_t> indices = { 0, 1, 2, 1, 3, 2 };
 
-    RegisterBatchTextureData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, p_triangleTexturedEffect2DUI, 
+    RegisterBatchTextureData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, p_triangleTexturedEffect2D, 
                              resource._gpuDescriptor, p_states->LinearClamp(), alpha, GetCurrentClipRect(), UICameraUI::GetSingletonInstance());
-
-
 
 
     // p_sprites use more memory and is slower than PrimitiveBatch!!!
@@ -1674,7 +1672,7 @@ void UIDXFoundation::Draw3DPoint(const XMFLOAT2& point, float z, const UIColor& 
         1, 3, 2   // 2nd triangle
     };
     
-    RegisterBatchData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, p_triangleEffect3DUI, GetCurrentClipRect(), UICameraUI::GetSingletonInstance());
+    RegisterBatchData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, p_triangleEffect3D, GetCurrentClipRect(), UICameraUI::GetSingletonInstance());
 }
 
 void UIDXFoundation::Draw3DPoints(const vector<XMFLOAT2>& points, float z, const UIColor& color, float pointSize, 
@@ -1723,7 +1721,7 @@ void UIDXFoundation::Draw3DLine(const XMFLOAT2& start, const XMFLOAT2& end, floa
     // Define indices for two triangles
     vector<uint16_t> indices = { 0, 1, 2, 1, 3, 2 };
 
-    RegisterBatchData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, p_triangleEffect3DUI, GetCurrentClipRect(), UICameraUI::GetSingletonInstance());
+    RegisterBatchData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, p_triangleEffect3D, GetCurrentClipRect(), UICameraUI::GetSingletonInstance());
 }
 
 void UIDXFoundation::Draw3DRectOutline(const XMFLOAT2& start, const XMFLOAT2& end, float z, const UIColor& color, float lineWidth, const XMMATRIX& transformMatrix) {    
@@ -1758,7 +1756,7 @@ void UIDXFoundation::Draw3DRectSolid(const XMFLOAT2& start, const XMFLOAT2& end,
     // Define indices for two triangles
     vector<uint16_t> indices = { 0, 1, 2, 1, 3, 2 };
 
-    RegisterBatchData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, p_triangleEffect3DUI, GetCurrentClipRect(), UICameraUI::GetSingletonInstance());
+    RegisterBatchData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, p_triangleEffect3D, GetCurrentClipRect(), UICameraUI::GetSingletonInstance());
 }
 
 void UIDXFoundation::Draw3DRectSolid(const XMFLOAT2& start, const XMFLOAT2& end, float z,
@@ -1800,7 +1798,7 @@ void UIDXFoundation::Draw3DImage(size_t textureIndex,
     // Define indices for two triangles
     vector<uint16_t> indices = { 0, 1, 2, 1, 3, 2 };
 
-    RegisterBatchTextureData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, p_triangleTexturedEffect3DUI, 
+    RegisterBatchTextureData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, p_triangleTexturedEffect3D, 
                              _textureResources[textureIndex]._gpuDescriptor, p_states->LinearClamp(), alpha, GetCurrentClipRect(), UICameraUI::GetSingletonInstance());
 }
 
@@ -1835,18 +1833,7 @@ void UIDXFoundation::Draw3DImage(const wstring& filePath, const UIColor& colorKe
     Draw3DImage(textureIndex, srcRect, dstStart, dstEnd, z, alpha, transformMatrix);
 }
 
-void UIDXFoundation::SetEffect3DCtrl(UICameraBase* pCamera3DCtrl) {
-    // Set matrices for all 3D control effects
-    Matrix viewMatrix = pCamera3DCtrl->GetViewMatrix();
-    Matrix projMatrix = pCamera3DCtrl->GetProjectionMatrix();
-    
-    // Triangle effect
-    p_triangleEffect3DCtrl->SetWorld(Matrix::Identity);
-    p_triangleEffect3DCtrl->SetView(viewMatrix);
-    p_triangleEffect3DCtrl->SetProjection(projMatrix);
-}
-
-void UIDXFoundation::Draw3DWorldCtrlPoint(const XMFLOAT3& point, const UIColor& color, UICameraCtrl* pCameraCtrl) {
+void UIDXFoundation::Draw3DWorldPoint(const XMFLOAT3& point, const UIColor& color, UICameraBase* pCamera) {
     // Create point vertex
     vector<VertexPositionColor> vertices = {
         {{point.x, point.y, point.z}, color.ToXMVECTORF32()}
@@ -1855,10 +1842,10 @@ void UIDXFoundation::Draw3DWorldCtrlPoint(const XMFLOAT3& point, const UIColor& 
     vector<uint16_t> indices = {0};
     
     // Register batch data instead of direct rendering
-    RegisterBatchData(D3D_PRIMITIVE_TOPOLOGY_POINTLIST, vertices, indices, p_pointEffect3DCtrl, GetCurrentClipRect(), pCameraCtrl);
+    RegisterBatchData(D3D_PRIMITIVE_TOPOLOGY_POINTLIST, vertices, indices, p_pointEffect3D, GetCurrentClipRect(), pCamera);
 }
 
-void UIDXFoundation::Draw3DWorldCtrlLine(const DirectX::XMFLOAT3& start, const DirectX::XMFLOAT3& end, const UIColor& colorS, const UIColor& colorE, UICameraCtrl* pCameraCtrl) {
+void UIDXFoundation::Draw3DWorldLine(const DirectX::XMFLOAT3& start, const DirectX::XMFLOAT3& end, const UIColor& colorS, const UIColor& colorE, UICameraBase* pCamera) {
     // Create line vertices with gradient colors
     vector<VertexPositionColor> vertices = {
         {{start.x, start.y, start.z}, colorS.ToXMVECTORF32()},  // Start vertex with start color
@@ -1868,14 +1855,14 @@ void UIDXFoundation::Draw3DWorldCtrlLine(const DirectX::XMFLOAT3& start, const D
     vector<uint16_t> indices = {0, 1};
     
     // Register batch data instead of direct rendering
-    RegisterBatchData(D3D_PRIMITIVE_TOPOLOGY_LINELIST, vertices, indices, p_lineEffect3DCtrl, GetCurrentClipRect(), pCameraCtrl);
+    RegisterBatchData(D3D_PRIMITIVE_TOPOLOGY_LINELIST, vertices, indices, p_lineEffect3D, GetCurrentClipRect(), pCamera);
 }
 	
-void UIDXFoundation::Draw3DWorldCtrlLine(const XMFLOAT3& start, const XMFLOAT3& end, const UIColor& color, UICameraCtrl* pCameraCtrl) {
-    Draw3DWorldCtrlLine(start, end, color, color, pCameraCtrl);
+void UIDXFoundation::Draw3DWorldLine(const XMFLOAT3& start, const XMFLOAT3& end, const UIColor& color, UICameraBase* pCamera) {
+    Draw3DWorldLine(start, end, color, color, pCamera);
 }
 
-void UIDXFoundation::Draw3DWorldCtrlThickLine(const XMFLOAT3& start, const XMFLOAT3& end, float lineWidth, const UIColor& color, UICameraCtrl* pCameraCtrl) {
+void UIDXFoundation::Draw3DWorldThickLine(const XMFLOAT3& start, const XMFLOAT3& end, float lineWidth, const UIColor& color, UICameraBase* pCamera) {
     const int segments = 8; // 圆柱体分段数
     
     XMVECTOR startVec = XMLoadFloat3(&start);
@@ -1892,7 +1879,7 @@ void UIDXFoundation::Draw3DWorldCtrlThickLine(const XMFLOAT3& start, const XMFLO
     up = XMVector3Cross(right, direction);
     
     // 将像素线宽转换为世界坐标线宽
-    float worldRadius = CalculateWorldLengthFromPixelLength(lineWidth * 0.5f, start, pCameraCtrl);
+    float worldRadius = CalculateWorldLengthFromPixelLength(lineWidth * 0.5f, start, pCamera);
     
     vector<VertexPositionColor> vertices;
     vector<uint16_t> indices;
@@ -1939,17 +1926,17 @@ void UIDXFoundation::Draw3DWorldCtrlThickLine(const XMFLOAT3& start, const XMFLO
     }
     
     RegisterBatchData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, 
-                      p_triangleEffect3DCtrl, GetCurrentClipRect(), pCameraCtrl);
+                      p_triangleEffect3D, GetCurrentClipRect(), pCamera);
 }
 
-void UIDXFoundation::Draw3DWorldCtrlCircle(const XMFLOAT3& center, float pixelRadius, const UIColor& color, UCHAR alpha, UICameraCtrl* pCameraCtrl) {
+void UIDXFoundation::Draw3DWorldCircle(const XMFLOAT3& center, float pixelRadius, const UIColor& color, UCHAR alpha, UICameraBase* pCamera) {
     // Calculate camera-facing billboard
-    Matrix view = pCameraCtrl->GetViewMatrix();
+    Matrix view = pCamera->GetViewMatrix();
     XMVECTOR right = XMVectorSet(view.m[0][0], view.m[1][0], view.m[2][0], 0);
     XMVECTOR up = XMVectorSet(view.m[0][1], view.m[1][1], view.m[2][1], 0);
     
     // Convert pixel radius to world radius at given depth
-    float worldRadius = CalculateWorldLengthFromPixelLength(pixelRadius, center, pCameraCtrl);
+    float worldRadius = CalculateWorldLengthFromPixelLength(pixelRadius, center, pCamera);
     XMVECTOR centerVec = XMLoadFloat3(&center);
     
     // Create very smooth circular geometry using even more triangles
@@ -1990,11 +1977,60 @@ void UIDXFoundation::Draw3DWorldCtrlCircle(const XMFLOAT3& center, float pixelRa
     
     // Register batch data for triangle color rendering
     RegisterBatchData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices,
-                      p_triangleEffect3DCtrl, GetCurrentClipRect(), pCameraCtrl);
+                      p_triangleEffect3D, GetCurrentClipRect(), pCamera);
+}
+
+void UIDXFoundation::Draw3DWorldTriangle(const XMFLOAT3& p1, const XMFLOAT3& p2, const XMFLOAT3& p3, const UIColor& color, UCHAR alpha, UICameraBase* pCamera) {
+    vector<VertexPositionColor> vertices;
+    vector<uint16_t> indices;
+    
+    // Convert color to XMFLOAT4
+    XMFLOAT4 color4;
+    XMStoreFloat4(&color4, color.ToXMVECTORF32(alpha));
+    
+    // Add triangle vertices with uniform color
+    vertices.emplace_back(p1, color4);
+    vertices.emplace_back(p2, color4);
+    vertices.emplace_back(p3, color4);
+    
+    // Triangle indices (counter-clockwise for proper front-facing)
+    indices.push_back(0);
+    indices.push_back(1);
+    indices.push_back(2);
+    
+    // Register batch data for triangle rendering
+    RegisterBatchData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices,
+                      p_triangleEffect3D, GetCurrentClipRect(), pCamera);
+}
+
+void UIDXFoundation::Draw3DWorldTriangle(const XMFLOAT3& p1, const XMFLOAT3& p2, const XMFLOAT3& p3, 
+                                        const UIColor& color1, const UIColor& color2, const UIColor& color3, UCHAR alpha, UICameraBase* pCamera) {
+    vector<VertexPositionColor> vertices;
+    vector<uint16_t> indices;
+    
+    // Convert colors to XMFLOAT4
+    XMFLOAT4 color4_1, color4_2, color4_3;
+    XMStoreFloat4(&color4_1, color1.ToXMVECTORF32(alpha));
+    XMStoreFloat4(&color4_2, color2.ToXMVECTORF32(alpha));
+    XMStoreFloat4(&color4_3, color3.ToXMVECTORF32(alpha));
+    
+    // Add triangle vertices with individual colors for gradient effect
+    vertices.emplace_back(p1, color4_1);
+    vertices.emplace_back(p2, color4_2);
+    vertices.emplace_back(p3, color4_3);
+    
+    // Triangle indices (counter-clockwise for proper front-facing)
+    indices.push_back(0);
+    indices.push_back(1);
+    indices.push_back(2);
+    
+    // Register batch data for triangle rendering
+    RegisterBatchData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices,
+                      p_triangleEffect3D, GetCurrentClipRect(), pCamera);
 }
 
 // Helper function to calculate world length from pixel length
-float UIDXFoundation::CalculateWorldLengthFromPixelLength(float pixelLength, const XMFLOAT3& worldPosition, UICameraCtrl* pCamera) {
+float UIDXFoundation::CalculateWorldLengthFromPixelLength(float pixelLength, const XMFLOAT3& worldPosition, UICameraBase* pCamera) {
     // Get camera matrices
     XMMATRIX view = pCamera->GetViewMatrix();
     XMMATRIX proj = pCamera->GetProjectionMatrix();
@@ -2023,7 +2059,7 @@ float UIDXFoundation::CalculateWorldLengthFromPixelLength(float pixelLength, con
         return pixelLength * worldUnitsPerPixel;
     } else {
         // orthographic projection
-        return pixelLength / viewport.Width * pCamera->GetWorldWidth();
+        return pixelLength / viewport.Width * dynamic_cast<UICameraCtrl*>(pCamera)->GetWorldWidth();
     }
 }
 
@@ -2056,7 +2092,7 @@ void XM_CALLCONV UIDXFoundation::DrawGrid(FXMVECTOR xAxis, FXMVECTOR yAxis, FXMV
     auto commandList = p_deviceResources->GetCommandList();
     PIXBeginEvent(commandList, PIX_COLOR_DEFAULT, L"Draw grid");
 
-    p_lineEffect3DGame->Apply(commandList);
+    p_lineEffect3D->Apply(commandList);
 
     p_batch->Begin(commandList);
 
@@ -2156,7 +2192,7 @@ void UIDXFoundation::CreateDeviceDependentResourcesXTK() {
                 CommonStates::CullClockwise,    // Using RH coordinates, and SDKMESH is in LH coordiantes
                 rtState);
 
-            _modelEffectsGame = p_model->CreateEffects(psd, alphapsd, p_modelResources->Heap(), p_states->Heap());
+            _modelEffects3D = p_model->CreateEffects(psd, alphapsd, p_modelResources->Heap(), p_states->Heap());
         }
 
         DX::FindMediaFile(strFilePath, MAX_PATH, L"windowslogo.dds");
@@ -2207,14 +2243,29 @@ void UIDXFoundation::CreateDeviceDependentResourcesXTK() {
                 CommonStates::DepthDefault,
                 CommonStates::CullNone,
                 rtState,
+                D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT);
+
+            pd.blendDesc = transparentBlendDesc;
+            pd.depthStencilDesc = depthStencilDesc;
+
+            p_pointEffect2D = make_unique<BasicEffect>(device, EffectFlags::VertexColor, pd);
+            p_pointEffect3D = make_unique<BasicEffect>(device, EffectFlags::VertexColor, pd);
+        }
+
+        {
+            EffectPipelineStateDescription pd(
+                &VertexPositionColor::InputLayout,
+                CommonStates::AlphaBlend,
+                CommonStates::DepthDefault,
+                CommonStates::CullNone,
+                rtState,
                 D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE);
 
             pd.blendDesc = transparentBlendDesc;
             pd.depthStencilDesc = depthStencilDesc;
 
             p_lineEffect2D = make_unique<BasicEffect>(device, EffectFlags::VertexColor, pd);
-            p_lineEffect3DGame = make_unique<BasicEffect>(device, EffectFlags::VertexColor, pd);
-            p_lineEffect3DCtrl = make_unique<BasicEffect>(device, EffectFlags::VertexColor, pd);
+            p_lineEffect3D = make_unique<BasicEffect>(device, EffectFlags::VertexColor, pd);
         }
 
         {
@@ -2230,24 +2281,7 @@ void UIDXFoundation::CreateDeviceDependentResourcesXTK() {
             pd.depthStencilDesc = depthStencilDesc;
 
             p_triangleEffect2D = make_unique<BasicEffect>(device, EffectFlags::VertexColor, pd);
-            p_triangleEffect3DUI = make_unique<BasicEffect>(device, EffectFlags::VertexColor, pd);
-            p_triangleEffect3DCtrl = make_unique<BasicEffect>(device, EffectFlags::VertexColor, pd);
-        }
-
-        {
-            EffectPipelineStateDescription pd(
-                &VertexPositionColor::InputLayout,
-                CommonStates::AlphaBlend,
-                CommonStates::DepthDefault,
-                CommonStates::CullNone,
-                rtState,
-                D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT);
-
-            pd.blendDesc = transparentBlendDesc;
-            pd.depthStencilDesc = depthStencilDesc;
-
-            p_pointEffect2D = make_unique<BasicEffect>(device, EffectFlags::VertexColor, pd);
-            p_pointEffect3DCtrl = make_unique<BasicEffect>(device, EffectFlags::VertexColor, pd);
+            p_triangleEffect3D = make_unique<BasicEffect>(device, EffectFlags::VertexColor, pd);
         }
 
         {
@@ -2262,9 +2296,8 @@ void UIDXFoundation::CreateDeviceDependentResourcesXTK() {
             pd.blendDesc = transparentBlendDescForTexture;
             pd.depthStencilDesc = depthStencilDesc;
 
-            p_triangleTexturedEffect2DUI = make_unique<BasicEffect>(device, EffectFlags::Texture, pd);
-            p_triangleTexturedEffect3DUI = make_unique<BasicEffect>(device, EffectFlags::Texture, pd);
-            p_triangleTexturedEffect3DCtrl = make_unique<BasicEffect>(device, EffectFlags::Texture, pd);
+            p_triangleTexturedEffect2D = make_unique<BasicEffect>(device, EffectFlags::Texture, pd);
+            p_triangleTexturedEffect3D = make_unique<BasicEffect>(device, EffectFlags::Texture, pd);
         }
 
         {
@@ -2275,9 +2308,9 @@ void UIDXFoundation::CreateDeviceDependentResourcesXTK() {
                 CommonStates::CullNone,
                 rtState);
 
-            p_shapeEffectGame = make_unique<BasicEffect>(device, EffectFlags::PerPixelLighting | EffectFlags::Texture, pd);
-            p_shapeEffectGame->EnableDefaultLighting();
-            p_shapeEffectGame->SetTexture(p_resourceDescriptors->GetGpuHandle(Descriptors::WindowsLogo), p_states->AnisotropicWrap());
+            p_shapeEffect3D = make_unique<BasicEffect>(device, EffectFlags::PerPixelLighting | EffectFlags::Texture, pd);
+            p_shapeEffect3D->EnableDefaultLighting();
+            p_shapeEffect3D->SetTexture(p_resourceDescriptors->GetGpuHandle(Descriptors::WindowsLogo), p_states->AnisotropicWrap());
         }
 
         // // load MSYHFont
@@ -2300,6 +2333,9 @@ void UIDXFoundation::CreateDeviceDependentResourcesXTK() {
 // Allocate all memory resources that change on a window SizeChanged event.
 void UIDXFoundation::CreateWindowSizeDependentResourcesXTK() {
     auto size = p_deviceResources->_outputSize;
+
+    UICameraUI::GetSingletonInstance()->SetUpCamera({0, 0, size.right, size.bottom});
+    UICameraGame::GetSingletonInstance()->SetUpCamera({0, 0, size.right, size.bottom});
 
     // 2D resources
     //auto viewport = p_deviceResources->GetScreenViewport();
@@ -2325,28 +2361,9 @@ void UIDXFoundation::CreateWindowSizeDependentResourcesXTK() {
     p_triangleEffect2D->SetView(Matrix::Identity);
     p_triangleEffect2D->SetProjection(_orthoMatrix2D);
 
-    p_triangleTexturedEffect2DUI->SetWorld(Matrix::Identity);
-    p_triangleTexturedEffect2DUI->SetView(Matrix::Identity);
-    p_triangleTexturedEffect2DUI->SetProjection(_orthoMatrix2D);
-
-    // 3D resources
-    UICameraUI::GetSingletonInstance()->SetUpCamera({0, 0, size.right, size.bottom});
-    //
-    p_triangleEffect3DUI->SetWorld(Matrix::Identity);
-    p_triangleEffect3DUI->SetView(UICameraUI::GetSingletonInstance()->GetViewMatrix());
-    p_triangleEffect3DUI->SetProjection(UICameraUI::GetSingletonInstance()->GetProjectionMatrix());
-    p_triangleTexturedEffect3DUI->SetWorld(Matrix::Identity);
-    p_triangleTexturedEffect3DUI->SetView(UICameraUI::GetSingletonInstance()->GetViewMatrix());
-    p_triangleTexturedEffect3DUI->SetProjection(UICameraUI::GetSingletonInstance()->GetProjectionMatrix());
-    
-    //
-    UICameraGame::GetSingletonInstance()->SetUpCamera({0, 0, size.right, size.bottom});
-    //
-    p_lineEffect3DGame->SetWorld(Matrix::Identity);
-    p_lineEffect3DGame->SetView(UICameraGame::GetSingletonInstance()->GetViewMatrix());
-    p_lineEffect3DGame->SetProjection(UICameraGame::GetSingletonInstance()->GetProjectionMatrix());
-    p_shapeEffectGame->SetView(UICameraGame::GetSingletonInstance()->GetViewMatrix());
-    p_shapeEffectGame->SetProjection(UICameraGame::GetSingletonInstance()->GetProjectionMatrix());
+    p_triangleTexturedEffect2D->SetWorld(Matrix::Identity);
+    p_triangleTexturedEffect2D->SetView(Matrix::Identity);
+    p_triangleTexturedEffect2D->SetProjection(_orthoMatrix2D);
 }
 
 void UIDXFoundation::CreateResources() {
@@ -2362,19 +2379,16 @@ void UIDXFoundation::ResetResources() {
     p_batchTexture.reset();
     p_shape.reset();
     p_model.reset();
-    p_lineEffect3DCtrl.reset();
-    p_lineEffect3DGame.reset();
     p_lineEffect2D.reset();
     p_triangleEffect2D.reset();
-    p_triangleTexturedEffect2DUI.reset();
+    p_triangleTexturedEffect2D.reset();
     p_pointEffect2D.reset();
-    p_pointEffect3DCtrl.reset();
-    p_triangleEffect3DUI.reset();
-    p_triangleEffect3DCtrl.reset();
-    p_triangleTexturedEffect3DUI.reset();
-    p_triangleTexturedEffect3DCtrl.reset();
-    p_shapeEffectGame.reset();
-    _modelEffectsGame.clear();
+    p_pointEffect3D.reset();
+    p_lineEffect3D.reset();
+    p_triangleEffect3D.reset();
+    p_triangleTexturedEffect3D.reset();
+    p_shapeEffect3D.reset();
+    _modelEffects3D.clear();
     p_modelResources.reset();
     //p_sprites.reset();
     p_resourceDescriptors.reset();
@@ -2673,7 +2687,7 @@ void UIDXFoundation::Draw2DCharTextureFT(size_t textureIndex, XMFLOAT2 position,
     // define index data
     vector<uint16_t> indices = { 0, 1, 2, 1, 3, 2 };
 
-    RegisterBatchTextureData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, p_triangleTexturedEffect2DUI, 
+    RegisterBatchTextureData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, p_triangleTexturedEffect2D, 
                              resource._gpuDescriptor, p_states->LinearClamp(), alpha, GetCurrentClipRect(), UICameraUI::GetSingletonInstance());
     
 
@@ -2731,7 +2745,7 @@ void UIDXFoundation::Draw3DCharTextureFT(size_t textureIndex, XMFLOAT2 position,
     // Define indices for two triangles
     vector<uint16_t> indices = { 0, 1, 2, 1, 3, 2 };
 
-    RegisterBatchTextureData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, p_triangleTexturedEffect3DUI, 
+    RegisterBatchTextureData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, p_triangleTexturedEffect3D, 
                              _charTextureResources[textureIndex]._gpuDescriptor, 
                              p_states->LinearClamp(), alpha, GetCurrentClipRect(), UICameraUI::GetSingletonInstance());
 }
@@ -3166,7 +3180,7 @@ void UIDXFoundation::RegisterBatchData(D3D_PRIMITIVE_TOPOLOGY topology,
     // Create new batch data with key information
     BatchData newBatch;
     newBatch._batchID = 1;  // p_batch
-    newBatch._effect = effect.get();
+    newBatch._pEffect = effect.get();
     newBatch._topology = topology;
     newBatch._clipRect = clipRect;
     newBatch._pCamera = pCamera;
@@ -3194,7 +3208,7 @@ void UIDXFoundation::RegisterBatchTextureData(D3D_PRIMITIVE_TOPOLOGY topology,
     // Create new batch data with key information
     BatchData newBatch;
     newBatch._batchID = 2;  // p_batchTexture
-    newBatch._effect = effect.get();
+    newBatch._pEffect = effect.get();
     newBatch._topology = topology;
     newBatch._srvDescriptor = srvDescriptor;
     newBatch._samplerDescriptor = samplerDescriptor;
@@ -3244,6 +3258,17 @@ void UIDXFoundation::ExecuteColorBatch(const BatchData& batch, ID3D12GraphicsCom
     if (batch._colorVertices.empty() || batch._indices.empty()) {
         return;
     }
+
+    if (_pCurrentCamera != batch._pCamera || 
+        (_pCurrentCamera == batch._pCamera && _pCurrentEffect != batch._pEffect)) {
+        if (batch._pEffect != p_pointEffect2D.get() && batch._pEffect != p_lineEffect2D.get() && batch._pEffect != p_triangleEffect2D.get()) {
+            batch._pEffect->SetWorld(Matrix::Identity);
+            batch._pEffect->SetView(batch._pCamera->GetViewMatrix());
+            batch._pEffect->SetProjection(batch._pCamera->GetProjectionMatrix());
+        }
+
+        _pCurrentEffect = batch._pEffect;
+    }
     
     // Set viewport only if camera changed
     if (_pCurrentCamera != batch._pCamera) {
@@ -3254,16 +3279,8 @@ void UIDXFoundation::ExecuteColorBatch(const BatchData& batch, ID3D12GraphicsCom
         _pCurrentCamera = batch._pCamera;
     }
 
-    // Check if this is a 3D control effect and set matrices for the current effect only
-    if (batch._effect == p_lineEffect3DCtrl.get() || batch._effect == p_pointEffect3DCtrl.get() ||
-        batch._effect == p_triangleEffect3DCtrl.get() || batch._effect == p_triangleTexturedEffect3DCtrl.get()) {
-        batch._effect->SetWorld(Matrix::Identity);
-        batch._effect->SetView(batch._pCamera->GetViewMatrix());
-        batch._effect->SetProjection(batch._pCamera->GetProjectionMatrix());
-    }
-
     // Apply effect for this batch
-    batch._effect->Apply(commandList);
+    batch._pEffect->Apply(commandList);
     
     // Render each draw call in this batch
     p_batch->Begin(commandList);
@@ -3282,6 +3299,17 @@ void UIDXFoundation::ExecuteTextureBatch(const BatchData& batch, ID3D12GraphicsC
     if (batch._textureVertices.empty() || batch._indices.empty()) {
         return;
     }
+
+    if (_pCurrentCamera != batch._pCamera || 
+        (_pCurrentCamera == batch._pCamera && _pCurrentEffect != batch._pEffect)) {
+        if (batch._pEffect != p_triangleTexturedEffect2D.get()) {
+            batch._pEffect->SetWorld(Matrix::Identity);
+            batch._pEffect->SetView(batch._pCamera->GetViewMatrix());
+            batch._pEffect->SetProjection(batch._pCamera->GetProjectionMatrix());
+        }
+
+        _pCurrentEffect = batch._pEffect;
+    }
     
     // Set viewport only if camera changed
     if (_pCurrentCamera != batch._pCamera) {
@@ -3291,24 +3319,12 @@ void UIDXFoundation::ExecuteTextureBatch(const BatchData& batch, ID3D12GraphicsC
 
         _pCurrentCamera = batch._pCamera;
     }
-
-    // Check if this is a 3D control effect and set matrices for the current effect only
-    if (batch._effect == p_lineEffect3DCtrl.get() || 
-        batch._effect == p_pointEffect3DCtrl.get() ||
-        batch._effect == p_triangleEffect3DCtrl.get()) {
-        Matrix viewMatrix = batch._pCamera->GetViewMatrix();
-        Matrix projMatrix = batch._pCamera->GetProjectionMatrix();
-
-        batch._effect->SetWorld(Matrix::Identity);
-        batch._effect->SetView(viewMatrix);
-        batch._effect->SetProjection(projMatrix);
-    }
     
     // Set texture and alpha for this batch
     XMVECTORF32 colorAlpha = { 1.0f, 1.0f, 1.0f, batch._alpha / 255.0f };
-    batch._effect->SetTexture(batch._srvDescriptor, batch._samplerDescriptor);
-    batch._effect->SetColorAndAlpha(colorAlpha);
-    batch._effect->Apply(commandList);
+    batch._pEffect->SetTexture(batch._srvDescriptor, batch._samplerDescriptor);
+    batch._pEffect->SetColorAndAlpha(colorAlpha);
+    batch._pEffect->Apply(commandList);
     
     // Render each draw call in this batch
     p_batchTexture->Begin(commandList);

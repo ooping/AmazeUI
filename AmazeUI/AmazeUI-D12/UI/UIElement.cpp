@@ -344,7 +344,7 @@ bool UICameraBase::SetUpCamera(const RECT& viewRC) {
 // convert screen 2D to 3D
 // screenPos: the 2D screen position in the window
 // z: the z depth in the window [0,1]
-XMFLOAT3 UICameraUI::ConvertScreen2DTo3D(const XMFLOAT3& screenPos) {
+XMFLOAT3 UICameraBase::ConvertScreen2DTo3D(const XMFLOAT3& screenPos) {
     // get device resources and viewport size
     float viewportWidth = static_cast<float>(_viewport.Width);
     float viewportHeight = static_cast<float>(_viewport.Height);
@@ -394,7 +394,7 @@ XMFLOAT3 UICameraUI::ConvertScreen2DTo3D(const XMFLOAT3& screenPos) {
 
 // convert 3D space coordinates to window 2D coordinates
 // worldPos: the 3D world position
-XMFLOAT3 UICameraUI::Convert3DToScreen2D(const XMFLOAT3& worldPos) {
+XMFLOAT3 UICameraBase::Convert3DToScreen2D(const XMFLOAT3& worldPos) {
     // get device resources and viewport size
     float viewportWidth = static_cast<float>(_viewport.Width);
     float viewportHeight = static_cast<float>(_viewport.Height);

@@ -161,34 +161,30 @@ private:
     std::unique_ptr<DirectX::DescriptorHeap>                                p_resourceDescriptors;
     std::unique_ptr<DirectX::CommonStates>                                  p_states;
 
+    std::unique_ptr<DirectX::PrimitiveBatch<DirectX::VertexPositionColor>>  p_batch;
+	std::unique_ptr<DirectX::PrimitiveBatch<DirectX::VertexPositionTexture>>  p_batchTexture;
+	//std::unique_ptr<DirectX::SpriteBatch>                                   p_sprites;
+    //std::unique_ptr<DirectX::SpriteFont>                                    p_font;
+
 	std::unique_ptr<DirectX::BasicEffect>                                   p_pointEffect2D;
 	std::unique_ptr<DirectX::BasicEffect>                                   p_lineEffect2D;
 	std::unique_ptr<DirectX::BasicEffect>                                   p_triangleEffect2D;
-	std::unique_ptr<DirectX::BasicEffect>                                   p_triangleEffect3DUI;
-	std::unique_ptr<DirectX::BasicEffect>                                   p_triangleTexturedEffect2DUI;
-	std::unique_ptr<DirectX::BasicEffect>                                   p_triangleTexturedEffect3DUI;
+	std::unique_ptr<DirectX::BasicEffect>                                   p_triangleTexturedEffect2D;
 
-	//std::unique_ptr<DirectX::SpriteBatch>                                   p_sprites;
-    //std::unique_ptr<DirectX::SpriteFont>                                    p_font;
-    std::unique_ptr<DirectX::PrimitiveBatch<DirectX::VertexPositionColor>>  p_batch;
-	std::unique_ptr<DirectX::PrimitiveBatch<DirectX::VertexPositionTexture>>  p_batchTexture;
-	//
-	std::unique_ptr<DirectX::BasicEffect>                                   p_lineEffect3DGame;
-    std::unique_ptr<DirectX::BasicEffect>                                   p_shapeEffectGame;
+	std::unique_ptr<DirectX::BasicEffect> 									p_pointEffect3D;
+	std::unique_ptr<DirectX::BasicEffect> 									p_lineEffect3D;
+	std::unique_ptr<DirectX::BasicEffect> 									p_triangleEffect3D;
+	std::unique_ptr<DirectX::BasicEffect>                                   p_triangleTexturedEffect3D;
+	std::unique_ptr<DirectX::BasicEffect>                                   p_shapeEffect3D;
+
     std::unique_ptr<DirectX::GeometricPrimitive>                            p_shape;
     std::unique_ptr<DirectX::Model>                                         p_model;
-    DirectX::Model::EffectCollection                                        _modelEffectsGame;
+    DirectX::Model::EffectCollection                                        _modelEffects3D;
     std::unique_ptr<DirectX::EffectTextureFactory>                          p_modelResources;
-
-	std::unique_ptr<DirectX::BasicEffect> 									p_pointEffect3DCtrl;
-	std::unique_ptr<DirectX::BasicEffect> 									p_lineEffect3DCtrl;
-	std::unique_ptr<DirectX::BasicEffect> 									p_triangleEffect3DCtrl;
-	std::unique_ptr<DirectX::BasicEffect>                                   p_triangleTexturedEffect3DCtrl;
 
     Microsoft::WRL::ComPtr<ID3D12Resource>                                  _texture1;
 
 	DirectX::SimpleMath::Matrix 											_orthoMatrix2D;
-	// 3D
 	DirectX::SimpleMath::Matrix 											_world;
 
     // Descriptors
@@ -360,20 +356,35 @@ private:
 					 float z, UCHAR alpha, 
 					 const DirectX::XMMATRIX& transformMatrix);
 
-/*************************************************** 3D Controls APIs ***************************************************/
-// Set the viewport and effect corresponding to UICameraCtrl to render 3D controls
-// draw point/line/ball/ in 3D world space
+/*************************************************** 3D World APIs ***************************************************/
+// Use UICameraBase (UICameraGame, UICameraCtrl, etc.) to render 3D world objects in 3D world space
 public:
-	void SetEffect3DCtrl(UICameraBase* pCamera3DCtrl);
+	void Draw3DWorldPoint(const DirectX::XMFLOAT3& point, const UIColor& color, UICameraBase* pCamera);
+	void Draw3DWorldLine(const DirectX::XMFLOAT3& start, const DirectX::XMFLOAT3& end, const UIColor& colorS, const UIColor& colorE, UICameraBase* pCamera);
+	void Draw3DWorldLine(const DirectX::XMFLOAT3& start, const DirectX::XMFLOAT3& end, const UIColor& color, UICameraBase* pCamera);
+	void Draw3DWorldThickLine(const DirectX::XMFLOAT3& start, const DirectX::XMFLOAT3& end, float lineWidth, const UIColor& color, UICameraBase* pCamera);
+	void Draw3DWorldCircle(const DirectX::XMFLOAT3& center, float pixelRadius, const UIColor& color, UCHAR alpha, UICameraBase* pCamera);
+	void Draw3DWorldTriangle(const DirectX::XMFLOAT3& p1, const DirectX::XMFLOAT3& p2, const DirectX::XMFLOAT3& p3, const UIColor& color, UCHAR alpha, UICameraBase* pCamera);
+	void Draw3DWorldTriangle(const DirectX::XMFLOAT3& p1, const DirectX::XMFLOAT3& p2, const DirectX::XMFLOAT3& p3, 
+							 const UIColor& color1, const UIColor& color2, const UIColor& color3, UCHAR alpha, UICameraBase* pCamera);
 
-	void Draw3DWorldCtrlPoint(const DirectX::XMFLOAT3& point, const UIColor& color, UICameraCtrl* pCameraCtrl);
-	void Draw3DWorldCtrlLine(const DirectX::XMFLOAT3& start, const DirectX::XMFLOAT3& end, const UIColor& colorS, const UIColor& colorE, UICameraCtrl* pCameraCtrl);
-	void Draw3DWorldCtrlLine(const DirectX::XMFLOAT3& start, const DirectX::XMFLOAT3& end, const UIColor& color, UICameraCtrl* pCameraCtrl);
-	void Draw3DWorldCtrlThickLine(const DirectX::XMFLOAT3& start, const DirectX::XMFLOAT3& end, float lineWidth, const UIColor& color, UICameraCtrl* pCameraCtrl);
-	void Draw3DWorldCtrlCircle(const DirectX::XMFLOAT3& center, float pixelRadius, const UIColor& color, UCHAR alpha, UICameraCtrl* pCameraCtrl);
+	// Legacy API support (backward compatibility)
+	void Draw3DWorldCtrlPoint(const DirectX::XMFLOAT3& point, const UIColor& color, UICameraCtrl* pCameraCtrl) {
+		Draw3DWorldPoint(point, color, static_cast<UICameraBase*>(pCameraCtrl));
+	}
+	void Draw3DWorldCtrlLine(const DirectX::XMFLOAT3& start, const DirectX::XMFLOAT3& end, const UIColor& color, UICameraCtrl* pCameraCtrl) {
+		Draw3DWorldLine(start, end, color, static_cast<UICameraBase*>(pCameraCtrl));
+	}
+	void Draw3DWorldCtrlCircle(const DirectX::XMFLOAT3& center, float pixelRadius, const UIColor& color, UCHAR alpha, UICameraCtrl* pCameraCtrl) {
+		Draw3DWorldCircle(center, pixelRadius, color, alpha, static_cast<UICameraBase*>(pCameraCtrl));
+	}
+	void Draw3DWorldCtrlTriangle(const DirectX::XMFLOAT3& p1, const DirectX::XMFLOAT3& p2, const DirectX::XMFLOAT3& p3, const UIColor& color, UCHAR alpha, UICameraCtrl* pCameraCtrl) {
+		Draw3DWorldTriangle(p1, p2, p3, color, alpha, static_cast<UICameraBase*>(pCameraCtrl));
+	}
+
 
 	// Helper functions for world coordinate conversion
-	float CalculateWorldLengthFromPixelLength(float pixelLength, const DirectX::XMFLOAT3& worldPosition, UICameraCtrl* pCamera);
+	float CalculateWorldLengthFromPixelLength(float pixelLength, const DirectX::XMFLOAT3& worldPosition, UICameraBase* pCamera);
 
 
 /*************************************************** Batch Rendering System ***************************************************/
@@ -382,7 +393,7 @@ private:
 		int _batchID;														// 1: p_batch   2: p_batchTexture
 		
 		// as key
-		DirectX::BasicEffect* _effect;										// p_batch & p_batchTexture
+		DirectX::BasicEffect* _pEffect;										// p_batch & p_batchTexture
 		RECT _clipRect;														// p_batch & p_batchTexture
 		D3D12_GPU_DESCRIPTOR_HANDLE _srvDescriptor;							// p_batchTexture
 		D3D12_GPU_DESCRIPTOR_HANDLE _samplerDescriptor;						// p_batchTexture
@@ -401,7 +412,7 @@ private:
 				return false;
 			}
 
-			if (_effect != other._effect) {
+			if (_pEffect != other._pEffect) {
 				return false;
 			}
 
@@ -450,4 +461,5 @@ private:
 	std::vector<BatchData> _batchDataList;
 
 	UICameraBase* _pCurrentCamera = nullptr;
+	DirectX::BasicEffect* _pCurrentEffect = nullptr;
 };
