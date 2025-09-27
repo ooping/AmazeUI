@@ -5388,8 +5388,7 @@ void UIChart3D::Draw() {
 	DrawCurves();
 
 	// Get command list
-    auto* dx = UIDXFoundation::GetSingletonInstance();
-	dx->Draw3DWorldTextFT(L"3DS 3.1415", {_xAxisEnd._x / 2, _yAxisEnd._y / 2, 0.0f}, UIColor::Black, 18.0f, &_cameraCtrl);
+	UIFont3D(18.0f)(L"3DS OOPING", {_xAxisEnd._x / 2, _yAxisEnd._y / 2, 0.0f}, UIColor::Black, &_cameraCtrl);
 }
 
 bool UIChart3D::OnRButtonDown(POINT pt) {

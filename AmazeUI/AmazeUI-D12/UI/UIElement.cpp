@@ -694,3 +694,11 @@ void UITriangle3D::operator()(const UIColor& color1, const UIColor& color2, cons
 void UITriangle3D::operator()(const UIColor& color, UCHAR alpha, UICameraBase* pCamera) {
 	UIDXFoundation::GetSingletonInstance()->Draw3DWorldTriangle(_p1, _p2, _p3, color, alpha, pCamera);
 }
+
+// UIFont3D implementation
+UIFont3D::UIFont3D(float fontSize) : _fontSize(fontSize) {}
+
+void UIFont3D::operator()(std::wstring text, const UIPointFloat3& position, const UIColor& color, UICameraBase* pCamera) {
+	// Use UIDXFoundation's 3D world text rendering directly
+	UIDXFoundation::GetSingletonInstance()->Draw3DWorldTextFT(text, {position._x, position._y, position._z}, color, _fontSize, pCamera);
+}
