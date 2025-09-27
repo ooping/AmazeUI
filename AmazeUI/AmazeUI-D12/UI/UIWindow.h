@@ -32,10 +32,10 @@ public:
 	virtual ~UIWindowBase();
 
 	// create window
-	bool CreateWindowBase(UIContainer* pUIContainer, const RECT& relativeRect=Shape2D::NULL_RECT, int layoutFlag=UILayoutCalc::NO_ZOOM, bool isShow=true, bool isOnHeap=false);
-	bool CreateWindowBase(UIWindowBase* pParent, const RECT& relativeRect=Shape2D::NULL_RECT, int layoutFlag=UILayoutCalc::NO_ZOOM, bool isShow=true, bool isOnHeap=false);
-	bool CreateWindowBaseOnHeap(UIContainer* pUIContainer, const RECT& relativeRect=Shape2D::NULL_RECT, int layoutFlag=UILayoutCalc::NO_ZOOM, bool isShow=true);
-	bool CreateWindowBaseOnHeap(UIWindowBase* pParent, const RECT& relativeRect=Shape2D::NULL_RECT, int layoutFlag=UILayoutCalc::NO_ZOOM, bool isShow=true);
+	bool CreateWindowBase(UIContainer* pUIContainer, const RECT& relativeRect=UIShape2D::NULL_RECT, int layoutFlag=UILayoutCalc::NO_ZOOM, bool isShow=true, bool isOnHeap=false);
+	bool CreateWindowBase(UIWindowBase* pParent, const RECT& relativeRect=UIShape2D::NULL_RECT, int layoutFlag=UILayoutCalc::NO_ZOOM, bool isShow=true, bool isOnHeap=false);
+	bool CreateWindowBaseOnHeap(UIContainer* pUIContainer, const RECT& relativeRect=UIShape2D::NULL_RECT, int layoutFlag=UILayoutCalc::NO_ZOOM, bool isShow=true);
+	bool CreateWindowBaseOnHeap(UIWindowBase* pParent, const RECT& relativeRect=UIShape2D::NULL_RECT, int layoutFlag=UILayoutCalc::NO_ZOOM, bool isShow=true);
 	// destroy window
 	bool DestroyWindowBase();
 

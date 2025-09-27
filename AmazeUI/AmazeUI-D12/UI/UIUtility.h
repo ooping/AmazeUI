@@ -105,7 +105,7 @@ typedef void (*pMQFuncType)(LPARAM lParam);
 
 
 /*-------------------------------------------------- UI utility functions--------------------------------------------------*/
-namespace Shape2D {
+namespace UIShape2D {
 	constexpr RECT NULL_RECT = {0, 0, 0, 0};
 	constexpr POINT NULL_POINT = {0, 0};
 	constexpr SIZE NULL_SIZE = {0, 0};
@@ -267,7 +267,6 @@ public:
     static const UIColor ScrollbarNormal;
     static const UIColor ScrollbarHover;
 
-
     static const UIColor PrimaryBlue;
     static const UIColor PrimaryGreen;
     static const UIColor PrimaryPurple;
@@ -324,6 +323,125 @@ inline const UIColor UIColor::SelectedBlue = UIColor(187, 233, 255, 255);
 inline const UIColor UIColor::Gray95 = UIColor(242, 242, 242, 255);
 
 
+/*-------------------------------------------------- Point Structures and Utilities --------------------------------------------------*/
+namespace UIPointFloat {
+    struct PointFloat2 {
+        float _x;
+        float _y;
+
+        PointFloat2(float x = 0.0f, float y = 0.0f) : _x(x), _y(y) {}
+        
+        PointFloat2 operator+(const PointFloat2& other) const {
+            return PointFloat2(_x + other._x, _y + other._y);
+        }
+        PointFloat2 operator-(const PointFloat2& other) const {
+            return PointFloat2(_x - other._x, _y - other._y);
+        }
+        PointFloat2 operator*(float scale) const {
+            return PointFloat2(_x * scale, _y * scale);
+        }
+        
+        DirectX::XMFLOAT2 ToXMFLOAT2() const {
+            return DirectX::XMFLOAT2(_x, _y);
+        }
+    };
+
+    struct PointFloat3 {
+        float _x;
+        float _y;
+        float _z;
+
+        PointFloat3(float x = 0.0f, float y = 0.0f, float z = 0.0f) : _x(x), _y(y), _z(z) {}
+        
+        PointFloat3 operator+(const PointFloat3& other) const {
+            return PointFloat3(_x + other._x, _y + other._y, _z + other._z);
+        }
+        PointFloat3 operator-(const PointFloat3& other) const {
+            return PointFloat3(_x - other._x, _y - other._y, _z - other._z);
+        }
+        PointFloat3 operator*(float scale) const {
+            return PointFloat3(_x * scale, _y * scale, _z * scale);
+        }
+
+        DirectX::XMFLOAT3 ToXMFLOAT3() const {
+            return DirectX::XMFLOAT3(_x, _y, _z);
+        }
+    };
+
+    inline float Distance2D(const PointFloat2& _p1, const PointFloat2& _p2) {
+        float _dx = _p1._x - _p2._x;
+        float _dy = _p1._y - _p2._y;
+        return sqrt(_dx * _dx + _dy * _dy);
+    }
+
+    inline float Distance3D(const PointFloat3& _p1, const PointFloat3& _p2) {
+        float _dx = _p1._x - _p2._x;
+        float _dy = _p1._y - _p2._y;
+        float _dz = _p1._z - _p2._z;
+        return sqrt(_dx * _dx + _dy * _dy + _dz * _dz);
+    }
+
+    // interpolation
+    inline PointFloat2 Lerp2D(const PointFloat2& _a, const PointFloat2& _b, float _t) {
+        return _a + (_b - _a) * _t;
+    }
+
+    inline PointFloat3 Lerp3D(const PointFloat3& _a, const PointFloat3& _b, float _t) {
+        return _a + (_b - _a) * _t;
+    }
+
+    // dot product
+    inline float Dot2D(const PointFloat2& _a, const PointFloat2& _b) {
+        return _a._x * _b._x + _a._y * _b._y;
+    }
+
+    inline float Dot3D(const PointFloat3& _a, const PointFloat3& _b) {
+        return _a._x * _b._x + _a._y * _b._y + _a._z * _b._z;
+    }
+
+    // Cross product (2D returns scalar, 3D returns vector)
+    inline float Cross2D(const PointFloat2& _a, const PointFloat2& _b) {
+        return _a._x * _b._y - _a._y * _b._x;
+    }
+
+    inline PointFloat3 Cross3D(const PointFloat3& _a, const PointFloat3& _b) {
+        return PointFloat3(
+            _a._y * _b._z - _a._z * _b._y,
+            _a._z * _b._x - _a._x * _b._z,
+            _a._x * _b._y - _a._y * _b._x
+        );
+    }
+
+    // Vector length
+    inline float Length2D(const PointFloat2& _p) {
+        return sqrt(_p._x * _p._x + _p._y * _p._y);
+    }
+
+    inline float Length3D(const PointFloat3& _p) {
+        return sqrt(_p._x * _p._x + _p._y * _p._y + _p._z * _p._z);
+    }
+
+    // Vector normalization
+    inline PointFloat2 Normalize2D(const PointFloat2& _p) {
+        float _length = Length2D(_p);
+        if (_length > 0.0f) {
+            return _p * (1.0f / _length);
+        }
+        return PointFloat2(0.0f, 0.0f);
+    }
+
+    inline PointFloat3 Normalize3D(const PointFloat3& _p) {
+        float _length = Length3D(_p);
+        if (_length > 0.0f) {
+            return _p * (1.0f / _length);
+        }
+        return PointFloat3(0.0f, 0.0f, 0.0f);
+    }
+}
+
+// Type aliases provided for backward compatibility
+using UIPointFloat2 = UIPointFloat::PointFloat2;
+using UIPointFloat3 = UIPointFloat::PointFloat3;
 
 
 

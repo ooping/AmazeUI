@@ -3,7 +3,7 @@
 //#include "UI3D.h"
 
 using namespace std;
-using namespace Shape2D;
+using namespace UIShape2D;
 
 UIAnimationManage::~UIAnimationManage() {
 	UICaret::GetSingletonInstance()->DestroySingletonInstance();

@@ -12,7 +12,7 @@
 
 using namespace DirectX;
 using namespace std;
-using namespace Shape2D;
+using namespace UIShape2D;
 
 
 UIWinTop gWinTop;
@@ -122,9 +122,31 @@ void UIWinTop::OnCreate()
 
 		UIChart3D *pChart3D101 = new UIChart3D();
 		pChart3D101->CreateControlOnHeap(0, &_canvas100);
+		//
+		vector<UIPointFloat3> points;
+		for (int i = 0; i < 100; ++i) {
+			points.push_back({0, cos(i * XM_PI / 50.0f), (float)i});
+		}
+		pChart3D101->AddCurve(L"Curve1", points, UIColor::Gold);
+		//
+		points.clear();
+		for (int i = 0; i < 100; ++i) {
+			points.push_back({(float)i, sin(i * XM_PI / 50.0f), 0});
+		}
+		pChart3D101->AddCurve(L"Curve2", points, UIColor::Black);
+		//
+		pChart3D101->CalcXYCoordRange();
 
 		UIChart3D* pChart3D102 = new UIChart3D();
 		pChart3D102->CreateControlOnHeap(0, &_canvas100);
+		//
+		points.clear();
+		for (int i = 0; i < 100; ++i) {
+			points.push_back({(float)i, sin(i * XM_PI / 50.0f), 0});
+		}
+		pChart3D102->AddCurve(L"Curve1", points, UIColor::Black);
+		//
+		pChart3D102->CalcXYCoordRange();
 
 		UILayoutGrid layoutGrid1;
 		layoutGrid1.InitPoint(CreatePoint()(20, 20));

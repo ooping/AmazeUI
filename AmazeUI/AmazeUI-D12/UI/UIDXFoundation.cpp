@@ -6,7 +6,7 @@ using namespace std;
 
 using namespace DirectX;
 using namespace SimpleMath;
-using namespace Shape2D;
+using namespace UIShape2D;
 
 using Microsoft::WRL::ComPtr; 
 
@@ -1863,22 +1863,22 @@ void UIDXFoundation::Draw3DWorldLine(const XMFLOAT3& start, const XMFLOAT3& end,
 }
 
 void UIDXFoundation::Draw3DWorldThickLine(const XMFLOAT3& start, const XMFLOAT3& end, float lineWidth, const UIColor& color, UICameraBase* pCamera) {
-    const int segments = 8; // 圆柱体分段数
+    const int segments = 8; // Number of cylinder segments
     
     XMVECTOR startVec = XMLoadFloat3(&start);
     XMVECTOR endVec = XMLoadFloat3(&end);
     XMVECTOR direction = XMVector3Normalize(XMVectorSubtract(endVec, startVec));
     
-    // 找到两个垂直于线段的向量
+    // Find two vectors perpendicular to the segment
     XMVECTOR up = XMVectorSet(0, 1, 0, 0);
     if (abs(XMVectorGetY(direction)) > 0.9f) {
-        up = XMVectorSet(1, 0, 0, 0); // 如果线段接近垂直，使用X轴
+    up = XMVectorSet(1, 0, 0, 0); // If the segment is nearly vertical, use the X axis
     }
     
     XMVECTOR right = XMVector3Normalize(XMVector3Cross(direction, up));
     up = XMVector3Cross(right, direction);
     
-    // 将像素线宽转换为世界坐标线宽
+    // Convert pixel line width to world-space line width
     float worldRadius = CalculateWorldLengthFromPixelLength(lineWidth * 0.5f, start, pCamera);
     
     vector<VertexPositionColor> vertices;
@@ -1887,7 +1887,7 @@ void UIDXFoundation::Draw3DWorldThickLine(const XMFLOAT3& start, const XMFLOAT3&
     XMFLOAT4 uniformColor4;
     XMStoreFloat4(&uniformColor4, color.ToXMVECTORF32());
     
-    // 生成圆柱体顶点
+    // Generate cylinder vertices
     for (int i = 0; i < segments; ++i) {
         float angle = (float)i * XM_2PI / segments;
         float cosAngle = cosf(angle);
@@ -1898,31 +1898,31 @@ void UIDXFoundation::Draw3DWorldThickLine(const XMFLOAT3& start, const XMFLOAT3&
             XMVectorScale(up, worldRadius * sinAngle)
         );
         
-        // 起点圆周顶点
+    // Start circle vertices
         XMFLOAT3 startVertex;
         XMStoreFloat3(&startVertex, XMVectorAdd(startVec, offset));
         vertices.emplace_back(startVertex, uniformColor4);
         
-        // 终点圆周顶点
+    // End circle vertices
         XMFLOAT3 endVertex;
         XMStoreFloat3(&endVertex, XMVectorAdd(endVec, offset));
         vertices.emplace_back(endVertex, uniformColor4);
     }
     
-    // 生成圆柱体侧面三角形索引
+    // Generate triangle indices for the cylinder sides
     for (int i = 0; i < segments; ++i) {
         int current = i * 2;
         int next = ((i + 1) % segments) * 2;
         
-        // 第一个三角形
-        indices.push_back(static_cast<uint16_t>(current));     // 当前起点
-        indices.push_back(static_cast<uint16_t>(current + 1)); // 当前终点
-        indices.push_back(static_cast<uint16_t>(next));        // 下一个起点
+    // First triangle
+    indices.push_back(static_cast<uint16_t>(current));     // Current start
+    indices.push_back(static_cast<uint16_t>(current + 1)); // Current end
+    indices.push_back(static_cast<uint16_t>(next));        // Next start
         
-        // 第二个三角形
-        indices.push_back(static_cast<uint16_t>(current + 1)); // 当前终点
-        indices.push_back(static_cast<uint16_t>(next + 1));    // 下一个终点
-        indices.push_back(static_cast<uint16_t>(next));        // 下一个起点
+    // Second triangle
+    indices.push_back(static_cast<uint16_t>(current + 1)); // Current end
+    indices.push_back(static_cast<uint16_t>(next + 1));    // Next end
+    indices.push_back(static_cast<uint16_t>(next));        // Next start
     }
     
     RegisterBatchData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, 
@@ -2072,8 +2072,8 @@ void UIDXFoundation::Draw3DWorldTextFT(const std::wstring& text, const DirectX::
     FTSizeFont ftSizeFont;
     GetFTSizeFont(fontSize, ftSizeFont);
 
-    // 计算基线偏移的世界坐标
-    float baselineOffset = ftSizeFont._ftFontAscent;
+    // Calculate baseline offset in world coordinates
+    float baselineOffset = (float)ftSizeFont._ftFontAscent;
     
     // render each character
     for (wchar_t ch : text) {      
@@ -2086,44 +2086,44 @@ void UIDXFoundation::Draw3DWorldTextFT(const std::wstring& text, const DirectX::
         // get character resource
         CharTextureResource& resource = _charTextureResources[textureIndex];
         
-        // 使用像素到世界坐标转换来精确计算位置
-        // 字符的左侧偏移
+        // Use pixel-to-world conversion to calculate positions precisely
+        // Character left offset
         float charX = x + CalculateWorldLengthFromPixelLength((float)resource._left, worldPosition, pCamera);
-        // 字符的顶部位置 = 基线位置 - (基线到字符顶部的距离)
+        // Character top position = baseline position - (distance from baseline to character top)
         float charY = y - CalculateWorldLengthFromPixelLength((float)(baselineOffset - resource._top), worldPosition, pCamera);
         
-        // 传递fontSize作为scale参数，让Draw3DWorldCharTextureFT内部进行正确的像素到世界坐标转换
+        // Pass fontSize as scale parameter for Draw3DWorldCharTextureFT to perform correct pixel-to-world conversion
         Draw3DWorldCharTextureFT(textureIndex, XMFLOAT3(charX, charY, z), 1, 255, pCamera);
         
-        // 更新笔位置（世界空间）
+        // Update pen position (world space)
         x += CalculateWorldLengthFromPixelLength((float)resource._advance, worldPosition, pCamera);
     }
 }
 
 void UIDXFoundation::Draw3DWorldCharTextureFT(size_t textureIndex, DirectX::XMFLOAT3 worldPosition, float scale, UCHAR alpha, UICameraBase* pCamera) {
-    // 获取纹理资源
+    // Get texture resource
     CharTextureResource& resource = _charTextureResources[textureIndex];
     
-    // scale参数已经是世界单位，直接使用字符尺寸
+    // Scale parameter is already in world units, use character dimensions directly
     float charWorldWidth = CalculateWorldLengthFromPixelLength(resource._width * scale, worldPosition, pCamera);
     float charWorldHeight = CalculateWorldLengthFromPixelLength(resource._height * scale, worldPosition, pCamera);
     
-    // 创建世界空间的顶点数据 - 修正Y坐标排列，确保正确的上下位置
+    // Create world-space vertex data - fix Y coordinate ordering to ensure correct vertical positioning
     vector<VertexPositionTexture> vertices = {
-        // 左上角 (UV: 0, 0)
+        // Top-left (UV: 0, 0)
         { {worldPosition.x, worldPosition.y, worldPosition.z}, XMFLOAT2(0.f, 0.f) },
-        // 右上角 (UV: 1, 0) 
+        // Top-right (UV: 1, 0) 
         { {worldPosition.x + charWorldWidth, worldPosition.y, worldPosition.z}, XMFLOAT2(1.f, 0.f) },
-        // 左下角 (UV: 0, 1)
+        // Bottom-left (UV: 0, 1)
         { {worldPosition.x, worldPosition.y - charWorldHeight, worldPosition.z}, XMFLOAT2(0.f, 1.f) },
-        // 右下角 (UV: 1, 1)
+        // Bottom-right (UV: 1, 1)
         { {worldPosition.x + charWorldWidth, worldPosition.y - charWorldHeight, worldPosition.z}, XMFLOAT2(1.f, 1.f) }
     };
     
-    // 定义索引数据
+    // Define index data
     vector<uint16_t> indices = { 0, 1, 2, 1, 3, 2 };
 
-    // 使用传入的相机而不是固定的UI相机，这样每个控件可以有自己的视角
+    // Use the provided camera instead of a fixed UI camera, so each control can have its own perspective
     RegisterBatchTextureData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, p_triangleTexturedEffect3D, 
                              resource._gpuDescriptor, p_states->LinearClamp(), alpha, GetCurrentClipRect(), pCamera);
 }

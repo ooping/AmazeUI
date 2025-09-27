@@ -163,6 +163,57 @@ struct UIFont {
 };
 
 
+// point
+class UICameraBase;
+struct UIPoint3D {
+	UIPoint3D(float x, float y, float z);
+	~UIPoint3D() = default;
+
+	void operator()(const UIColor& color, UICameraBase* pCamera);
+
+	DirectX::XMFLOAT3 _point;
+};
+
+// point set
+struct UIPoints3D {
+	UIPoints3D(const std::vector<UIPointFloat3>& points);
+	~UIPoints3D() = default;
+
+	void operator()(const UIColor& color, UICameraBase* pCamera);
+
+	std::vector<DirectX::XMFLOAT3> _points;
+};
+
+struct UILine3D {
+	UILine3D(UIPointFloat3 start, UIPointFloat3 end, float width = 1.0f);
+	~UILine3D() = default;
+
+	void operator()(const UIColor& colorS, const UIColor& colorE, UICameraBase* pCamera);
+	void operator()(const UIColor& color, UICameraBase* pCamera);
+
+	DirectX::XMFLOAT3 _start, _end;
+	float _width;
+};
+
+struct UICircle3D {
+	UICircle3D(UIPointFloat3 center, float radius);
+	~UICircle3D() = default;
+
+	void operator()(const UIColor& color, UICameraBase* pCamera);
+
+	DirectX::XMFLOAT3 _center;
+	float _radius;
+};
+
+struct UITriangle3D {
+	UITriangle3D(UIPointFloat3 p1, UIPointFloat3 p2, UIPointFloat3 p3);
+	~UITriangle3D() = default;
+
+	void operator()(const UIColor& color1, const UIColor& color2, const UIColor& color3, UCHAR alpha, UICameraBase* pCamera);
+	void operator()(const UIColor& color, UCHAR alpha, UICameraBase* pCamera);
+
+	DirectX::XMFLOAT3 _p1, _p2, _p3;
+};
 
 
 class UICameraBase {

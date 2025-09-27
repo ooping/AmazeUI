@@ -1,6 +1,6 @@
 #include "UIUtility.h"
 using namespace std;
-using namespace Shape2D;
+using namespace UIShape2D;
 
 
 RECT CreateRect::operator()(POINT point, SIZE size) {
@@ -11,7 +11,7 @@ RECT CreateRect::operator()(LONG left, LONG top, LONG right, LONG bottom) {
     return {left, top, right, bottom};
 }
 
-POINT Shape2D::CreatePoint::operator()(LONG x, LONG y) {
+POINT UIShape2D::CreatePoint::operator()(LONG x, LONG y) {
     return {x, y};
 }
 

@@ -12,7 +12,7 @@
 
 using namespace DirectX;
 using namespace std;
-using namespace Shape2D;
+using namespace UIShape2D;
 
 
 UIWinTop gWinTop;

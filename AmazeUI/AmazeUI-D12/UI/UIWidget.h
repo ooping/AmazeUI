@@ -3,6 +3,8 @@
 #include "UIElement.h"
 #include "UIDXFoundation.h"
 #include "UIAnimation.h"
+#include <vector>
+#include <list>
 
 /*------------------------------------------------------- UIControlBase -------------------------------------------------------*/
 class UIScrollBar;
@@ -23,31 +25,31 @@ public:
 				pT->OnDestroy();
 			} break;
 			case WM_SIZE: {
-				pT->OnSize(Shape2D::CreatePoint()(LOWORD(lParam), HIWORD(lParam)));
+				pT->OnSize(UIShape2D::CreatePoint()(LOWORD(lParam), HIWORD(lParam)));
 			} break;
 			case WM_MOUSEMOVE: {
-				isMsgHandled = pT->OnMouseMove(Shape2D::CreatePoint()(LOWORD(lParam), HIWORD(lParam)));
+				isMsgHandled = pT->OnMouseMove(UIShape2D::CreatePoint()(LOWORD(lParam), HIWORD(lParam)));
 			} break;
 			case WM_MOUSELEAVE: {
-				pT->OnMouseLeave(Shape2D::CreatePoint()(LOWORD(lParam), HIWORD(lParam)));
+				pT->OnMouseLeave(UIShape2D::CreatePoint()(LOWORD(lParam), HIWORD(lParam)));
 			} break;
 			case WM_MOUSEWHEEL: {
 				isMsgHandled = pT->OnMouseWheel((short)HIWORD(wParam));
 			} break;
 			case WM_LBUTTONDOWN: {
-				isMsgHandled = pT->OnLButtonDown(Shape2D::CreatePoint()(LOWORD(lParam), HIWORD(lParam)));
+				isMsgHandled = pT->OnLButtonDown(UIShape2D::CreatePoint()(LOWORD(lParam), HIWORD(lParam)));
 			} break;
 			case WM_LBUTTONUP: {
-				isMsgHandled = pT->OnLButtonUp(Shape2D::CreatePoint()(LOWORD(lParam), HIWORD(lParam)));
+				isMsgHandled = pT->OnLButtonUp(UIShape2D::CreatePoint()(LOWORD(lParam), HIWORD(lParam)));
 			} break;
 			case WM_RBUTTONDOWN: {
-				isMsgHandled = pT->OnRButtonDown(Shape2D::CreatePoint()(LOWORD(lParam), HIWORD(lParam)));
+				isMsgHandled = pT->OnRButtonDown(UIShape2D::CreatePoint()(LOWORD(lParam), HIWORD(lParam)));
 			} break;
 			case WM_RBUTTONUP: {
-				isMsgHandled = pT->OnRButtonUp(Shape2D::CreatePoint()(LOWORD(lParam), HIWORD(lParam)));
+				isMsgHandled = pT->OnRButtonUp(UIShape2D::CreatePoint()(LOWORD(lParam), HIWORD(lParam)));
 			} break;
 			case WM_LBUTTONDBLCLK: {
-				isMsgHandled = pT->OnLButtonDbClk(Shape2D::CreatePoint()(LOWORD(lParam), HIWORD(lParam)));
+				isMsgHandled = pT->OnLButtonDbClk(UIShape2D::CreatePoint()(LOWORD(lParam), HIWORD(lParam)));
 			} break;
 			case WM_KEYDOWN: {
 				pT->OnKeyDown((TCHAR)wParam);
@@ -87,22 +89,22 @@ public:
 		return isMsgHandled;
 	}
 
-	bool CreateControl(UINT id, UIContainer* pUIContainer, const RECT& relativeRect = Shape2D::NULL_RECT, int layoutFlag = UILayoutCalc::NO_ZOOM, bool isShow = true, bool isOnHeap = false) {
+	bool CreateControl(UINT id, UIContainer* pUIContainer, const RECT& relativeRect = UIShape2D::NULL_RECT, int layoutFlag = UILayoutCalc::NO_ZOOM, bool isShow = true, bool isOnHeap = false) {
 		_id = id;
 		return CreateWindowBase(pUIContainer, relativeRect, layoutFlag, isShow, isOnHeap);
 	}
 
-	bool CreateControl(UINT id, UIWindowBase* pParent, const RECT& relativeRect = Shape2D::NULL_RECT, int layoutFlag = UILayoutCalc::NO_ZOOM, bool isShow = true, bool isOnHeap = false) {
+	bool CreateControl(UINT id, UIWindowBase* pParent, const RECT& relativeRect = UIShape2D::NULL_RECT, int layoutFlag = UILayoutCalc::NO_ZOOM, bool isShow = true, bool isOnHeap = false) {
 		_id = id;
 		return CreateWindowBase(pParent, relativeRect, layoutFlag, isShow, isOnHeap);
 	}
 
-	bool CreateControlOnHeap(UINT id, UIContainer* pUIContainer, const RECT& relativeRect = Shape2D::NULL_RECT, int layoutFlag = UILayoutCalc::NO_ZOOM, bool isShow = true) {
+	bool CreateControlOnHeap(UINT id, UIContainer* pUIContainer, const RECT& relativeRect = UIShape2D::NULL_RECT, int layoutFlag = UILayoutCalc::NO_ZOOM, bool isShow = true) {
 		_id = id;
 		return CreateWindowBase(pUIContainer, relativeRect, layoutFlag, isShow, true);
 	}
 
-	bool CreateControlOnHeap(UINT id, UIWindowBase* pParent, const RECT& relativeRect = Shape2D::NULL_RECT, int layoutFlag = UILayoutCalc::NO_ZOOM, bool isShow = true) {
+	bool CreateControlOnHeap(UINT id, UIWindowBase* pParent, const RECT& relativeRect = UIShape2D::NULL_RECT, int layoutFlag = UILayoutCalc::NO_ZOOM, bool isShow = true) {
 		_id = id;
 		return CreateWindowBase(pParent, relativeRect, layoutFlag, isShow, true);
 	}
@@ -165,7 +167,7 @@ protected:
 				pT->OnNotify((int)wParam, (LPARAM)lParam);
 			} break;
 			case WM_SIZE: {
-				pT->OnSize(Shape2D::CreatePoint()(LOWORD(lParam), HIWORD(lParam)));
+				pT->OnSize(UIShape2D::CreatePoint()(LOWORD(lParam), HIWORD(lParam)));
 			} break;
 		};
 
@@ -756,13 +758,8 @@ class UIChart : public UIControlBase<UIChart> {
 	typedef std::pair<float, float> RANGE_FLOAT;
 	typedef std::vector<RANGE_FLOAT> VECTOR_RANGE; 
 
-	struct PointFloat {
-		float _x;
-		float _y;
-
-		PointFloat(float x=0.0f, float y=0.0f) : _x(x), _y(y) {}
-	};
-	typedef std::vector<PointFloat> VECTOR_POINT; 
+	// PointFloat2 has been moved to UIUtility.h, use UIPointFloat2
+	typedef std::vector<UIPointFloat2> VECTOR_POINT2; 
 
 	struct CurveInfo {	
 		CurveInfo();
@@ -771,7 +768,7 @@ class UIChart : public UIControlBase<UIChart> {
 		bool JudgePointNearLine(POINT& p0, POINT& p1, POINT& p2);							// judge whether the point p0 is near the line (p1,p2)
 		bool operator==(std::wstring textName);												// overload the comparison  name as key
 
-		VECTOR_POINT _pointList;
+		VECTOR_POINT2 _pointList;
 		bool _isXCoordInOrder;																// flag to indicate whether the x-axis data is ordered (from small to large)
 		int _beginPointIndex, _endPointIndex;												// draw the interval [beginPointIndex, endPointIndex]
 
@@ -859,13 +856,13 @@ private:
 	void CalcCoordSymmetry(RANGE_FLOAT& rangeCoord);								// calculate coordinate symmetry
 
 	// coordinate value and real position conversion
-	void TransfromCoordToPos(POINT& pointPos, PointFloat& pointCoord, int yFlag);
-	bool TransfromPosToCoord(POINT& pointPos, PointFloat& pointCoord, int yFlag);
+	void TransfromCoordToPos(POINT& pointPos, UIPointFloat2& pointCoord, int yFlag);
+	bool TransfromPosToCoord(POINT& pointPos, UIPointFloat2& pointCoord, int yFlag);
 
 	// point range judgment
 	bool IsPosPointInbox(POINT& pointPos, const RECT& rect);
-	bool IsCoordPointInbox(PointFloat& pointCoord, PointFloat& p1, PointFloat& p2, bool nearYFlag=false);
-	bool IsCoordPointInCoordRange(PointFloat& pointCoord, int yFlag);
+	bool IsCoordPointInbox(UIPointFloat2& pointCoord, UIPointFloat2& p1, UIPointFloat2& p2, bool nearYFlag=false);
+	bool IsCoordPointInCoordRange(UIPointFloat2& pointCoord, int yFlag);
 
 	// judge whether the point is near the curve
 	bool IsPointNearCurve(POINT& point, int yFlag);
@@ -873,11 +870,11 @@ private:
 	bool IsPointNearCurveLine(POINT& point, CurveInfo& curve, int yFlag);
 
 	// calculate intersection point
-	PointFloat CalcIntersectionPoint(PointFloat& prePoint, PointFloat& curPoint, int outBoxIndex, int yFlag);
-	inline bool CalcLeftIntersectionPoint(PointFloat& pointCoord, float& k, float& b, int yFlag);
-	inline bool CalcTopIntersectionPoint(PointFloat& pointCoord, float& k, float& b, int yFlag);
-	inline bool CalcRightIntersectionPoint(PointFloat& pointCoord, float& k, float& b, int yFlag);
-	inline bool CalcBottomIntersectionPoint(PointFloat& pointCoord, float& k, float& b, int yFlag);
+	UIPointFloat2 CalcIntersectionPoint(UIPointFloat2& prePoint, UIPointFloat2& curPoint, int outBoxIndex, int yFlag);
+	inline bool CalcLeftIntersectionPoint(UIPointFloat2& pointCoord, float& k, float& b, int yFlag);
+	inline bool CalcTopIntersectionPoint(UIPointFloat2& pointCoord, float& k, float& b, int yFlag);
+	inline bool CalcRightIntersectionPoint(UIPointFloat2& pointCoord, float& k, float& b, int yFlag);
+	inline bool CalcBottomIntersectionPoint(UIPointFloat2& pointCoord, float& k, float& b, int yFlag);
 
 	// internal calculation mode
 	enum CalcModeInside {
@@ -1043,30 +1040,24 @@ private:
 class UIChart3D : public UIControlBase<UIChart3D> {
 	friend UIControlBase;
 
-	struct PointFloat {
-		float _x;
-		float _y;
-		float _z;
-
-		PointFloat(float x=0.0f, float y=0.0f, float z=0.0f) : _x(x), _y(y), _z(z) {}
-		
-		// Arithmetic operators for easy calculation
-		PointFloat operator+(const PointFloat& other) const {
-			return PointFloat(_x + other._x, _y + other._y, _z + other._z);
-		}
-		PointFloat operator-(const PointFloat& other) const {
-			return PointFloat(_x - other._x, _y - other._y, _z - other._z);
-		}
-		PointFloat operator*(float scale) const {
-			return PointFloat(_x * scale, _y * scale, _z * scale);
-		}
-
-		DirectX::XMFLOAT3 ToXMFLOAT3() const {
-			return DirectX::XMFLOAT3(_x, _y, _z);
-		}
-	};
+	// PointFloat3 has been moved to UIUtility.h, use UIPointFloat3
 
 	typedef std::pair<float, float> RANGE_FLOAT_3D;
+	typedef std::vector<UIPointFloat3> VECTOR_POINT3;
+
+	struct CurveInfo {	
+		CurveInfo();
+
+		bool CalcCoordRange(float& xMin, float& xMax, float& yMin, float& yMax, float& zMin, float& zMax);			// calculate the coordinate range of the curve
+		bool operator==(std::wstring textName);												// overload the comparison with name as key
+
+		VECTOR_POINT3 _pointList;
+		std::wstring _name;																	// curve name, used as key
+		UIColor _color;																		// curve color
+	
+		bool _isShow;																		// show flag
+	};
+	typedef std::list<CurveInfo> CURVE_LIST;
 
 	/* Usage Example:
 	   // 1. Setup data coordinate ranges
@@ -1079,14 +1070,14 @@ class UIChart3D : public UIControlBase<UIChart3D> {
 	   chart3d.AddDataPoint(75.0f, 30.0f, 50.0f, UIColor::Blue, 12.0f);    // Blue sphere, 12 pixel radius
 	   
 	   // 3. Convert data coordinates to world coordinates
-	   PointFloat worldPoint = chart3d.DataToWorld({25.0f, 10.0f, 100.0f});
+	   PointFloat3 worldPoint = chart3d.DataToWorld({25.0f, 10.0f, 100.0f});
 	   
 	   // 4. Convert world coordinates to screen coordinates for mouse interaction
 	   POINT screenPos = chart3d.WorldToScreen(worldPoint);
 	   
 	   // 5. Reverse conversion for mouse picking
-	   PointFloat pickedWorld = chart3d.ScreenToWorld(mousePos, 0.5f);
-	   PointFloat pickedData = chart3d.WorldToData(pickedWorld);
+	   PointFloat3 pickedWorld = chart3d.ScreenToWorld(mousePos, 0.5f);
+	   PointFloat3 pickedData = chart3d.WorldToData(pickedWorld);
 	   
 	   // 6. Clear all data points when needed
 	   chart3d.ClearDataPoints();
@@ -1107,27 +1098,52 @@ public:
 	// Coordinate system setup
 	void SetDataCoordRange(float xMin, float xMax, float yMin, float yMax, float zMin, float zMax);
 
+	// Curve management
+	void AddCurve(UIString curveName, const std::vector<UIPointFloat3>& points, UIColor color = UIColor::White);
+	void AddCurve(UIString curveName, const std::vector<float>& xList, const std::vector<float>& yList, const std::vector<float>& zList, UIColor color = UIColor::White);
+	void ClearAllCurves();
+	void CalcXYCoordRange();
+
 	// Coordinate transformation functions
-	PointFloat DataToWorld(const PointFloat& dataCoord) const;
-	PointFloat WorldToData(const PointFloat& worldCoord) const;
-	POINT WorldToScreen(const PointFloat& worldCoord);
-	PointFloat ScreenToWorld(const POINT& screenPos, float depth = 0.0f);
+	UIPointFloat3 DataToWorld(const UIPointFloat3& dataCoord) const;
+	UIPointFloat3 WorldToData(const UIPointFloat3& worldCoord) const;
+	POINT WorldToScreen(const UIPointFloat3& worldCoord);
+	UIPointFloat3 ScreenToWorld(const POINT& screenPos, float depth = 0.0f);
 
 private:
 	// 3D axes calculation and drawing functions
 	void CalcAxes3D();
 	void DrawAxes3D();
+	void DrawCurves();
 
 	// Independent camera system
 	UICameraCtrl _cameraCtrl;
 
-	// Pre-calculated axes coordinates in world space (calculated in CalcArea)
-	PointFloat _axesOrigin = {0.0f, 0.0f, 0.0f};      // Origin point in world coordinates
-	PointFloat _xAxisEnd = {1.0f, 0.0f, 0.0f};        // X axis end point in world coordinates
-	PointFloat _yAxisEnd = {0.0f, 1.0f, 0.0f};        // Y axis end point in world coordinates
-	PointFloat _zAxisEnd = {0.0f, 0.0f, 1.0f};        // Z axis end point in world coordinates
+	// Curve data
+	CURVE_LIST _curveList;													// 3D curve list
 
-	PointFloat _axisLengths = {1.0f, 1.0f, 1.0f};  // World coordinate axis lengths
+	UIPointFloat3 _axisLengths = {1.0f, 1.0f, 1.0f};  	 // World coordinate axis lengths
+
+	// Pre-calculated axes coordinates in world space (calculated in CalcArea)
+	UIPointFloat3 _axesOrigin = {0.0f, 0.0f, 0.0f};      // Origin point in world coordinates
+	UIPointFloat3 _xAxisEnd = {1.0f, 0.0f, 0.0f};        // X axis end point in world coordinates
+	UIPointFloat3 _yAxisEnd = {0.0f, 1.0f, 0.0f};        // Y axis end point in world coordinates
+	UIPointFloat3 _zAxisEnd = {0.0f, 0.0f, 1.0f};        // Z axis end point in world coordinates
+
+	// Axis subdivision points (5 intermediate points between origin and end)
+	std::vector<UIPointFloat3> _xAxisTicks;     // X axis subdivision points
+	std::vector<UIPointFloat3> _yAxisTicks;     // Y axis subdivision points  
+	std::vector<UIPointFloat3> _zAxisTicks;     // Z axis subdivision points
+
+	// Tick mark lines perpendicular to each axis
+	std::vector<std::pair<UIPointFloat3, UIPointFloat3>> _xTickLines;  // X axis tick marks
+	std::vector<std::pair<UIPointFloat3, UIPointFloat3>> _yTickLines;  // Y axis tick marks
+	std::vector<std::pair<UIPointFloat3, UIPointFloat3>> _zTickLines;  // Z axis tick marks
+
+	// Arrow triangles at axis endpoints
+	std::vector<UIPointFloat3> _xArrowTriangle;  // X axis arrow triangle (3 vertices)
+	std::vector<UIPointFloat3> _yArrowTriangle;  // Y axis arrow triangle (3 vertices)
+	std::vector<UIPointFloat3> _zArrowTriangle;  // Z axis arrow triangle (3 vertices)
 
 	// 3D coordinate system definition
 	RANGE_FLOAT_3D _xDataRange = {0.0f, 1.0f};  // Data coordinate range for X axis

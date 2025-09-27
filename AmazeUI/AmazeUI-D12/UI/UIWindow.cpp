@@ -5,7 +5,7 @@
 #include "UIElement.h"
 
 using namespace std;
-using namespace Shape2D;
+using namespace UIShape2D;
 using namespace DirectX;
 
 const float gLevelZ = 0.01f;
@@ -48,10 +48,10 @@ bool UIWindowBase::CreateWindowBase(UIContainer* pUIContainer, const RECT& relat
 	_clientRC = relativeRect;
 	OffsetRect(&_clientRC, -_clientRC.left, -_clientRC.top);
 	// relative to parent window starting point
-	_relativePoint = Shape2D::CreatePoint()(relativeRect.left, relativeRect.top);
+	_relativePoint = UIShape2D::CreatePoint()(relativeRect.left, relativeRect.top);
 	// relative to handle window starting point
 	POINT p = p_parentUIContainer->GetBindWindowAbusolutePoint();
-	_abusolutePoint = Shape2D::CreatePoint()(p.x+relativeRect.left, p.y+relativeRect.top);
+	_abusolutePoint = UIShape2D::CreatePoint()(p.x+relativeRect.left, p.y+relativeRect.top);
 
 	// layout information
 	_layoutMode = layoutFlag;
@@ -162,7 +162,7 @@ void UIWindowBase::MoveWindow(const RECT& relativeRect) {
 	}
 
 	POINT p = p_parentUIContainer->GetBindWindowAbusolutePoint();
-	POINT tempPoint = Shape2D::CreatePoint()(p.x+relativeRect.left, p.y+relativeRect.top);
+	POINT tempPoint = UIShape2D::CreatePoint()(p.x+relativeRect.left, p.y+relativeRect.top);
 
 	// if the position does not change, do not update the calculation
 	if (CompareRects()(relativeRect, GetRelativeRect()) && ComparePoints()(_abusolutePoint, tempPoint)) {
@@ -170,7 +170,7 @@ void UIWindowBase::MoveWindow(const RECT& relativeRect) {
 	}
 
 	// position calculation
-	_relativePoint = Shape2D::CreatePoint()(relativeRect.left, relativeRect.top);
+	_relativePoint = UIShape2D::CreatePoint()(relativeRect.left, relativeRect.top);
 	//
 	_abusolutePoint = tempPoint;
 	//
@@ -222,7 +222,7 @@ UIContainer::UIContainer() {
 	_isBindDUI = true;
 	_pBindDUIWin = nullptr;
 
-	_preMousePt = Shape2D::CreatePoint()(0, 0);
+	_preMousePt = UIShape2D::CreatePoint()(0, 0);
 }
 
 UIContainer::~UIContainer() {
@@ -345,7 +345,7 @@ POINT UIContainer::GetBindWindowAbusolutePoint() {
 		return _pBindDUIWin->_abusolutePoint;
 	}
 
-	return Shape2D::CreatePoint()(0, 0);
+	return UIShape2D::CreatePoint()(0, 0);
 }
 
 

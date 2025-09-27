@@ -2,7 +2,7 @@
 #include "UIDXFoundation.h"
 using namespace std;
 using namespace DirectX;
-using namespace Shape2D;
+using namespace UIShape2D;
 using namespace SimpleMath;
 
 UIScreenClipRectGuard::UIScreenClipRectGuard(const RECT& clipRC, bool execute) {
@@ -157,7 +157,7 @@ void UIImage::operator()(LONG dstCenterX, LONG dstCenterY, float scale, UCHAR al
 		return;
 	}
 
-	RECT dstRect = CreateRect()(Shape2D::CreatePoint()((LONG)(dstCenterX - (textureRect.right * scale / 2)), (LONG)(dstCenterY - (textureRect.bottom * scale / 2))), 
+	RECT dstRect = CreateRect()(UIShape2D::CreatePoint()((LONG)(dstCenterX - (textureRect.right * scale / 2)), (LONG)(dstCenterY - (textureRect.bottom * scale / 2))), 
 										 CreateSize()((LONG)((textureRect.right - textureRect.left) * scale), (LONG)((textureRect.bottom - textureRect.top) * scale)));
 	this->operator()(NULL_RECT, dstRect, alphy, transformMatrix);
 }
@@ -202,36 +202,36 @@ void UISlicedImage::operator()(LONG dstBeginX, LONG dstBeginY, LONG width, LONG 
 	UINT imageWidth = GetRectWidth()(textureRect);
 	UINT imageHeight = GetRectHeight()(textureRect);
 
-	RECT rc1 = CreateRect()(Shape2D::CreatePoint()(0, 0), CreateSize()(_leftBarWidth, _topBarHeight));
+	RECT rc1 = CreateRect()(UIShape2D::CreatePoint()(0, 0), CreateSize()(_leftBarWidth, _topBarHeight));
 	_image(rc1, dstBeginX, dstBeginY, alphy, transformMatrix);
 
-	RECT rc3 = CreateRect()(Shape2D::CreatePoint()(imageWidth - _rightBarWidth , 0), CreateSize()(_rightBarWidth, _topBarHeight));
+	RECT rc3 = CreateRect()(UIShape2D::CreatePoint()(imageWidth - _rightBarWidth , 0), CreateSize()(_rightBarWidth, _topBarHeight));
 	_image(rc3, dstBeginX + width - _rightBarWidth, dstBeginY, alphy, transformMatrix);
 
-	RECT rc4 = CreateRect()(Shape2D::CreatePoint()(0, imageHeight - _bottomBarHeight), CreateSize()(_leftBarWidth, _bottomBarHeight));
+	RECT rc4 = CreateRect()(UIShape2D::CreatePoint()(0, imageHeight - _bottomBarHeight), CreateSize()(_leftBarWidth, _bottomBarHeight));
 	_image(rc4, dstBeginX, dstBeginY + height - _bottomBarHeight, alphy, transformMatrix);
 
-	RECT rc6 = CreateRect()(Shape2D::CreatePoint()(imageWidth - _rightBarWidth, imageHeight - _bottomBarHeight), CreateSize()(_rightBarWidth, _bottomBarHeight));
+	RECT rc6 = CreateRect()(UIShape2D::CreatePoint()(imageWidth - _rightBarWidth, imageHeight - _bottomBarHeight), CreateSize()(_rightBarWidth, _bottomBarHeight));
 	_image(rc6, dstBeginX + width - _rightBarWidth, dstBeginY + height - _bottomBarHeight, alphy, transformMatrix);
 
-	RECT rc2 = CreateRect()(Shape2D::CreatePoint()(_leftBarWidth, 0) , CreateSize()(imageWidth - _leftBarWidth - _rightBarWidth, _topBarHeight));
-	RECT rc2d = CreateRect()(Shape2D::CreatePoint()(dstBeginX + _leftBarWidth, dstBeginY), CreateSize()(width - _leftBarWidth - _rightBarWidth, _topBarHeight));
+	RECT rc2 = CreateRect()(UIShape2D::CreatePoint()(_leftBarWidth, 0) , CreateSize()(imageWidth - _leftBarWidth - _rightBarWidth, _topBarHeight));
+	RECT rc2d = CreateRect()(UIShape2D::CreatePoint()(dstBeginX + _leftBarWidth, dstBeginY), CreateSize()(width - _leftBarWidth - _rightBarWidth, _topBarHeight));
 	_image(rc2, rc2d, alphy, transformMatrix);
 
-	RECT rc5 = CreateRect()(Shape2D::CreatePoint()(_leftBarWidth, imageHeight - _bottomBarHeight), CreateSize()(imageWidth - _leftBarWidth - _rightBarWidth, _bottomBarHeight));
-	RECT rc5d = CreateRect()(Shape2D::CreatePoint()(dstBeginX + _leftBarWidth, dstBeginY + height - _bottomBarHeight), CreateSize()(width - _leftBarWidth - _rightBarWidth, _bottomBarHeight));
+	RECT rc5 = CreateRect()(UIShape2D::CreatePoint()(_leftBarWidth, imageHeight - _bottomBarHeight), CreateSize()(imageWidth - _leftBarWidth - _rightBarWidth, _bottomBarHeight));
+	RECT rc5d = CreateRect()(UIShape2D::CreatePoint()(dstBeginX + _leftBarWidth, dstBeginY + height - _bottomBarHeight), CreateSize()(width - _leftBarWidth - _rightBarWidth, _bottomBarHeight));
 	_image(rc5, rc5d, alphy, transformMatrix);
 
-	RECT rc7 = CreateRect()(Shape2D::CreatePoint()(0, _topBarHeight), CreateSize()(_leftBarWidth, imageHeight - _topBarHeight - _bottomBarHeight));
-	RECT rc7d = CreateRect()(Shape2D::CreatePoint()(dstBeginX, dstBeginY + _topBarHeight), CreateSize()(_leftBarWidth, height - _topBarHeight - _bottomBarHeight));
+	RECT rc7 = CreateRect()(UIShape2D::CreatePoint()(0, _topBarHeight), CreateSize()(_leftBarWidth, imageHeight - _topBarHeight - _bottomBarHeight));
+	RECT rc7d = CreateRect()(UIShape2D::CreatePoint()(dstBeginX, dstBeginY + _topBarHeight), CreateSize()(_leftBarWidth, height - _topBarHeight - _bottomBarHeight));
 	_image(rc7, rc7d, alphy, transformMatrix);
 
-	RECT rc8 = CreateRect()(Shape2D::CreatePoint()(imageWidth - _rightBarWidth, _topBarHeight), CreateSize()(_rightBarWidth, imageHeight - _topBarHeight - _bottomBarHeight));
-	RECT rc8d = CreateRect()(Shape2D::CreatePoint()(dstBeginX + width - _rightBarWidth, dstBeginY + _topBarHeight), CreateSize()(_rightBarWidth, height - _topBarHeight - _bottomBarHeight));
+	RECT rc8 = CreateRect()(UIShape2D::CreatePoint()(imageWidth - _rightBarWidth, _topBarHeight), CreateSize()(_rightBarWidth, imageHeight - _topBarHeight - _bottomBarHeight));
+	RECT rc8d = CreateRect()(UIShape2D::CreatePoint()(dstBeginX + width - _rightBarWidth, dstBeginY + _topBarHeight), CreateSize()(_rightBarWidth, height - _topBarHeight - _bottomBarHeight));
 	_image(rc8, rc8d, alphy, transformMatrix);
 	
-	RECT rc9 = CreateRect()(Shape2D::CreatePoint()(_leftBarWidth, _topBarHeight), CreateSize()(imageWidth - _leftBarWidth - _rightBarWidth, imageHeight - _topBarHeight - _bottomBarHeight));
-	RECT rc9d = CreateRect()(Shape2D::CreatePoint()(dstBeginX + _leftBarWidth, dstBeginY + _topBarHeight), CreateSize()(width - _leftBarWidth - _rightBarWidth, height - _topBarHeight - _bottomBarHeight));
+	RECT rc9 = CreateRect()(UIShape2D::CreatePoint()(_leftBarWidth, _topBarHeight), CreateSize()(imageWidth - _leftBarWidth - _rightBarWidth, imageHeight - _topBarHeight - _bottomBarHeight));
+	RECT rc9d = CreateRect()(UIShape2D::CreatePoint()(dstBeginX + _leftBarWidth, dstBeginY + _topBarHeight), CreateSize()(width - _leftBarWidth - _rightBarWidth, height - _topBarHeight - _bottomBarHeight));
 	_image(rc9, rc9d, alphy, transformMatrix);
 }
 
@@ -450,9 +450,69 @@ bool UICameraCtrl::SetUpCamera(const RECT& ctrlRC) {
 	}
 
 	// Calculate world space offset
-    float tanHalfFOV = tan(_fov * 0.5f);
-    _worldHeight = 2.0f * _viewDistance * tanHalfFOV;
-    _worldWidth = _worldHeight * _aspectRatio;
+    // float tanHalfFOV = tan(_fov * 0.5f);
+    // _worldHeight = 2.0f * _viewDistance * tanHalfFOV;
+    // _worldWidth = _worldHeight * _aspectRatio;
+
+	{
+		// **Corrected version: World space calculation considering camera rotation**
+		// 1. Basic frustum dimensions (in camera space)
+		float tanHalfFOV = tan(_fov * 0.5f);
+		float viewSpaceHeight = 2.0f * _viewDistance * tanHalfFOV;
+		float viewSpaceWidth = viewSpaceHeight * _aspectRatio;
+		
+		// 2. Get camera orientation vectors
+		XMVECTOR forward = XMLoadFloat3(&_forward);
+		XMVECTOR up = XMLoadFloat3(&_up);
+		XMVECTOR right = XMLoadFloat3(&_right);
+		
+		// 3. Calculate frustum corner positions in world space
+		XMVECTOR camPos = XMLoadFloat3(&_position);
+		
+		// Four corners of the frustum in camera space
+		float halfWidth = viewSpaceWidth * 0.5f;
+		float halfHeight = viewSpaceHeight * 0.5f;
+		
+		XMVECTOR corners[4] = {
+			XMVectorSet(-halfWidth, -halfHeight, _viewDistance, 1.0f), // Bottom-left
+			XMVectorSet( halfWidth, -halfHeight, _viewDistance, 1.0f), // Bottom-right
+			XMVectorSet(-halfWidth,  halfHeight, _viewDistance, 1.0f), // Top-left
+			XMVectorSet( halfWidth,  halfHeight, _viewDistance, 1.0f)  // Top-right
+		};
+		
+		// 4. Convert camera space coordinates to world space coordinates
+		XMVECTOR worldCorners[4];
+		for (int i = 0; i < 4; i++) {
+			// Camera space to world space transformation
+			XMVECTOR localPos = corners[i];
+			worldCorners[i] = camPos + 
+							  XMVectorGetX(localPos) * right +
+							  XMVectorGetY(localPos) * up +
+							  XMVectorGetZ(localPos) * forward;
+		}
+		
+		// 5. Calculate projection range on the XY plane
+		float minX = FLT_MAX, maxX = -FLT_MAX;
+		float minY = FLT_MAX, maxY = -FLT_MAX;
+		
+		for (int i = 0; i < 4; i++) {
+			float x = XMVectorGetX(worldCorners[i]);
+			float y = XMVectorGetY(worldCorners[i]);
+			
+			minX = min(minX, x);
+			maxX = max(maxX, x);
+			minY = min(minY, y);
+			maxY = max(maxY, y);
+		}
+		
+		// 6. Final world space dimensions
+		_worldWidth = maxX - minX;
+		_worldHeight = maxY - minY;
+		
+		// 7. Optional: Store projection center point
+		// _worldCenterX = (maxX + minX) * 0.5f;
+		// _worldCenterY = (maxY + minY) * 0.5f;
+	}
 
 	return true;
 }
@@ -565,4 +625,72 @@ void UI3DRotation::SetRotationY(bool isRotationY, LONG xByY, float yAngle) {
 	_isRotationY = isRotationY;
 	_XY.x = (float)xByY;
 	_yAngle = yAngle;
+}
+
+// UIPoint3D implementation
+UIPoint3D::UIPoint3D(float x, float y, float z) : _point(x, y, z) {}
+
+void UIPoint3D::operator()(const UIColor& color, UICameraBase* pCamera) {
+	UIDXFoundation::GetSingletonInstance()->Draw3DWorldPoint(_point, color, pCamera);
+}
+
+// UIPoints3D implementation
+UIPoints3D::UIPoints3D(const std::vector<UIPointFloat3>& points) {
+	_points.reserve(points.size());
+	for (const auto& point : points) {
+		_points.emplace_back(point._x, point._y, point._z);
+	}
+}
+
+void UIPoints3D::operator()(const UIColor& color, UICameraBase* pCamera) {
+	for (const auto& point : _points) {
+		UIDXFoundation::GetSingletonInstance()->Draw3DWorldPoint(point, color, pCamera);
+	}
+}
+
+// UILine3D implementation
+UILine3D::UILine3D(UIPointFloat3 start, UIPointFloat3 end, float width) 
+	: _start(start._x, start._y, start._z), _end(end._x, end._y, end._z), _width(width) {}
+
+void UILine3D::operator()(const UIColor& colorS, const UIColor& colorE, UICameraBase* pCamera) {
+	if (_width <= 1.0f) {
+		UIDXFoundation::GetSingletonInstance()->Draw3DWorldLine(_start, _end, colorS, colorE, pCamera);
+	} else {
+		// For thick lines, use the thick line function with interpolated color
+		UIColor avgColor(
+			(colorS._r + colorE._r) / 2,
+			(colorS._g + colorE._g) / 2,
+			(colorS._b + colorE._b) / 2,
+			(colorS._a + colorE._a) / 2
+		);
+		UIDXFoundation::GetSingletonInstance()->Draw3DWorldThickLine(_start, _end, _width, avgColor, pCamera);
+	}
+}
+
+void UILine3D::operator()(const UIColor& color, UICameraBase* pCamera) {
+	if (_width <= 1.0f) {
+		UIDXFoundation::GetSingletonInstance()->Draw3DWorldLine(_start, _end, color, pCamera);
+	} else {
+		UIDXFoundation::GetSingletonInstance()->Draw3DWorldThickLine(_start, _end, _width, color, pCamera);
+	}
+}
+
+// UICircle3D implementation
+UICircle3D::UICircle3D(UIPointFloat3 center, float radius) 
+	: _center(center._x, center._y, center._z), _radius(radius) {}
+
+void UICircle3D::operator()(const UIColor& color, UICameraBase* pCamera) {
+	UIDXFoundation::GetSingletonInstance()->Draw3DWorldCircle(_center, _radius, color, 255, pCamera);
+}
+
+// UITriangle3D implementation
+UITriangle3D::UITriangle3D(UIPointFloat3 p1, UIPointFloat3 p2, UIPointFloat3 p3) 
+	: _p1(p1._x, p1._y, p1._z), _p2(p2._x, p2._y, p2._z), _p3(p3._x, p3._y, p3._z) {}
+
+void UITriangle3D::operator()(const UIColor& color1, const UIColor& color2, const UIColor& color3, UCHAR alpha, UICameraBase* pCamera) {
+	UIDXFoundation::GetSingletonInstance()->Draw3DWorldTriangle(_p1, _p2, _p3, color1, color2, color3, alpha, pCamera);
+}
+
+void UITriangle3D::operator()(const UIColor& color, UCHAR alpha, UICameraBase* pCamera) {
+	UIDXFoundation::GetSingletonInstance()->Draw3DWorldTriangle(_p1, _p2, _p3, color, alpha, pCamera);
 }
