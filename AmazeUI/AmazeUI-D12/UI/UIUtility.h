@@ -329,6 +329,7 @@ namespace UIPointFloat {
         float _x;
         float _y;
 
+        PointFloat2(DirectX::XMFLOAT2 vec) : _x(vec.x), _y(vec.y) {}
         PointFloat2(float x = 0.0f, float y = 0.0f) : _x(x), _y(y) {}
         
         PointFloat2 operator+(const PointFloat2& other) const {
@@ -351,6 +352,7 @@ namespace UIPointFloat {
         float _y;
         float _z;
 
+        PointFloat3(DirectX::XMFLOAT3 vec) : _x(vec.x), _y(vec.y), _z(vec.z) {}
         PointFloat3(float x = 0.0f, float y = 0.0f, float z = 0.0f) : _x(x), _y(y), _z(z) {}
         
         PointFloat3 operator+(const PointFloat3& other) const {

@@ -338,6 +338,9 @@ bool UICameraBase::SetUpCamera(const RECT& viewRC) {
 		D3D12_MAX_DEPTH
 	};
 
+	// Calculate world space dimensions considering camera rotation
+	CalculateWorldDimensions();
+
 	return true;
 }
 
@@ -444,82 +447,67 @@ XMFLOAT3 UICameraBase::Convert3DToScreen2D(const XMFLOAT3& worldPos) {
 	return screenPos;
 }
 
-bool UICameraCtrl::SetUpCamera(const RECT& ctrlRC) {
-	if (!UICameraBase::SetUpCamera(ctrlRC)) {
-		return false;
+void UICameraBase::CalculateWorldDimensions() {
+	// **Rotation-aware world space calculation for Chart3D control**
+	// 1. Basic frustum dimensions (in camera space)
+	float viewDistance = GetViewDistance();
+	float tanHalfFOV = tan(_fov * 0.5f);
+	float viewSpaceHeight = 2.0f * viewDistance * tanHalfFOV;
+	float viewSpaceWidth = viewSpaceHeight * _aspectRatio;
+	
+	// 2. Get camera orientation vectors
+	XMVECTOR forward = XMLoadFloat3(&_forward);
+	XMVECTOR up = XMLoadFloat3(&_up);
+	XMVECTOR right = XMLoadFloat3(&_right);
+	
+	// 3. Calculate frustum corner positions in world space
+	XMVECTOR camPos = XMLoadFloat3(&_position);
+	
+	// Four corners of the frustum in camera space
+	float halfWidth = viewSpaceWidth * 0.5f;
+	float halfHeight = viewSpaceHeight * 0.5f;
+	
+	XMVECTOR corners[4] = {
+		XMVectorSet(-halfWidth, -halfHeight, viewDistance, 1.0f), // Bottom-left
+		XMVectorSet( halfWidth, -halfHeight, viewDistance, 1.0f), // Bottom-right
+		XMVectorSet(-halfWidth,  halfHeight, viewDistance, 1.0f), // Top-left
+		XMVectorSet( halfWidth,  halfHeight, viewDistance, 1.0f)  // Top-right
+	};
+	
+	// 4. Convert camera space coordinates to world space coordinates
+	XMVECTOR worldCorners[4];
+	for (int i = 0; i < 4; i++) {
+		// Camera space to world space transformation
+		XMVECTOR localPos = corners[i];
+		worldCorners[i] = camPos + 
+						  XMVectorGetX(localPos) * right +
+						  XMVectorGetY(localPos) * up +
+						  XMVectorGetZ(localPos) * forward;
 	}
-
-	// Calculate world space offset
-    // float tanHalfFOV = tan(_fov * 0.5f);
-    // _worldHeight = 2.0f * _viewDistance * tanHalfFOV;
-    // _worldWidth = _worldHeight * _aspectRatio;
-
-	{
-		// **Corrected version: World space calculation considering camera rotation**
-		// 1. Basic frustum dimensions (in camera space)
-		float tanHalfFOV = tan(_fov * 0.5f);
-		float viewSpaceHeight = 2.0f * _viewDistance * tanHalfFOV;
-		float viewSpaceWidth = viewSpaceHeight * _aspectRatio;
+	
+	// 5. Calculate projection range on the XY plane
+	float minX = FLT_MAX, maxX = -FLT_MAX;
+	float minY = FLT_MAX, maxY = -FLT_MAX;
+	
+	for (int i = 0; i < 4; i++) {
+		float x = XMVectorGetX(worldCorners[i]);
+		float y = XMVectorGetY(worldCorners[i]);
 		
-		// 2. Get camera orientation vectors
-		XMVECTOR forward = XMLoadFloat3(&_forward);
-		XMVECTOR up = XMLoadFloat3(&_up);
-		XMVECTOR right = XMLoadFloat3(&_right);
-		
-		// 3. Calculate frustum corner positions in world space
-		XMVECTOR camPos = XMLoadFloat3(&_position);
-		
-		// Four corners of the frustum in camera space
-		float halfWidth = viewSpaceWidth * 0.5f;
-		float halfHeight = viewSpaceHeight * 0.5f;
-		
-		XMVECTOR corners[4] = {
-			XMVectorSet(-halfWidth, -halfHeight, _viewDistance, 1.0f), // Bottom-left
-			XMVectorSet( halfWidth, -halfHeight, _viewDistance, 1.0f), // Bottom-right
-			XMVectorSet(-halfWidth,  halfHeight, _viewDistance, 1.0f), // Top-left
-			XMVectorSet( halfWidth,  halfHeight, _viewDistance, 1.0f)  // Top-right
-		};
-		
-		// 4. Convert camera space coordinates to world space coordinates
-		XMVECTOR worldCorners[4];
-		for (int i = 0; i < 4; i++) {
-			// Camera space to world space transformation
-			XMVECTOR localPos = corners[i];
-			worldCorners[i] = camPos + 
-							  XMVectorGetX(localPos) * right +
-							  XMVectorGetY(localPos) * up +
-							  XMVectorGetZ(localPos) * forward;
-		}
-		
-		// 5. Calculate projection range on the XY plane
-		float minX = FLT_MAX, maxX = -FLT_MAX;
-		float minY = FLT_MAX, maxY = -FLT_MAX;
-		
-		for (int i = 0; i < 4; i++) {
-			float x = XMVectorGetX(worldCorners[i]);
-			float y = XMVectorGetY(worldCorners[i]);
-			
-			minX = min(minX, x);
-			maxX = max(maxX, x);
-			minY = min(minY, y);
-			maxY = max(maxY, y);
-		}
-		
-		// 6. Final world space dimensions
-		_worldWidth = maxX - minX;
-		_worldHeight = maxY - minY;
-		
-		// 7. Optional: Store projection center point
-		// _worldCenterX = (maxX + minX) * 0.5f;
-		// _worldCenterY = (maxY + minY) * 0.5f;
+		minX = min(minX, x);
+		maxX = max(maxX, x);
+		minY = min(minY, y);
+		maxY = max(maxY, y);
 	}
-
-	return true;
+	
+	// 6. Final world space dimensions
+	_worldWidth = maxX - minX;
+	_worldHeight = maxY - minY;
 }
 
 void UICameraCtrl::RotateCamera(float deltaYaw, float deltaPitch) {
 	_yaw += deltaYaw;
 	_pitch += deltaPitch;
+	float viewDistance = GetViewDistance();
 	
 	// Limit pitch angle to avoid flipping
 	_pitch = std::max(-89.0f, std::min(89.0f, _pitch));
@@ -530,15 +518,18 @@ void UICameraCtrl::RotateCamera(float deltaYaw, float deltaPitch) {
 	float pitchRad = DirectX::XMConvertToRadians(_pitch);
 	
 	// Calculate camera position relative to target (spherical coordinate system)
-	float x = _viewDistance * cosf(pitchRad) * sinf(yawRad);
-	float y = _viewDistance * sinf(pitchRad);
-	float z = -_viewDistance * cosf(pitchRad) * cosf(yawRad);
+	float x = viewDistance * cosf(pitchRad) * sinf(yawRad);
+	float y = viewDistance * sinf(pitchRad);
+	float z = -viewDistance * cosf(pitchRad) * cosf(yawRad);
 	
 	// Set new camera position
 	_position = DirectX::XMFLOAT3(_target.x + x, _target.y + y, _target.z + z);
 	
 	// Recalculate view matrix
 	SetViewMatrix();
+	
+	// Recalculate world space dimensions after rotation
+	//CalculateWorldDimensions();
 }
 
 

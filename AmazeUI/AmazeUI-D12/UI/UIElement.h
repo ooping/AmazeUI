@@ -240,21 +240,34 @@ public:
 	float _nearPlane = 0.01f;
 	float _farPlane = 10000.0f;
 
+	// World space dimensions (calculated from frustum)
+	float _worldWidth = 0.0f;
+	float _worldHeight = 0.0f;
+
 	// Setup methods
 	virtual bool SetUpCamera(const RECT& viewRC);
 
 	// Update camera matrices
 	void SetViewMatrix();
-	void SetProjectionMatrix();	
+	void SetProjectionMatrix();
+	
 	// Matrix access
 	const DirectX::SimpleMath::Matrix& GetViewMatrix() const { return _view; }
 	const DirectX::SimpleMath::Matrix& GetProjectionMatrix() const { return _projection3D; }
 
 	const D3D12_VIEWPORT& GetViewport() const { return _viewport; }
 
+	// World space access
+	float GetWorldWidth() const { return _worldWidth; }
+	float GetWorldHeight() const { return _worldHeight; }
+	float GetViewDistance() const { return UIPointFloat::Distance3D(_position, _target); }
+
 	// Convert screen 2D to 3D
 	DirectX::XMFLOAT3 ConvertScreen2DTo3D(const DirectX::XMFLOAT3& screenPos);
 	DirectX::XMFLOAT3 Convert3DToScreen2D(const DirectX::XMFLOAT3& viewPos);
+
+	// World space calculation
+	void CalculateWorldDimensions();
 
 protected:
 	DirectX::SimpleMath::Matrix _view;
@@ -280,26 +293,16 @@ class UICameraGame : public UICameraBase, public SingletonPattern<UICameraGame> 
 
 // Independent 3D camera system for Chart3D control, similar to Unity3D Scene View axes
 class UICameraCtrl : public UICameraBase {
-	float _worldWidth;
-	float _worldHeight;
-
 	// Mouse rotation support
 	float _yaw = 0.0f;    // Left-right rotation angle
 	float _pitch = 0.0f;  // Up-down rotation angle
-	float _viewDistance = 5.0f; // Camera distance to target
 
 public:
 	UICameraCtrl() = default;
 	~UICameraCtrl() = default;
 
-	// Setup methods
-	bool SetUpCamera(const RECT& viewRC);
-
 	// Mouse rotation
 	void RotateCamera(float deltaYaw, float deltaPitch);
-
-	float GetWorldWidth() const { return _worldWidth; }
-	float GetWorldHeight() const { return _worldHeight; }
 };
 
 
