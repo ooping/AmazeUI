@@ -460,7 +460,7 @@ private:
 /*
 	UISelectList only supports popup creation
 */
-class UISelectList : public UIControlBase<UISelectList>, public UIAnimateHelp {
+class UISelectList : public UIControlBase<UISelectList>, public UIAnimateFrameHelp {
 	friend UIControlBase;
 
 public:
@@ -926,7 +926,7 @@ private:
 };
 
 /*------------------------------------------------------- UITabX -------------------------------------------------------*/
-class UITab : public UIControlBase<UITab>, public UIContainerHelp<UITab>, public UIAnimateHelp {
+class UITab : public UIControlBase<UITab>, public UIContainerHelp<UITab>, public UIAnimateFrameHelp {
 	friend UIControlBase;
 
 	/*--------------------------------- control data ---------------------------------*/

@@ -84,9 +84,9 @@ void UISetCaretPos(ULONG x, ULONG y, bool IsShowImmd=true, const DirectX::XMMATR
 
 
 // Animation effect helper class
-class UIAnimateHelp : public UIAnimationBase {
+class UIAnimateFrameHelp : public UIAnimationBase {
 public:
-	UIAnimateHelp();
+	UIAnimateFrameHelp() = default;
 
 	void PlayAnimate(int maxFrame = 5);
 
@@ -94,15 +94,34 @@ protected:
 	bool IsAnimationRun();
 	bool UpdateAnimation();
 
-	int _maxFrame;
-	int _frameIndex;			// Start from 1
-	bool _1stFrame;
+	int _maxFrame = 1;
+	int _frameIndex = 0;
+	bool _isAnimationStarted = false; // Animation start flag
+};
+
+// Time-based animation helper class
+class UIAnimateSecondHelp : public UIAnimationBase {
+public:
+	UIAnimateSecondHelp() = default;
+
+	void PlayAnimate(float duration = 2.0f);
+
+protected:
+	bool IsAnimationRun();
+	bool UpdateAnimation();
+	float GetDeltaTime() const { return _deltaTime; }
+
+	float _duration = 2.0f;           // Animation duration in seconds
+	float _elapsedTime = 0.0f;        // Elapsed time in seconds  
+	float _deltaTime = 0.0f;          // Time since last update
+	DWORD _lastTickTime = 0;          // Last update timestamp
+	bool _isAnimationStarted = false; // Animation start flag
 };
 
 
 
 // Animation common effects
-class UIAnimateEffectHitDrum : public UIAnimateHelp {
+class UIAnimateEffectHitDrum : public UIAnimateFrameHelp {
 public:
 	UIAnimateEffectHitDrum();
 	~UIAnimateEffectHitDrum() = default;
@@ -124,21 +143,29 @@ protected:
 
 
 
-// Base particle system class
-class UIAnimateParticle : public UIAnimateHelp {
+// Base particle system class  
+class UIAnimateParticle : public UIAnimateSecondHelp {
 public:
-	UIAnimateParticle();
+	UIAnimateParticle() = default;
 	virtual ~UIAnimateParticle() = default;
 	
-	// Public setters for common properties
-	void SetEmissionRate(float rate) { _emissionRate = rate; }
-	void SetParticleScale(float scale) { _particleScale = scale; }
-	void SetMaxParticles(int maxCount) { _maxParticles = maxCount; }
-	void SetParticleSize(float size) { _particleSize = size; }
-	void SetTurbulence(float turbulence) { _turbulence = turbulence; }
-	void SetEmissionAngle(float angle) { _emissionAngle = angle; }
+	// Emitter shape and position controls
+	void SetEmitterPosition(const UIPointFloat3& position) { _emitterPosition = position; }
+	void SetEmitterDirection(const UIPointFloat3& direction);
+	void SetEmissionRadius(float radius) { _emissionRadius = radius; }
+	void SetConeAngle(float angleDegrees) { _coneAngle = angleDegrees; }
+	void SetConeHeight(float height) { _coneHeight = height; }
+	void SetSurfaceEmissionOnly(bool surfaceOnly) { _surfaceEmissionOnly = surfaceOnly; }
 	
-	// Advanced particle controls
+	// Emission and particle controls
+	void SetEmissionRate(float rate) { _emissionRate = rate; }
+	void SetMaxParticles(int maxCount) { _maxParticles = maxCount; }
+	void SetSpeedRange(float minSpeed, float maxSpeed) { _speedMin = minSpeed; _speedMax = maxSpeed; }
+	void SetParticleSize(float size) { _particleSize = size; }
+	void SetParticleScale(float scale) { _particleScale = scale; }
+	
+	// Physics controls
+	void SetTurbulence(float turbulence) { _turbulence = turbulence; }
 	void SetWindForce(const UIPointFloat3& wind) { _windForce = wind; }
 	void SetGravity(float gravity) { _gravity = gravity; }
 	void SetAirResistance(float resistance) { _airResistance = resistance; }
@@ -146,14 +173,14 @@ public:
 protected:
 	// Common particle structure
 	struct BaseParticle {
-		UIPointFloat3 _position;
-		UIPointFloat3 _velocity;
-		UIPointFloat3 _acceleration;
+		UIPointFloat3 _position;		// world space position
+		UIPointFloat3 _velocity;		// world space velocity
+		UIPointFloat3 _acceleration;	// world space acceleration
 		UIColor _color;
-		float _life;            // Life remaining [0, 1]
-		float _maxLife;         // Maximum life time
-		float _initialSize;     // Initial size for proper scaling
-		float _currentSize;     // Current size
+		float _life;            		// Life remaining [0, 1]
+		float _maxLife;         		// Maximum life time
+		float _initialSize;     		// Initial size for proper scaling
+		float _currentSize;     		// Current size
 		UCHAR _alpha;
 	};
 
@@ -165,22 +192,40 @@ protected:
 	// Utility functions
 	float RandomFloat(float min, float max);
 	float Lerp(float a, float b, float t);
-
-	// Common properties
-	UIPointFloat3 _emitterPosition;
-	UICameraBase* _pCamera;
-	float _emissionRate;
-	float _deltaTime;
-	float _particleScale;     // 粒子大小倍数
-	int _maxParticles;        // 最大粒子数量
-	float _particleSize;      // 粒子基础大小
-	float _turbulence;        // 湍流强度
-	float _emissionAngle;     // 发射角度范围
+	void NormalizeVector(UIPointFloat3& vector);
+	float DotProduct(const UIPointFloat3& a, const UIPointFloat3& b);
+	UIPointFloat3 CrossProduct(const UIPointFloat3& a, const UIPointFloat3& b);
 	
-	// Advanced physics properties
-	UIPointFloat3 _windForce; // 风力向量
-	float _gravity;           // 重力强度
-	float _airResistance;     // 空气阻力
+	// Core emission algorithm - generates position, direction and speed in world space
+	void GenerateEmissionPoint(UIPointFloat3& outPosition, UIPointFloat3& outVelocity);
+
+	// Emitter shape properties (all in world space)
+	UIPointFloat3 _emitterPosition = { 0.0f, 0.0f, 0.0f };		// Emitter center position in world space
+	UIPointFloat3 _emitterDirection = { 1.0f, 0.0f, 0.0f };		// Cone axis direction (normalized)
+	float _emissionRadius = 0.1f;								// Base emission radius
+	float _coneAngle = 30.0f;									// Cone angle in degrees
+	float _coneHeight = 2.0f;									// Cone height
+	bool _surfaceEmissionOnly = false;							// Emit only from cone surface
+
+	// Emission properties
+	float _emissionRate = 100.0f;								// Particles emitted per second
+	int _maxParticles = 1000;									// Maximum particle count
+	float _emissionAccumulator = 0.0f;							// Fractional particle accumulator
+
+	// Particle properties
+	float _speedMin = 1.0f;										// Minimum emission speed
+	float _speedMax = 3.0f;										// Maximum emission speed
+	float _particleSize = 1.0f;									// Base particle size
+	float _particleScale = 1.0f;								// Particle size multiplier
+
+	// Physics properties
+	float _turbulence = 0.5f;									// Turbulence strength
+	UIPointFloat3 _windForce = { 0.0f, 0.0f, 0.0f };			// Wind force vector
+	float _gravity = 0.0f;										// Gravity strength
+	float _airResistance = 0.02f;								// Air resistance coefficient
+
+	// Rendering
+	UICameraBase* _pCamera = nullptr;							// Camera reference for rendering
 
 	void DrawAnimation() override;
 };

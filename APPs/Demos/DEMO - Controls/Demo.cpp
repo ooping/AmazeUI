@@ -60,8 +60,6 @@ void UIWinTop::OnCreate()
 	auto* pCanvas200 = new UICanvas();
 	pCanvas100->CreateWindowBaseOnHeap(pTab1);
 	pCanvas200->CreateWindowBaseOnHeap(pTab1);
-	pCanvas100->CreateWindowBaseOnHeap(pTab1);
-	pCanvas200->CreateWindowBaseOnHeap(pTab1);
 	//
 	pTab1->SetCellNum(2);
 	pTab1->SetCell(0, "tab1", pCanvas100);
@@ -92,32 +90,13 @@ void UIWinTop::OnCreate()
 			_flame1.SetEmissionRate(5.0f);        // 更高发射率
 			_flame1.SetFlameIntensity(2.0f);      // 更强火焰强度
 			_flame1.SetFlameHeight(1.5f);         // 更高火焰
-			_flame1.SetParticleSize(1.5f);        // 更大粒子
+			_flame1.SetParticleSize(10.0f);        // 更大粒子
 			_flame1.SetTurbulence(0.8f);          // 更强湍流
-			_flame1.SetEmissionAngle(60.0f);      // 更大发射角度
-			_flame1.SetMaxParticles(200);         // 更多粒子
+			_flame1.SetConeAngle(60.0f);          // 更大发射角度
+			_flame1.SetMaxParticles(1000);         // 更多粒子
 			_flame1.SetWindForce({0.2f, 0.0f, 0.0f}); // 添加风力效果
 			_flame1.PlayFlameAnimate({0.0f, 0.0f, 0.0f}, UICameraGame::GetSingletonInstance(), 300);
 		});
-
-		auto* pBut3 = new UIButton();
-		pBut3->CreateControlOnHeap(0, pCanvas100);
-		pBut3->SetText("Torch Flame");
-		pBut3->SetClickEvent([this]() {
-			ShowMsg("Torch Flame Effect");
-			
-			// Torch-like flame effect - narrow and tall
-			_flame1.SetEmissionRate(4.0f);
-			_flame1.SetFlameIntensity(1.8f);
-			_flame1.SetFlameHeight(4.0f);         // 很高的火焰
-			_flame1.SetParticleSize(1.2f);
-			_flame1.SetTurbulence(0.3f);          // 较低湍流，更稳定
-			_flame1.SetEmissionAngle(25.0f);      // 较窄的发射角度
-			_flame1.SetMaxParticles(120);
-			_flame1.SetWindForce({0.0f, 0.1f, 0.0f}); // 轻微向上的风力
-			_flame1.PlayFlameAnimate({0.0f, 0.0f, 0.0f}, UICameraGame::GetSingletonInstance(), 300);
-		});
-
 
 		_checkbut101.CreateControl(199, pCanvas100);
 		_checkbut101.SetText("CheckButton 1");

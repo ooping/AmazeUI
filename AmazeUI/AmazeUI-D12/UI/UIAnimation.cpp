@@ -144,30 +144,23 @@ void UISetCaretPos(ULONG x, ULONG y, bool IsShowImmd, const DirectX::XMMATRIX& t
 
 
 
-UIAnimateHelp::UIAnimateHelp() {
-	_frameIndex = 1;
-	_maxFrame = 0;
-	_1stFrame = false;
-}
-
-bool UIAnimateHelp::IsAnimationRun() {
-	return _frameIndex <= _maxFrame;
-}
-
-bool UIAnimateHelp::UpdateAnimation() {
-	if (_1stFrame) {
-		_1stFrame = false;
-		return true;
+bool UIAnimateFrameHelp::IsAnimationRun() {
+	if (!_isAnimationStarted) {
+		return false;
 	}
 
-	++_frameIndex;
-	return true;
+	_isAnimationStarted = _frameIndex <= _maxFrame;
+	return _isAnimationStarted;
 }
 
-void UIAnimateHelp::PlayAnimate(int maxFrame) {
-	_frameIndex = 1;
+bool UIAnimateFrameHelp::UpdateAnimation() {
+	return (++_frameIndex) <= _maxFrame;
+}
+
+void UIAnimateFrameHelp::PlayAnimate(int maxFrame) {
+	_frameIndex = 0;
 	_maxFrame = maxFrame;
-	_1stFrame = true;
+	_isAnimationStarted = true;
 
 	UIRegisterAnimate(this);
 }
@@ -199,21 +192,34 @@ void UIAnimateEffectHitDrum::DrawSlicedHitDrumAnimate(UISlicedImage& slicedImage
 	slicedImage.operator()(ScaleRect()(rc, 1.0f + (_hitPower * _frameIndex / _maxFrame)), static_cast<UCHAR>(255 - (250 * _frameIndex / _maxFrame)), transformMatrix);
 }
 
-UIAnimateParticle::UIAnimateParticle() {
-	_emitterPosition = UIPointFloat3(0.0f, 0.0f, 0.0f);
-	_pCamera = nullptr;
-	_emissionRate = 2.0f;
-	_deltaTime = 1.0f / 60.0f; // Assume 60fps
-	_particleScale = 1.0f;
-	_maxParticles = 150; // 增加到150个粒子
-	_particleSize = 1.0f;
-	_turbulence = 0.5f;
-	_emissionAngle = 45.0f; // degrees
-	_windForce = UIPointFloat3(0.0f, 0.0f, 0.0f);
-	_gravity = -0.8f;
-	_airResistance = 0.02f;
+/*--------------------------------- UIAnimateSecondHelp ---------------------------------*/
+void UIAnimateSecondHelp::PlayAnimate(float duration) {
+	_duration = duration;
+	_elapsedTime = 0.0f;
+	_deltaTime = 0.0f;
+	_lastTickTime = GetTickCount();
+	_isAnimationStarted = true;
+	UIRegisterAnimate(this);
 }
 
+bool UIAnimateSecondHelp::IsAnimationRun() {
+	return _isAnimationStarted && (_elapsedTime < _duration);
+}
+
+bool UIAnimateSecondHelp::UpdateAnimation() {
+	if (!_isAnimationStarted) {
+		return false;
+	}
+
+	DWORD currentTime = GetTickCount();
+	_deltaTime = (currentTime - _lastTickTime) / 1000.0f; // Convert to seconds
+	_lastTickTime = currentTime;
+	_elapsedTime += _deltaTime;
+
+	return IsAnimationRun();
+}
+
+/*--------------------------------- UIAnimateParticle ---------------------------------*/
 void UIAnimateParticle::DrawAnimation() {
 	if (_pCamera == nullptr) {
 		return;
@@ -237,16 +243,153 @@ float UIAnimateParticle::Lerp(float a, float b, float t) {
 	return a + t * (b - a);
 }
 
+void UIAnimateParticle::SetEmitterDirection(const UIPointFloat3& direction) {
+	_emitterDirection = direction;
+	NormalizeVector(_emitterDirection);
+}
+
+void UIAnimateParticle::NormalizeVector(UIPointFloat3& vector) {
+	float length = sqrt(vector._x * vector._x + vector._y * vector._y + vector._z * vector._z);
+	if (length > 0.0f) {
+		vector._x /= length;
+		vector._y /= length;
+		vector._z /= length;
+	}
+}
+
+float UIAnimateParticle::DotProduct(const UIPointFloat3& a, const UIPointFloat3& b) {
+	return a._x * b._x + a._y * b._y + a._z * b._z;
+}
+
+UIPointFloat3 UIAnimateParticle::CrossProduct(const UIPointFloat3& a, const UIPointFloat3& b) {
+	return UIPointFloat3(
+		a._y * b._z - a._z * b._y,
+		a._z * b._x - a._x * b._z,
+		a._x * b._y - a._y * b._x
+	);
+}
+
+// 核心发射算法 - 直接在世界空间中计算锥形发射
+void UIAnimateParticle::GenerateEmissionPoint(UIPointFloat3& outPosition, UIPointFloat3& outVelocity) {
+	// 1. 在圆形发射区域内随机选择位置
+	float theta = RandomFloat(0, 2 * 3.14159265f);
+	float radiusRatio = sqrt(RandomFloat(0, 1.0f)); // 平方根分布保证均匀
+	float radius = _emissionRadius * radiusRatio;
+	
+	// 2. 计算发射高度
+	float height;
+	if (_surfaceEmissionOnly) {
+		height = _coneHeight; // 仅从锥顶发射
+	} else {
+		height = RandomFloat(0, _coneHeight);
+	}
+	
+	// 3. 计算锥形收缩后的实际半径
+	float heightRatio = height / _coneHeight;
+	float coneRadiusAtHeight = radius * (1.0f - heightRatio * tan(_coneAngle * 3.14159265f / 360.0f));
+	
+	// 4. 计算基础坐标系下的位置 (以Y轴为锥轴)
+	UIPointFloat3 basePos(
+		coneRadiusAtHeight * cos(theta),
+		height,
+		coneRadiusAtHeight * sin(theta)
+	);
+	
+	// 5. 如果发射方向不是默认的(0,1,0)，需要旋转到正确方向
+	UIPointFloat3 defaultUp(0.0f, 1.0f, 0.0f);
+	if (abs(DotProduct(_emitterDirection, defaultUp) - 1.0f) > 0.001f) {
+		// 计算旋转轴和角度
+		UIPointFloat3 rotAxis = CrossProduct(defaultUp, _emitterDirection);
+		float rotAngle = acos(DotProduct(defaultUp, _emitterDirection));
+		
+		// 简化的旋转实现 (仅适用于常见情况)
+		if (abs(rotAngle) > 0.001f) {
+			// 使用Rodriguez旋转公式的简化版本
+			NormalizeVector(rotAxis);
+			float cosA = cos(rotAngle);
+			float sinA = sin(rotAngle);
+			
+			// Rodriguez rotation formula: v' = v*cos(θ) + (k×v)*sin(θ) + k*(k·v)*(1-cos(θ))
+			UIPointFloat3 kCrossV = CrossProduct(rotAxis, basePos);
+			float kDotV = DotProduct(rotAxis, basePos);
+			
+			basePos._x = basePos._x * cosA + kCrossV._x * sinA + rotAxis._x * kDotV * (1 - cosA);
+			basePos._y = basePos._y * cosA + kCrossV._y * sinA + rotAxis._y * kDotV * (1 - cosA);
+			basePos._z = basePos._z * cosA + kCrossV._z * sinA + rotAxis._z * kDotV * (1 - cosA);
+		}
+	}
+	
+	// 6. 计算最终世界位置
+	outPosition = UIPointFloat3(
+		_emitterPosition._x + basePos._x,
+		_emitterPosition._y + basePos._y,
+		_emitterPosition._z + basePos._z
+	);
+	
+	// 7. 生成发射速度方向 (锥形分布)
+	float coneAngleRad = _coneAngle * 3.14159265f / 180.0f;
+	float phi = RandomFloat(0, 2 * 3.14159265f);
+	float cosTheta = RandomFloat(cos(coneAngleRad), 1.0f);
+	float sinTheta = sqrt(1 - cosTheta * cosTheta);
+	
+	// 基础方向 (向上)
+	UIPointFloat3 baseDir(
+		sinTheta * cos(phi),
+		cosTheta,
+		sinTheta * sin(phi)
+	);
+	
+	// 旋转到发射器方向
+	if (abs(DotProduct(_emitterDirection, defaultUp) - 1.0f) > 0.001f) {
+		UIPointFloat3 rotAxis = CrossProduct(defaultUp, _emitterDirection);
+		float rotAngle = acos(DotProduct(defaultUp, _emitterDirection));
+		
+		if (abs(rotAngle) > 0.001f) {
+			NormalizeVector(rotAxis);
+			float cosA = cos(rotAngle);
+			float sinA = sin(rotAngle);
+			
+			UIPointFloat3 kCrossV = CrossProduct(rotAxis, baseDir);
+			float kDotV = DotProduct(rotAxis, baseDir);
+			
+			baseDir._x = baseDir._x * cosA + kCrossV._x * sinA + rotAxis._x * kDotV * (1 - cosA);
+			baseDir._y = baseDir._y * cosA + kCrossV._y * sinA + rotAxis._y * kDotV * (1 - cosA);
+			baseDir._z = baseDir._z * cosA + kCrossV._z * sinA + rotAxis._z * kDotV * (1 - cosA);
+		}
+	}
+	
+	// 8. 计算最终速度
+	float speed = RandomFloat(_speedMin, _speedMax);
+	outVelocity = UIPointFloat3(
+		baseDir._x * speed,
+		baseDir._y * speed,
+		baseDir._z * speed
+	);
+}
+
+/*--------------------------------- UIAnimateParticleFlame ---------------------------------*/
 UIAnimateParticleFlame::UIAnimateParticleFlame() {
 	_flameIntensity = 1.0f;
 	_flameHeight = 2.0f;
+	_flameSpreadAngle = 30.0f;
+	_flameNarrowness = 1.0f;
+	_windDirection = UIPointFloat3(0.0f, 0.0f, 0.0f);
 }
 
 void UIAnimateParticleFlame::PlayFlameAnimate(const UIPointFloat3& position, UICameraBase* pCamera, int maxFrame) {
 	_emitterPosition = position;
 	_pCamera = pCamera;
 	_particles.clear();
-	PlayAnimate(maxFrame);
+	
+	// 设置火焰特有的发射器参数
+	_coneAngle = _flameSpreadAngle;
+	_coneHeight = _flameHeight;
+	_speedMin = 1.0f * _flameHeight;
+	_speedMax = 2.5f * _flameHeight;
+	
+	// 转换为时间基础的动画 (假设60fps)
+	float duration = maxFrame / 60.0f;
+	PlayAnimate(duration);
 }
 
 void UIAnimateParticleFlame::SetFlameIntensity(float intensity) {
@@ -267,64 +410,49 @@ void UIAnimateParticleFlame::DrawParticles() {
 }
 
 void UIAnimateParticleFlame::EmitParticles() {
-	// Limit particle count to maxParticles
-	if (_particles.size() >= _maxParticles) {
-		return;
-	}
+	// 基于时间的粒子发射
+	float deltaTime = GetDeltaTime();
+	if (deltaTime <= 0.0f) return;
 	
-	// Enhanced emission rate for more particles - 增加粒子数量
-	int particlesToEmit = static_cast<int>(_emissionRate * _flameIntensity * 2.5f);
-	
-	// Apply emission angle range for flame shape control
-	float angleRadians = _emissionAngle * 3.14159f / 180.0f;
+	// 累积发射器计算
+	_emissionAccumulator += _emissionRate * _flameIntensity * deltaTime;
+	int particlesToEmit = static_cast<int>(_emissionAccumulator);
+	_emissionAccumulator -= particlesToEmit;
 	
 	for (int i = 0; i < particlesToEmit; ++i) {
-		// Respect max particle limit
+		// 检查粒子数量限制
 		if (_particles.size() >= _maxParticles) {
 			break;
 		}
 		
 		FlameParticle particle;
 		
-		// Enhanced emission area for wider flame base - 增大发射区域
-		float baseRadius = 0.15f * _particleScale;
-		float offsetX = RandomFloat(-baseRadius, baseRadius);
-		float offsetZ = RandomFloat(-baseRadius, baseRadius);
-		particle._position = UIPointFloat3(
-			_emitterPosition._x + offsetX,
-			_emitterPosition._y,
-			_emitterPosition._z + offsetZ
-		);
+		// 使用新的发射算法生成位置和速度
+		UIPointFloat3 emitPos, emitVel;
+		GenerateEmissionPoint(emitPos, emitVel);
 		
-		// Enhanced velocity with emission angle control
-		particle._initialSpeed = RandomFloat(1.5f, 3.0f) * _flameHeight;
+		particle._position = emitPos;
+		particle._velocity = emitVel;
+		particle._initialSpeed = sqrt(emitVel._x * emitVel._x + emitVel._y * emitVel._y + emitVel._z * emitVel._z);
 		
-		// Apply emission angle for flame shape - 火焰形状控制
-		float randomAngle = RandomFloat(-angleRadians / 2, angleRadians / 2);
-		float velocityX = sin(randomAngle) * particle._initialSpeed * 0.3f;
-		float velocityZ = cos(randomAngle) * RandomFloat(-0.2f, 0.2f);
+		// 添加火焰特有的扰动
+		particle._velocity._x += RandomFloat(-0.3f, 0.3f) * _turbulence;
+		particle._velocity._z += RandomFloat(-0.3f, 0.3f) * _turbulence;
 		
-		particle._velocity = UIPointFloat3(
-			velocityX + RandomFloat(-0.2f, 0.2f) * _turbulence, // Enhanced turbulence
-			particle._initialSpeed,   // Upward movement
-			velocityZ + RandomFloat(-0.2f, 0.2f) * _turbulence  // Enhanced turbulence
-		);
+		// 物理属性
+		particle._acceleration = UIPointFloat3(_windForce._x, _gravity, _windForce._z);
 		
-		// Gravity and air resistance
-		particle._acceleration = UIPointFloat3(0.0f, -0.8f, 0.0f);
-		
-		// Enhanced lifetime variation
+		// 生命周期
 		particle._life = 1.0f;
-		particle._maxLife = RandomFloat(0.8f, 1.2f);
+		particle._maxLife = RandomFloat(1.5f, 3.0f);
 		
-		// Enhanced particle size - 增大粒子尺寸
-		float baseSizeMultiplier = _particleSize * _particleScale * 2.5f; // 2.5倍基础大小
-		particle._initialSize = RandomFloat(0.08f, 0.20f) * _flameIntensity * baseSizeMultiplier;
+		// 尺寸属性
+		particle._initialSize = RandomFloat(0.05f, 0.15f) * _particleSize * _particleScale * _flameIntensity;
 		particle._currentSize = particle._initialSize;
-		particle._turbulence = RandomFloat(0.5f, 1.5f) * _turbulence;
+		particle._turbulence = RandomFloat(0.3f, 0.8f) * _turbulence;
 		
-		// Initial color and alpha
-		particle._color = GetFlameColor(1.0f);
+		// 外观属性
+		particle._color = GetFlameColor(0.0f); // 初始颜色
 		particle._alpha = 255;
 		
 		_particles.push_back(particle);
