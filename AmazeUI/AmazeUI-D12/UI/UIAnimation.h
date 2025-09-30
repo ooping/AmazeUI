@@ -143,6 +143,7 @@ protected:
 
 
 
+
 // Base particle system class  
 class UIAnimateParticle : public UIAnimateSecondHelp {
 public:
@@ -270,5 +271,3 @@ private:
 	// Helper functions
 	UIColor GetFlameColor(float lifeRatio);
 };
-
-

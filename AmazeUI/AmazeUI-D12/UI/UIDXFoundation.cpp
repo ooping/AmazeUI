@@ -733,11 +733,6 @@ unique_ptr<PrimitiveBatch<VertexPositionColor>>& UIDXFoundation::GetPrimitiveBat
 
 void UIDXFoundation::Render3D() {
     {
-        //Draw procedurally generated dynamic 3D grid
-        const XMVECTORF32 xaxis = { 20.f, 0.f, 0.f };
-        const XMVECTORF32 yaxis = { 0.f, 0.f, 20.f };
-        DrawGrid(xaxis, yaxis, g_XMZero, 20, 20, Colors::Gray);
-
         auto commandList = p_deviceResources->GetCommandList();
 
         static int ii = 0;
@@ -1337,18 +1332,18 @@ void UIDXFoundation::Calculate2DLinePoints(const XMFLOAT2& start, const XMFLOAT2
     // Diagonal line (bottom endpoint): Move 1 pixel down 
     p1 = start;
     p2 = end;
-    if (fabs(p1.x-p2.x)<0.001f) {
+    if (fabs(p1.x - p2.x)<0.001f) {
         p1.x += 1.0f;
         p2.x += 1.0f;
-        p1.y > p2.y ? p1.y+=1.0f : p2.y+=1.0f;
+        p1.y > p2.y ? p1.y += 1.0f : p2.y += 1.0f;
 
-    } else if (fabs(p1.y-p2.y)<0.001f) {
+    } else if (fabs(p1.y - p2.y) < 0.001f) {
         p1.y += 1.0f;
         p2.y += 1.0f;
-        p1.x > p2.x ? p1.x+=1.0f : p2.x+=1.0f;
+        p1.x > p2.x ? p1.x += 1.0f : p2.x += 1.0f;
     } else {
-        p1.x > p2.x ? p1.x+=1.0f : p2.x+=1.0f;
-        p1.y > p2.y ? p1.y+=1.0f : p2.y+=1.0f;
+        p1.x > p2.x ? p1.x += 1.0f : p2.x += 1.0f;
+        p1.y > p2.y ? p1.y += 1.0f : p2.y += 1.0f;
     }
 }
 
@@ -1683,7 +1678,7 @@ void UIDXFoundation::Draw3DPoints(const vector<XMFLOAT2>& points, float z, const
     }
 }
 
-void UIDXFoundation::Draw3DLine(const XMFLOAT2& start, const XMFLOAT2& end, float z, const UIColor& color, float lineWidth, const XMMATRIX& transformMatrix) {
+void UIDXFoundation::Draw3DLine(const XMFLOAT2& start, const XMFLOAT2& end, float z, const UIColor& color, float lineWidth, const XMMATRIX& transformMatrix) { 
     XMVECTORF32 finalColor = color.ToXMVECTORF32();
 
     XMFLOAT2 p1, p2;
@@ -1711,11 +1706,11 @@ void UIDXFoundation::Draw3DLine(const XMFLOAT2& start, const XMFLOAT2& end, floa
     vector<XMFLOAT3> wps;
     UIZPlaneTransform::TransformPoints(transformMatrix, points, z, wps);
 
-     // create rectangle vertices
+    // create rectangle vertices
     vector<VertexPositionColor> vertices = {
         { { wps[0].x, wps[0].y, wps[0].z }, finalColor },  // left top
-        { { wps[1].x, wps[1].y, wps[1].z }, finalColor },  // right top
-        { { wps[2].x, wps[2].y, wps[2].z }, finalColor },  // left bottom
+        { { wps[1].x, wps[1].y, wps[1].z }, finalColor },  // left bottom
+        { { wps[2].x, wps[2].y, wps[2].z }, finalColor },  // right top
         { { wps[3].x, wps[3].y, wps[3].z }, finalColor }   // right bottom
     };
     // Define indices for two triangles
@@ -2152,44 +2147,6 @@ void UIDXFoundation::Clear() {
     // Set the scissor rect.
     ResetClipRect();
 
-    PIXEndEvent(commandList);
-}
-
-void XM_CALLCONV UIDXFoundation::DrawGrid(FXMVECTOR xAxis, FXMVECTOR yAxis, FXMVECTOR origin, size_t xdivs, size_t ydivs, GXMVECTOR color) {
-    auto commandList = p_deviceResources->GetCommandList();
-    PIXBeginEvent(commandList, PIX_COLOR_DEFAULT, L"Draw grid");
-
-    p_lineEffect3D->Apply(commandList);
-
-    p_batch->Begin(commandList);
-
-    xdivs = max<size_t>(1, xdivs);
-    ydivs = max<size_t>(1, ydivs);
-
-    for (size_t i = 0; i <= xdivs; ++i) {
-        float fPercent = float(i) / float(xdivs);
-        fPercent = (fPercent * 2.0f) - 1.0f;
-        XMVECTOR vScale = XMVectorScale(xAxis, fPercent);
-        vScale = XMVectorAdd(vScale, origin);
-
-        VertexPositionColor v1(XMVectorSubtract(vScale, yAxis), color);
-        VertexPositionColor v2(XMVectorAdd(vScale, yAxis), color);
-        p_batch->DrawLine(v1, v2);
-    }
-
-    for (size_t i = 0; i <= ydivs; i++) {
-        float fPercent = float(i) / float(ydivs);
-        fPercent = (fPercent * 2.0f) - 1.0f;
-        XMVECTOR vScale = XMVectorScale(yAxis, fPercent);
-        vScale = XMVectorAdd(vScale, origin);
-
-        VertexPositionColor v1(XMVectorSubtract(vScale, xAxis), color);
-        VertexPositionColor v2(XMVectorAdd(vScale, xAxis), color);
-        p_batch->DrawLine(v1, v2);
-     }
-
-    p_batch->End();
-    
     PIXEndEvent(commandList);
 }
 

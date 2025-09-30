@@ -151,8 +151,6 @@ private:
     void CreateDeviceDependentResourcesXTK();
     void CreateWindowSizeDependentResourcesXTK();
 
-    void XM_CALLCONV DrawGrid(DirectX::FXMVECTOR xAxis, DirectX::FXMVECTOR yAxis, DirectX::FXMVECTOR origin, size_t xdivs, size_t ydivs, DirectX::GXMVECTOR color);
-
     // Device resources.
     std::unique_ptr<UIDeviceResources>        								p_deviceResources;
 

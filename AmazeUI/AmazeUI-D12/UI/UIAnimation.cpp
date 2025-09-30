@@ -219,6 +219,10 @@ bool UIAnimateSecondHelp::UpdateAnimation() {
 	return IsAnimationRun();
 }
 
+
+
+
+
 /*--------------------------------- UIAnimateParticle ---------------------------------*/
 void UIAnimateParticle::DrawAnimation() {
 	if (_pCamera == nullptr) {
@@ -510,4 +514,3 @@ UIColor UIAnimateParticleFlame::GetFlameColor(float lifeRatio) {
 		return UIColor(255, 50, 0);
 	}
 }
-
