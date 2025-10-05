@@ -222,11 +222,11 @@ protected:
 	// Physics properties
 	float _turbulence = 0.5f;									// Turbulence strength
 	UIPointFloat3 _windForce = { 0.0f, 0.0f, 0.0f };			// Wind force vector
-	float _gravity = 0.0f;										// Gravity strength
+	float _gravity = 0.0f;										// Gravity strength -9.8f
 	float _airResistance = 0.02f;								// Air resistance coefficient
 
 	// Rendering
-	UICameraBase* _pCamera = nullptr;							// Camera reference for rendering
+	UICameraBase3D* _pCamera = nullptr;							// Camera reference for rendering
 
 	void DrawAnimation() override;
 };
@@ -237,7 +237,7 @@ public:
 	UIAnimateParticleFlame();
 	~UIAnimateParticleFlame() = default;
 
-	void PlayFlameAnimate(const UIPointFloat3& position, UICameraBase* pCamera, int maxFrame = 60);
+	void PlayFlameAnimate(const UIPointFloat3& position, UICameraBase3D* pCamera, int maxFrame = 60);
 
 	/*--------------------------------- Flame particle effect ---------------------------------*/
 public:

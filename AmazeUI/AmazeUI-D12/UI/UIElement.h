@@ -1,6 +1,7 @@
 #pragma once
 
 #include "UIUtility.h"
+#include "UICamera.h"
 
 // clipping region RAII handler
 struct UIScreenClipRectGuard {
@@ -164,12 +165,12 @@ struct UIFont {
 
 
 // point
-class UICameraBase;
+class UICameraBase3D;
 struct UIPoint3D {
 	UIPoint3D(float x, float y, float z);
 	~UIPoint3D() = default;
 
-	void operator()(const UIColor& color, UICameraBase* pCamera);
+	void operator()(const UIColor& color, UICameraBase3D* pCamera);
 
 	DirectX::XMFLOAT3 _point;
 };
@@ -179,7 +180,7 @@ struct UIPoints3D {
 	UIPoints3D(const std::vector<UIPointFloat3>& points);
 	~UIPoints3D() = default;
 
-	void operator()(const UIColor& color, UICameraBase* pCamera);
+	void operator()(const UIColor& color, UICameraBase3D* pCamera);
 
 	std::vector<DirectX::XMFLOAT3> _points;
 };
@@ -188,8 +189,8 @@ struct UILine3D {
 	UILine3D(UIPointFloat3 start, UIPointFloat3 end, float width = 1.0f);
 	~UILine3D() = default;
 
-	void operator()(const UIColor& colorS, const UIColor& colorE, UICameraBase* pCamera);
-	void operator()(const UIColor& color, UICameraBase* pCamera);
+	void operator()(const UIColor& colorS, const UIColor& colorE, UICameraBase3D* pCamera);
+	void operator()(const UIColor& color, UICameraBase3D* pCamera);
 
 	DirectX::XMFLOAT3 _start, _end;
 	float _width;
@@ -199,7 +200,7 @@ struct UICircle3D {
 	UICircle3D(UIPointFloat3 center, float radius);
 	~UICircle3D() = default;
 
-	void operator()(const UIColor& color, UICameraBase* pCamera);
+	void operator()(const UIColor& color, UICameraBase3D* pCamera);
 
 	DirectX::XMFLOAT3 _center;
 	float _radius;
@@ -209,8 +210,8 @@ struct UITriangle3D {
 	UITriangle3D(UIPointFloat3 p1, UIPointFloat3 p2, UIPointFloat3 p3);
 	~UITriangle3D() = default;
 
-	void operator()(const UIColor& color1, const UIColor& color2, const UIColor& color3, UCHAR alpha, UICameraBase* pCamera);
-	void operator()(const UIColor& color, UCHAR alpha, UICameraBase* pCamera);
+	void operator()(const UIColor& color1, const UIColor& color2, const UIColor& color3, UCHAR alpha, UICameraBase3D* pCamera);
+	void operator()(const UIColor& color, UCHAR alpha, UICameraBase3D* pCamera);
 
 	DirectX::XMFLOAT3 _p1, _p2, _p3;
 };
@@ -219,91 +220,14 @@ struct UIFont3D {
 	UIFont3D(float fontSize);
 	~UIFont3D() = default;
 
-	void operator()(std::wstring text, const UIPointFloat3& position, const UIColor& color, UICameraBase* pCamera);
+	void operator()(std::wstring text, const UIPointFloat3& position, const UIColor& color, UICameraBase3D* pCamera);
 
 	float _fontSize;
 };
 
 
-class UICameraBase {
-public:
-	// Camera vectors
-	DirectX::XMFLOAT3 _position = {0.0f, 0.0f, -5.0f};
-	DirectX::XMFLOAT3 _target = {0.0f, 0.0f, 0.0f};
-	DirectX::XMFLOAT3 _up = {0.0f, 1.0f, 0.0f};
-	DirectX::XMFLOAT3 _right = {1.0f, 0.0f, 0.0f};
-	DirectX::XMFLOAT3 _forward = {0.0f, 0.0f, 1.0f};
-
-	// Camera properties
-	float _fov = DirectX::XM_PIDIV2;
-	float _aspectRatio = 1.0f;	// should be set according to view width/height
-	float _nearPlane = 0.01f;
-	float _farPlane = 10000.0f;
-
-	// World space dimensions (calculated from frustum)
-	float _worldWidth = 0.0f;
-	float _worldHeight = 0.0f;
-
-	// Setup methods
-	virtual bool SetUpCamera(const RECT& viewRC);
-
-	// Update camera matrices
-	void SetViewMatrix();
-	void SetProjectionMatrix();
-	
-	// Matrix access
-	const DirectX::SimpleMath::Matrix& GetViewMatrix() const { return _view; }
-	const DirectX::SimpleMath::Matrix& GetProjectionMatrix() const { return _projection3D; }
-
-	const D3D12_VIEWPORT& GetViewport() const { return _viewport; }
-
-	// World space access
-	float GetWorldWidth() const { return _worldWidth; }
-	float GetWorldHeight() const { return _worldHeight; }
-	float GetViewDistance() const { return UIPointFloat::Distance3D(_position, _target); }
-
-	// Convert screen 2D to 3D
-	DirectX::XMFLOAT3 ConvertScreen2DTo3D(const DirectX::XMFLOAT3& screenPos);
-	DirectX::XMFLOAT3 Convert3DToScreen2D(const DirectX::XMFLOAT3& viewPos);
-
-	// World space calculation
-	void CalculateWorldDimensions();
-
-protected:
-	DirectX::SimpleMath::Matrix _view;
-    DirectX::SimpleMath::Matrix _projection3D;
-
-	D3D12_VIEWPORT _viewport = {};
-};
-
-class UICameraUI : public UICameraBase, public SingletonPattern<UICameraUI> {
-	friend class SingletonPattern<UICameraUI>;
-
-private:
-	UICameraUI() = default;
-	~UICameraUI() = default;
-};
-
-class UICameraGame : public UICameraBase, public SingletonPattern<UICameraGame> {
-	friend class SingletonPattern<UICameraGame>;
-
-	UICameraGame() = default;
-	~UICameraGame() = default;
-};
-
-// Independent 3D camera system for Chart3D control, similar to Unity3D Scene View axes
-class UICameraCtrl : public UICameraBase {
-	// Mouse rotation support
-	float _yaw = 0.0f;    // Left-right rotation angle
-	float _pitch = 0.0f;  // Up-down rotation angle
-
-public:
-	UICameraCtrl() = default;
-	~UICameraCtrl() = default;
-
-	// Mouse rotation
-	void RotateCamera(float deltaYaw, float deltaPitch);
-};
+// Note: Camera classes (UICameraBase3D, UICameraUI2D, UICameraUI3D, UICameraGame, UICameraCtrl) 
+// are now defined in UICamera.h
 
 
 

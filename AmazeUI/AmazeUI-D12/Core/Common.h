@@ -85,9 +85,9 @@ struct StringHelper {
         }
 
     #ifdef _WIN32
-        int size = MultiByteToWideChar(CP_ACP, 0, str.c_str(), static_cast<int>(str.length()), nullptr, 0);
+        int size = MultiByteToWideChar(CP_UTF8, 0, str.c_str(), static_cast<int>(str.length()), nullptr, 0);
         std::wstring result(size, 0);
-        MultiByteToWideChar(CP_ACP, 0, str.c_str(), static_cast<int>(str.length()), &result[0], size);
+        MultiByteToWideChar(CP_UTF8, 0, str.c_str(), static_cast<int>(str.length()), &result[0], size);
         return result;
     #endif
     }
@@ -98,9 +98,9 @@ struct StringHelper {
         }
  
     #ifdef _WIN32
-        int size = WideCharToMultiByte(CP_ACP, 0, wstr.c_str(), static_cast<int>(wstr.length()), nullptr, 0, nullptr, nullptr);
+        int size = WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), static_cast<int>(wstr.length()), nullptr, 0, nullptr, nullptr);
         std::string result(size, 0);
-        WideCharToMultiByte(CP_ACP, 0, wstr.c_str(), static_cast<int>(wstr.length()), &result[0], size, nullptr, nullptr);
+        WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), static_cast<int>(wstr.length()), &result[0], size, nullptr, nullptr);
         return result;
     #endif
     }
@@ -673,7 +673,6 @@ struct CSGuard {
     }
 };
 
-
 inline bool GetPCComList(std::vector<std::string>& comList) {
 	HKEY hKey;
 	wchar_t portName[256], comW[256];
@@ -700,4 +699,14 @@ inline bool GetPCComList(std::vector<std::string>& comList) {
 
 	return true;
 }
+
+struct IsKeyDown {
+	bool operator()(int key) {
+        return GetKeyState(key)&0x80 ? true:false;
+    }
+};
+
+
+
+
 #endif

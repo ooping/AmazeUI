@@ -182,9 +182,6 @@ private:
 
     Microsoft::WRL::ComPtr<ID3D12Resource>                                  _texture1;
 
-	DirectX::SimpleMath::Matrix 											_orthoMatrix2D;
-	DirectX::SimpleMath::Matrix 											_world;
-
     // Descriptors
     enum Descriptors {
         WindowsLogo,
@@ -253,7 +250,7 @@ public:
 					  		   const DirectX::XMMATRIX& transformMatrix = DirectX::XMMatrixIdentity());
 
 	void Draw3DWorldTextFT(const std::wstring& text, const DirectX::XMFLOAT3& worldPosition, 
-						   const UIColor& color, float fontSize, UICameraBase* pCamera);
+						   const UIColor& color, float fontSize, UICameraBase3D* pCamera);
 
 private:
 	void CreateResourcesFT();
@@ -264,7 +261,7 @@ private:
 	void Draw2DCharTextureFT(size_t textureIndex, DirectX::XMFLOAT2 position, float z, float scale, UCHAR alpha);
 	void Draw3DCharTextureFT(size_t textureIndex, DirectX::XMFLOAT2 position, float z, float scale, UCHAR alpha, const DirectX::XMMATRIX& transformMatrix);
 
-	void Draw3DWorldCharTextureFT(size_t textureIndex, DirectX::XMFLOAT3 worldPosition, float scale, UCHAR alpha, UICameraBase* pCamera);
+	void Draw3DWorldCharTextureFT(size_t textureIndex, DirectX::XMFLOAT3 worldPosition, float scale, UCHAR alpha, UICameraBase3D* pCamera);
 
 	struct FTSizeFont;
 	bool GetFTSizeFont(float fontSize, FTSizeFont& ftSizeFont);
@@ -318,9 +315,6 @@ private:
 					 RECT srcRect, DirectX::XMFLOAT2 dstStart, DirectX::XMFLOAT2 dstEnd, 
 					 float z, UCHAR alpha);
 
-	float CalculateNdcZByOrtho(float z_view);
-	float CalculateViewZByOrtho(float z_ndc);
-
 	void Calculate2DPoint(const DirectX::XMFLOAT2& point, DirectX::XMFLOAT2& p);
 	void Calculate2DLinePoints(const DirectX::XMFLOAT2& start, const DirectX::XMFLOAT2& end, DirectX::XMFLOAT2& p1, DirectX::XMFLOAT2& p2);
 	void Calculate2DRectPoints(const DirectX::XMFLOAT2& start, const DirectX::XMFLOAT2& end, DirectX::XMFLOAT2& ps, DirectX::XMFLOAT2& pe);
@@ -362,17 +356,32 @@ private:
 /*************************************************** 3D World APIs ***************************************************/
 // Use UICameraBase (UICameraGame, UICameraCtrl, etc.) to render 3D world objects in 3D world space
 public:
-	void Draw3DWorldPoint(const DirectX::XMFLOAT3& point, const UIColor& color, UICameraBase* pCamera);
-	void Draw3DWorldLine(const DirectX::XMFLOAT3& start, const DirectX::XMFLOAT3& end, const UIColor& colorS, const UIColor& colorE, UICameraBase* pCamera);
-	void Draw3DWorldLine(const DirectX::XMFLOAT3& start, const DirectX::XMFLOAT3& end, const UIColor& color, UICameraBase* pCamera);
-	void Draw3DWorldThickLine(const DirectX::XMFLOAT3& start, const DirectX::XMFLOAT3& end, float lineWidth, const UIColor& color, UICameraBase* pCamera);
-	void Draw3DWorldCircle(const DirectX::XMFLOAT3& center, float pixelRadius, const UIColor& color, UCHAR alpha, UICameraBase* pCamera);
-	void Draw3DWorldTriangle(const DirectX::XMFLOAT3& p1, const DirectX::XMFLOAT3& p2, const DirectX::XMFLOAT3& p3, const UIColor& color, UCHAR alpha, UICameraBase* pCamera);
+	void Draw3DWorldPoint(const DirectX::XMFLOAT3& point, const UIColor& color, UICameraBase3D* pCamera);
+	void Draw3DWorldLine(const DirectX::XMFLOAT3& start, const DirectX::XMFLOAT3& end, const UIColor& colorS, const UIColor& colorE, float lineWidth, UICameraBase3D* pCamera);
+	void Draw3DWorldLine(const DirectX::XMFLOAT3& start, const DirectX::XMFLOAT3& end, const UIColor& color, float lineWidth, UICameraBase3D* pCamera);
+	void Draw3DWorldCircle(const DirectX::XMFLOAT3& center, float pixelRadius, const UIColor& color, UCHAR alpha, UICameraBase3D* pCamera);
+	void Draw3DWorldTriangle(const DirectX::XMFLOAT3& p1, const DirectX::XMFLOAT3& p2, const DirectX::XMFLOAT3& p3, const UIColor& color, UCHAR alpha, UICameraBase3D* pCamera);
 	void Draw3DWorldTriangle(const DirectX::XMFLOAT3& p1, const DirectX::XMFLOAT3& p2, const DirectX::XMFLOAT3& p3, 
-							 const UIColor& color1, const UIColor& color2, const UIColor& color3, UCHAR alpha, UICameraBase* pCamera);
+							 const UIColor& color1, const UIColor& color2, const UIColor& color3, UCHAR alpha, UICameraBase3D* pCamera);
+	void Draw3DWorldTextureTriangle(const DirectX::XMFLOAT3& pLT, const DirectX::XMFLOAT3& pRT, const DirectX::XMFLOAT3& pLB,
+									const DirectX::XMFLOAT2& uv1, const DirectX::XMFLOAT2& uv2, const DirectX::XMFLOAT2& uv3,
+									size_t textureIndex, UCHAR alpha, UICameraBase3D* pCamera);
+	void Draw3DWorldRectOutline(const DirectX::XMFLOAT3& pLT, const DirectX::XMFLOAT3& pRT, const DirectX::XMFLOAT3& pLB, const DirectX::XMFLOAT3& pRB,
+								const UIColor& color, float lineWidth, UICameraBase3D* pCamera);
+	void Draw3DWorldRectSolid(const DirectX::XMFLOAT3& pLT, const DirectX::XMFLOAT3& pRT, const DirectX::XMFLOAT3& pLB, const DirectX::XMFLOAT3& pRB,
+							  const UIColor& color, UCHAR alpha, UICameraBase3D* pCamera);
+	void Draw3DWorldRectSolid(const DirectX::XMFLOAT3& pLT, const DirectX::XMFLOAT3& pRT, const DirectX::XMFLOAT3& pLB, const DirectX::XMFLOAT3& pRB,
+							  const UIColor& colorLT, const UIColor& colorRT, const UIColor& colorLB, const UIColor& colorRB, UCHAR alpha, UICameraBase3D* pCamera);
 
-	// Helper functions for world coordinate conversion
-	float CalculateWorldLengthFromPixelLength(float pixelLength, const DirectX::XMFLOAT3& worldPosition, UICameraBase* pCamera);
+	void Draw3DWorldImage(size_t textureIndex, const RECT& srcRect, const DirectX::XMFLOAT3& pLT, const DirectX::XMFLOAT3& pRT, 
+						  const DirectX::XMFLOAT3& pLB, const DirectX::XMFLOAT3& pRB, UCHAR alpha, UICameraBase3D* pCamera);
+
+private:
+	void Draw3DWorldLine(const DirectX::XMFLOAT3& start, const DirectX::XMFLOAT3& end, const UIColor& colorS, const UIColor& colorE, UICameraBase3D* pCamera);
+	void Draw3DWorldLine(const DirectX::XMFLOAT3& start, const DirectX::XMFLOAT3& end, const UIColor& color, UICameraBase3D* pCamera);
+	void Draw3DWorldThickLine(const DirectX::XMFLOAT3& start, const DirectX::XMFLOAT3& end, float lineWidth, const UIColor& color, UICameraBase3D* pCamera);
+	
+	float CalculateWorldLengthFromPixelLength(float pixelLength, const DirectX::XMFLOAT3& worldPosition, UICameraBase3D* pCamera);
 
 
 /*************************************************** Batch Rendering System ***************************************************/

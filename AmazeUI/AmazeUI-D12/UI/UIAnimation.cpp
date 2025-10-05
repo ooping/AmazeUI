@@ -273,96 +273,95 @@ UIPointFloat3 UIAnimateParticle::CrossProduct(const UIPointFloat3& a, const UIPo
 	);
 }
 
-// 核心发射算法 - 直接在世界空间中计算锥形发射
+// Core emission algorithm — compute cone-shaped particle emission directly in world-space coordinates.
 void UIAnimateParticle::GenerateEmissionPoint(UIPointFloat3& outPosition, UIPointFloat3& outVelocity) {
-	// 1. 在圆形发射区域内随机选择位置
+	// 1. Randomly pick a position inside a circular emission area
 	float theta = RandomFloat(0, 2 * 3.14159265f);
-	float radiusRatio = sqrt(RandomFloat(0, 1.0f)); // 平方根分布保证均匀
+	float radiusRatio = sqrt(RandomFloat(0, 1.0f)); // square-root distribution yields uniform sampling over the disk
 	float radius = _emissionRadius * radiusRatio;
-	
-	// 2. 计算发射高度
+
+	// 2. Compute emission height along the cone axis
 	float height;
 	if (_surfaceEmissionOnly) {
-		height = _coneHeight; // 仅从锥顶发射
+		height = _coneHeight; // emit only from the cone apex (surface)
 	} else {
 		height = RandomFloat(0, _coneHeight);
 	}
-	
-	// 3. 计算锥形收缩后的实际半径
+
+	// 3. Compute the cone radius at the chosen height
 	float heightRatio = height / _coneHeight;
 	float coneRadiusAtHeight = radius * (1.0f - heightRatio * tan(_coneAngle * 3.14159265f / 360.0f));
-	
-	// 4. 计算基础坐标系下的位置 (以Y轴为锥轴)
+
+	// 4. Construct the local-space position (cone aligned with +Y)
 	UIPointFloat3 basePos(
 		coneRadiusAtHeight * cos(theta),
 		height,
 		coneRadiusAtHeight * sin(theta)
 	);
-	
-	// 5. 如果发射方向不是默认的(0,1,0)，需要旋转到正确方向
+
+	// 5. If emitter direction != default up (0,1,0), rotate the point to align with emitter direction
 	UIPointFloat3 defaultUp(0.0f, 1.0f, 0.0f);
 	if (abs(DotProduct(_emitterDirection, defaultUp) - 1.0f) > 0.001f) {
-		// 计算旋转轴和角度
+		// compute rotation axis and angle
 		UIPointFloat3 rotAxis = CrossProduct(defaultUp, _emitterDirection);
 		float rotAngle = acos(DotProduct(defaultUp, _emitterDirection));
-		
-		// 简化的旋转实现 (仅适用于常见情况)
+
+		// simplified Rodrigues rotation (sufficient for common cases)
 		if (abs(rotAngle) > 0.001f) {
-			// 使用Rodriguez旋转公式的简化版本
 			NormalizeVector(rotAxis);
 			float cosA = cos(rotAngle);
 			float sinA = sin(rotAngle);
-			
-			// Rodriguez rotation formula: v' = v*cos(θ) + (k×v)*sin(θ) + k*(k·v)*(1-cos(θ))
+
+			// Rodrigues: v' = v*cos(θ) + (k×v)*sin(θ) + k*(k·v)*(1-cos(θ))
 			UIPointFloat3 kCrossV = CrossProduct(rotAxis, basePos);
 			float kDotV = DotProduct(rotAxis, basePos);
-			
+
 			basePos._x = basePos._x * cosA + kCrossV._x * sinA + rotAxis._x * kDotV * (1 - cosA);
 			basePos._y = basePos._y * cosA + kCrossV._y * sinA + rotAxis._y * kDotV * (1 - cosA);
 			basePos._z = basePos._z * cosA + kCrossV._z * sinA + rotAxis._z * kDotV * (1 - cosA);
 		}
 	}
-	
-	// 6. 计算最终世界位置
+
+	// 6. Compute final world-space position
 	outPosition = UIPointFloat3(
 		_emitterPosition._x + basePos._x,
 		_emitterPosition._y + basePos._y,
 		_emitterPosition._z + basePos._z
 	);
-	
-	// 7. 生成发射速度方向 (锥形分布)
+
+	// 7. Generate emission direction inside cone (cone-shaped angular distribution)
 	float coneAngleRad = _coneAngle * 3.14159265f / 180.0f;
 	float phi = RandomFloat(0, 2 * 3.14159265f);
 	float cosTheta = RandomFloat(cos(coneAngleRad), 1.0f);
 	float sinTheta = sqrt(1 - cosTheta * cosTheta);
-	
-	// 基础方向 (向上)
+
+	// local base direction (pointing up along +Y)
 	UIPointFloat3 baseDir(
 		sinTheta * cos(phi),
 		cosTheta,
 		sinTheta * sin(phi)
 	);
-	
-	// 旋转到发射器方向
+
+	// rotate direction into emitter orientation if needed
 	if (abs(DotProduct(_emitterDirection, defaultUp) - 1.0f) > 0.001f) {
 		UIPointFloat3 rotAxis = CrossProduct(defaultUp, _emitterDirection);
 		float rotAngle = acos(DotProduct(defaultUp, _emitterDirection));
-		
+
 		if (abs(rotAngle) > 0.001f) {
 			NormalizeVector(rotAxis);
 			float cosA = cos(rotAngle);
 			float sinA = sin(rotAngle);
-			
+
 			UIPointFloat3 kCrossV = CrossProduct(rotAxis, baseDir);
 			float kDotV = DotProduct(rotAxis, baseDir);
-			
+
 			baseDir._x = baseDir._x * cosA + kCrossV._x * sinA + rotAxis._x * kDotV * (1 - cosA);
 			baseDir._y = baseDir._y * cosA + kCrossV._y * sinA + rotAxis._y * kDotV * (1 - cosA);
 			baseDir._z = baseDir._z * cosA + kCrossV._z * sinA + rotAxis._z * kDotV * (1 - cosA);
 		}
 	}
-	
-	// 8. 计算最终速度
+
+	// 8. Compute final velocity vector
 	float speed = RandomFloat(_speedMin, _speedMax);
 	outVelocity = UIPointFloat3(
 		baseDir._x * speed,
@@ -380,18 +379,18 @@ UIAnimateParticleFlame::UIAnimateParticleFlame() {
 	_windDirection = UIPointFloat3(0.0f, 0.0f, 0.0f);
 }
 
-void UIAnimateParticleFlame::PlayFlameAnimate(const UIPointFloat3& position, UICameraBase* pCamera, int maxFrame) {
+void UIAnimateParticleFlame::PlayFlameAnimate(const UIPointFloat3& position, UICameraBase3D* pCamera, int maxFrame) {
 	_emitterPosition = position;
 	_pCamera = pCamera;
 	_particles.clear();
 	
-	// 设置火焰特有的发射器参数
+	// Set flame-specific emitter parameters
 	_coneAngle = _flameSpreadAngle;
 	_coneHeight = _flameHeight;
 	_speedMin = 1.0f * _flameHeight;
 	_speedMax = 2.5f * _flameHeight;
-	
-	// 转换为时间基础的动画 (假设60fps)
+
+	// Convert to time-based animation (assume 60 FPS)
 	float duration = maxFrame / 60.0f;
 	PlayAnimate(duration);
 }
@@ -414,51 +413,51 @@ void UIAnimateParticleFlame::DrawParticles() {
 }
 
 void UIAnimateParticleFlame::EmitParticles() {
-	// 基于时间的粒子发射
+	// Time-based particle emission
 	float deltaTime = GetDeltaTime();
 	if (deltaTime <= 0.0f) return;
-	
-	// 累积发射器计算
+
+	// Accumulate emission count based on rate and intensity
 	_emissionAccumulator += _emissionRate * _flameIntensity * deltaTime;
 	int particlesToEmit = static_cast<int>(_emissionAccumulator);
 	_emissionAccumulator -= particlesToEmit;
-	
+
 	for (int i = 0; i < particlesToEmit; ++i) {
-		// 检查粒子数量限制
+		// Check particle count limit
 		if (_particles.size() >= _maxParticles) {
 			break;
 		}
-		
+
 		FlameParticle particle;
-		
-		// 使用新的发射算法生成位置和速度
+
+		// Generate position and velocity using the emission algorithm
 		UIPointFloat3 emitPos, emitVel;
 		GenerateEmissionPoint(emitPos, emitVel);
-		
+
 		particle._position = emitPos;
 		particle._velocity = emitVel;
 		particle._initialSpeed = sqrt(emitVel._x * emitVel._x + emitVel._y * emitVel._y + emitVel._z * emitVel._z);
-		
-		// 添加火焰特有的扰动
+
+		// Add flame-specific turbulence
 		particle._velocity._x += RandomFloat(-0.3f, 0.3f) * _turbulence;
 		particle._velocity._z += RandomFloat(-0.3f, 0.3f) * _turbulence;
-		
-		// 物理属性
+
+		// Physical properties
 		particle._acceleration = UIPointFloat3(_windForce._x, _gravity, _windForce._z);
-		
-		// 生命周期
+
+		// Lifecycle
 		particle._life = 1.0f;
 		particle._maxLife = RandomFloat(1.5f, 3.0f);
-		
-		// 尺寸属性
+
+		// Size properties
 		particle._initialSize = RandomFloat(0.05f, 0.15f) * _particleSize * _particleScale * _flameIntensity;
 		particle._currentSize = particle._initialSize;
 		particle._turbulence = RandomFloat(0.3f, 0.8f) * _turbulence;
-		
-		// 外观属性
-		particle._color = GetFlameColor(0.0f); // 初始颜色
+
+		// Visual properties
+		particle._color = GetFlameColor(0.0f); // initial color
 		particle._alpha = 255;
-		
+
 		_particles.push_back(particle);
 	}
 }

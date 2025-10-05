@@ -43,15 +43,15 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <OutDir>..\Bins</OutDir>
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);C:\WorkSpace_SOFT\SoftWare\AmazeUI\AmazeUI-D12\ThirdParty\freetype-2.13.3\include;</IncludePath>
-    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);C:\WorkSpace_SOFT\SoftWare\AmazeUI\AmazeUI-D12\ThirdParty\freetype-2.13.3\objs;</LibraryPath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);..\..\..\AmazeUI\AmazeUI-D12\ThirdParty\freetype-2.13.3\include;</IncludePath>
+    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);..\..\..\AmazeUI\AmazeUI-D12\ThirdParty\freetype-2.13.3\objs;</LibraryPath>
     <TargetName>Demo - Controls</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>..\Bins</OutDir>
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);C:\WorkSpace_SOFT\SoftWare\AmazeUI\AmazeUI-D12\ThirdParty\freetype-2.13.3\include;</IncludePath>
-    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);C:\WorkSpace_SOFT\SoftWare\AmazeUI\AmazeUI-D12\ThirdParty\freetype-2.13.3\objs;</LibraryPath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);..\..\..\AmazeUI\AmazeUI-D12\ThirdParty\freetype-2.13.3\include;</IncludePath>
+    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);..\..\..\AmazeUI\AmazeUI-D12\ThirdParty\freetype-2.13.3\objs;</LibraryPath>
     <TargetName>Demo - Controls</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -102,6 +102,7 @@
     <ClInclude Include="..\..\..\AmazeUI\AmazeUI-D12\Core\Common.h" />
     <ClInclude Include="..\..\..\AmazeUI\AmazeUI-D12\UI\UIAnimation.h" />
     <ClInclude Include="..\..\..\AmazeUI\AmazeUI-D12\UI\UIApplication.h" />
+    <ClInclude Include="..\..\..\AmazeUI\AmazeUI-D12\UI\UICamera.h" />
     <ClInclude Include="..\..\..\AmazeUI\AmazeUI-D12\UI\UIDXFoundation.h" />
     <ClInclude Include="..\..\..\AmazeUI\AmazeUI-D12\UI\UIElement.h" />
     <ClInclude Include="..\..\..\AmazeUI\AmazeUI-D12\UI\UIUtility.h" />
@@ -114,6 +115,7 @@
     <ClCompile Include="..\..\..\AmazeUI\AmazeUI-D12\Core\Common.cpp" />
     <ClCompile Include="..\..\..\AmazeUI\AmazeUI-D12\UI\UIAnimation.cpp" />
     <ClCompile Include="..\..\..\AmazeUI\AmazeUI-D12\UI\UIApplication.cpp" />
+    <ClCompile Include="..\..\..\AmazeUI\AmazeUI-D12\UI\UICamera.cpp" />
     <ClCompile Include="..\..\..\AmazeUI\AmazeUI-D12\UI\UIDXFoundation.cpp" />
     <ClCompile Include="..\..\..\AmazeUI\AmazeUI-D12\UI\UIElement.cpp" />
     <ClCompile Include="..\..\..\AmazeUI\AmazeUI-D12\UI\UIUtility.cpp" />

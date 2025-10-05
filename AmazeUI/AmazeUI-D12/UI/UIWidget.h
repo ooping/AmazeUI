@@ -1120,7 +1120,7 @@ private:
 	UICameraCtrl _cameraCtrl;
 
 	// Curve data
-	CURVE_LIST _curveList;													// 3D curve list
+	CURVE_LIST _curveList;							     // 3D curve list
 
 	UIPointFloat3 _axisLengths = {1.0f, 1.0f, 1.0f};  	 // World coordinate axis lengths
 

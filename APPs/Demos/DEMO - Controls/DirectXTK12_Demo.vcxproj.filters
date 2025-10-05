@@ -27,6 +27,9 @@
     <ClCompile Include="..\..\..\AmazeUI\AmazeUI-D12\Core\Common.cpp">
       <Filter>AmazeUI\Core</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\AmazeUI\AmazeUI-D12\UI\UICamera.cpp">
+      <Filter>AmazeUI\UI</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -54,6 +57,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\AmazeUI\AmazeUI-D12\Core\Common.h">
       <Filter>AmazeUI\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\AmazeUI\AmazeUI-D12\UI\UICamera.h">
+      <Filter>AmazeUI\UI</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

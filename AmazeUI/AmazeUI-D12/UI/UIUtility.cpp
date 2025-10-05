@@ -58,10 +58,6 @@ RECT ScaleRect::operator()(const RECT& rc, float scale) {
     return CreateRect()(rc.left-dx/2, rc.top-dy/2, rc.right+dx/2, rc.bottom+dy/2);
 }
 
-bool IsKeyDown::operator()(int key) {
-	return GetKeyState(key)&0x80 ? true:false;
-}
-
 
 UILayoutCalc::UILayoutCalc(int flag) {
 	_zoomModeflag=flag;

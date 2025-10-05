@@ -736,7 +736,7 @@ void UIDXFoundation::Render3D() {
         auto commandList = p_deviceResources->GetCommandList();
 
         static int ii = 0;
-        _world = Matrix::CreateRotationY(float(++ii * XM_PIDIV4));
+        static DirectX::SimpleMath::Matrix _world = Matrix::CreateRotationY(float(++ii * XM_PIDIV4));
 
         // Draw 3D object
         // Draw teapot
@@ -1294,31 +1294,6 @@ bool UIDXFoundation::GetDDSTextureIndexFromFile(const wstring& filePath, const U
     return true;
 }
 
-float UIDXFoundation::CalculateNdcZByOrtho(float z_view) {
-    // get current orthographic projection matrix
-    Matrix ortho = _orthoMatrix2D;
-    
-    // for orthographic projection matrix, z transformation is linear
-    // z_ndc = (z_view * m22 + m32) / 1.0  (because w component is always 1.0)
-    float z_ndc = (z_view * ortho.m[2][2] + ortho.m[3][2]) / 1.0f;
-    
-    // output result
-    //OutputDebugStringA(("View z: " + to_string(z_view) + " -> NDC z: " + to_string(z_ndc) + "\n").c_str());
-    return z_ndc;
-}
-
-float UIDXFoundation::CalculateViewZByOrtho(float z_ndc) {
-    // get current orthographic projection matrix
-    Matrix ortho = _orthoMatrix2D;
-    
-    // for orthographic projection matrix, z transformation is linear
-    // z_view = (z_ndc - m32) / m22
-    float z_view = (z_ndc - ortho.m[3][2]) / ortho.m[2][2];
-    
-    //OutputDebugStringA(("NDC z: " + to_string(z_ndc) + " -> View z: " + to_string(z_view) + "\n").c_str());
-    return z_view;
-}
-
 void UIDXFoundation::Calculate2DPoint(const XMFLOAT2& point, XMFLOAT2& p) {
     p.x = point.x + 0.5f;
     p.y = point.y + 0.5f;
@@ -1421,7 +1396,7 @@ void UIDXFoundation::ResetClipRect() {
 }
 
 void UIDXFoundation::Draw2DPoint(const XMFLOAT2& point, float z, const UIColor& color, float pointSize) {
-    float viewZ = CalculateViewZByOrtho(z);
+    float viewZ = UICameraUI2D::GetSingletonInstance()->CalculateViewZByOrtho(z);
 
     XMFLOAT2 p;
     Calculate2DPoint(point, p);
@@ -1442,7 +1417,7 @@ void UIDXFoundation::Draw2DPoint(const XMFLOAT2& point, float z, const UIColor& 
         1, 3, 2   // 2nd triangle
     };
 
-    RegisterBatchData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, p_triangleEffect2D, GetCurrentClipRect(), UICameraUI::GetSingletonInstance());
+    RegisterBatchData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, p_triangleEffect2D, GetCurrentClipRect(), UICameraUI2D::GetSingletonInstance());
 }
 
 void UIDXFoundation::Draw2DPoints(const vector<XMFLOAT2>& points, float z, const UIColor& color, float pointSize) {
@@ -1470,10 +1445,10 @@ void UIDXFoundation::Draw2DLine(const XMFLOAT2& start, const XMFLOAT2& end, floa
     // calculate four vertices, using transformed viewZ
     float halfWidth = max(1.0f, lineWidth) * 0.5f;
 
-    // get viewZ
-    float viewZ = CalculateViewZByOrtho(z);
+    // Get viewZ
+    float viewZ = UICameraUI2D::GetSingletonInstance()->CalculateViewZByOrtho(z);
 
-    // calculate four vertices
+    // Calculate four vertices
     vector<VertexPositionColor> vertices = {
         {{ p1.x + normal.x * halfWidth, p1.y + normal.y * halfWidth, viewZ }, finalColor},
         {{ p1.x - normal.x * halfWidth, p1.y - normal.y * halfWidth, viewZ }, finalColor},
@@ -1483,7 +1458,7 @@ void UIDXFoundation::Draw2DLine(const XMFLOAT2& start, const XMFLOAT2& end, floa
     // draw two triangles
     vector<uint16_t> indices = { 0, 1, 2, 1, 3, 2 };
 
-    RegisterBatchData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, p_triangleEffect2D, GetCurrentClipRect(), UICameraUI::GetSingletonInstance());
+    RegisterBatchData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, p_triangleEffect2D, GetCurrentClipRect(), UICameraUI2D::GetSingletonInstance());
 }
 
 // Draw a 2D rectangle with specified color, hollow style
@@ -1506,7 +1481,7 @@ void UIDXFoundation::Draw2DRectSolid(const XMFLOAT2& start, const XMFLOAT2& end,
     XMFLOAT2 ps, pe;
     Calculate2DRectPoints(start, end, ps, pe);
 
-    float viewZ = CalculateViewZByOrtho(z);
+    float viewZ = UICameraUI2D::GetSingletonInstance()->CalculateViewZByOrtho(z);
 
     // Create vertices for the rectangle corners
     vector<VertexPositionColor> vertices = {
@@ -1519,7 +1494,7 @@ void UIDXFoundation::Draw2DRectSolid(const XMFLOAT2& start, const XMFLOAT2& end,
     // Define indices for two triangles
     vector<uint16_t> indices = { 0, 1, 2, 1, 3, 2 };
 
-    RegisterBatchData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, p_triangleEffect2D, GetCurrentClipRect(), UICameraUI::GetSingletonInstance());
+    RegisterBatchData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, p_triangleEffect2D, GetCurrentClipRect(), UICameraUI2D::GetSingletonInstance());
 }
 
 // Draw a 2D rectangle with specified color, alpha transparency and z-depth
@@ -1551,10 +1526,10 @@ void UIDXFoundation::Draw2DImage(size_t textureIndex,
     XMFLOAT2 ps, pe;
     Calculate2DRectPoints(dstStart, dstEnd, ps, pe);
 
-    // get view space Z value using 2D transform
-    float viewZ = CalculateViewZByOrtho(z);
+    // Get view space Z value using 2D transform
+    float viewZ = UICameraUI2D::GetSingletonInstance()->CalculateViewZByOrtho(z);
 
-    // calculate texture coordinates
+    // Calculate texture coordinates
     float texLeft = (float)srcRect.left / (float)GetRectWidth()(textureRect);
     float texTop = (float)srcRect.top / (float)GetRectHeight()(textureRect);
     float texRight = (float)srcRect.right / (float)GetRectWidth()(textureRect);
@@ -1572,7 +1547,7 @@ void UIDXFoundation::Draw2DImage(size_t textureIndex,
     vector<uint16_t> indices = { 0, 1, 2, 1, 3, 2 };
 
     RegisterBatchTextureData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, p_triangleTexturedEffect2D, 
-                             resource._gpuDescriptor, p_states->LinearClamp(), alpha, GetCurrentClipRect(), UICameraUI::GetSingletonInstance());
+                             resource._gpuDescriptor, p_states->LinearClamp(), alpha, GetCurrentClipRect(), UICameraUI2D::GetSingletonInstance());
 
 
     // p_sprites use more memory and is slower than PrimitiveBatch!!!
@@ -1641,33 +1616,10 @@ void UIDXFoundation::Draw3DPoint(const XMFLOAT2& point, float z, const UIColor& 
     XMFLOAT2 p;
     Calculate2DPoint(point, p);
 
-    // Define the point size (2x2 pixels)
-    const float halfSize = pointSize/2;
+    XMFLOAT3 wp;
+    UIZPlaneTransform::TransformPoint(transformMatrix, p, z, wp);
 
-    vector<XMFLOAT2> quadPoints = {
-        { p.x - halfSize, p.y - halfSize },
-        { p.x - halfSize, p.y + halfSize },
-        { p.x + halfSize, p.y - halfSize },
-        { p.x + halfSize, p.y + halfSize }
-    };
-
-    vector<XMFLOAT3> wps;
-    UIZPlaneTransform::TransformPoints(transformMatrix, quadPoints, z, wps);
-
-    // Create a small square with 4 vertices
-    vector<VertexPositionColor> vertices = {
-        { { wps[0].x, wps[0].y, wps[0].z }, finalColor },  // left top
-        { { wps[1].x, wps[1].y, wps[1].z }, finalColor },  // left bottom
-        { { wps[2].x, wps[2].y, wps[2].z }, finalColor },  // right top
-        { { wps[3].x, wps[3].y, wps[3].z }, finalColor }   // right bottom
-    };
-    // Define the indexes of the two triangles
-    vector<uint16_t> indices = { 
-        0, 1, 2,  // 1st triangle
-        1, 3, 2   // 2nd triangle
-    };
-    
-    RegisterBatchData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, p_triangleEffect3D, GetCurrentClipRect(), UICameraUI::GetSingletonInstance());
+    Draw3DWorldCircle(wp, pointSize / 2, finalColor, 255, UICameraUI3D::GetSingletonInstance());
 }
 
 void UIDXFoundation::Draw3DPoints(const vector<XMFLOAT2>& points, float z, const UIColor& color, float pointSize, 
@@ -1679,79 +1631,34 @@ void UIDXFoundation::Draw3DPoints(const vector<XMFLOAT2>& points, float z, const
 }
 
 void UIDXFoundation::Draw3DLine(const XMFLOAT2& start, const XMFLOAT2& end, float z, const UIColor& color, float lineWidth, const XMMATRIX& transformMatrix) { 
-    XMVECTORF32 finalColor = color.ToXMVECTORF32();
-
     XMFLOAT2 p1, p2;
     Calculate2DLinePoints(start, end, p1, p2);
-    // calculate line direction vector
-    XMFLOAT2 dir = { p2.x - p1.x, p2.y - p1.y };
-    float length = sqrt(dir.x * dir.x + dir.y * dir.y);
-    if (length < 0.0001f) {
-        return;
-    }
-    // normalize and calculate normal vector
-    dir.x /= length;
-    dir.y /= length;
-    XMFLOAT2 normal = { -dir.y, dir.x };
-    // calculate four vertices, using transformed viewZ
-    float halfWidth = max(1.0f, lineWidth) * 0.5f;
-
-    vector<XMFLOAT2> points = {
-        { p1.x + normal.x * halfWidth, p1.y + normal.y * halfWidth },
-        { p1.x - normal.x * halfWidth, p1.y - normal.y * halfWidth },
-        { p2.x + normal.x * halfWidth, p2.y + normal.y * halfWidth },
-        { p2.x - normal.x * halfWidth, p2.y - normal.y * halfWidth }
-    };
 
     vector<XMFLOAT3> wps;
-    UIZPlaneTransform::TransformPoints(transformMatrix, points, z, wps);
+    UIZPlaneTransform::TransformLinePoints(transformMatrix, p1, p2, z, wps);
 
-    // create rectangle vertices
-    vector<VertexPositionColor> vertices = {
-        { { wps[0].x, wps[0].y, wps[0].z }, finalColor },  // left top
-        { { wps[1].x, wps[1].y, wps[1].z }, finalColor },  // left bottom
-        { { wps[2].x, wps[2].y, wps[2].z }, finalColor },  // right top
-        { { wps[3].x, wps[3].y, wps[3].z }, finalColor }   // right bottom
-    };
-    // Define indices for two triangles
-    vector<uint16_t> indices = { 0, 1, 2, 1, 3, 2 };
-
-    RegisterBatchData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, p_triangleEffect3D, GetCurrentClipRect(), UICameraUI::GetSingletonInstance());
+    Draw3DWorldLine(wps[0], wps[1], color, lineWidth, UICameraUI3D::GetSingletonInstance());
 }
 
 void UIDXFoundation::Draw3DRectOutline(const XMFLOAT2& start, const XMFLOAT2& end, float z, const UIColor& color, float lineWidth, const XMMATRIX& transformMatrix) {    
-    Draw3DLine(XMFLOAT2(start.x, start.y), XMFLOAT2(end.x, start.y), z, color, lineWidth, transformMatrix); // up
-    Draw3DLine(XMFLOAT2(end.x, start.y), XMFLOAT2(end.x, end.y), z, color, lineWidth, transformMatrix); //right
-    Draw3DLine(XMFLOAT2(start.x, end.y), XMFLOAT2(end.x, end.y), z, color, lineWidth, transformMatrix); // down
-    Draw3DLine(XMFLOAT2(start.x, start.y), XMFLOAT2(start.x, end.y), z, color, lineWidth, transformMatrix); // left
+    XMFLOAT2 ps, pe;
+    Calculate2DRectPoints(start, end, ps, pe);
+    vector<XMFLOAT3> wps;
+    UIZPlaneTransform::TransformRectPoints(transformMatrix, ps, pe, z, wps);
+    
+    Draw3DWorldRectOutline(wps[0], wps[1], wps[2], wps[3], color, lineWidth, UICameraUI3D::GetSingletonInstance());
 }
 
 // Draw a 3D rectangle with specified color, alpha transparency and z-depth
 void UIDXFoundation::Draw3DRectSolid(const XMFLOAT2& start, const XMFLOAT2& end, float z,
                                      const UIColor& colorLT, const UIColor& colorRT, const UIColor& colorLB, const UIColor& colorRB, UCHAR alpha,
                                      const XMMATRIX& transformMatrix) {
-    // create final color with alpha
-    XMVECTORF32  finalColorLT = colorLT.ToXMVECTORF32(alpha);
-    XMVECTORF32  finalColorRT = colorRT.ToXMVECTORF32(alpha);
-    XMVECTORF32  finalColorLB = colorLB.ToXMVECTORF32(alpha);
-    XMVECTORF32  finalColorRB = colorRB.ToXMVECTORF32(alpha);
-
     XMFLOAT2 ps, pe;
     Calculate2DRectPoints(start, end, ps, pe);
     vector<XMFLOAT3> wps;
     UIZPlaneTransform::TransformRectPoints(transformMatrix, ps, pe, z, wps);
     
-    // create rectangle vertices
-    vector<VertexPositionColor> vertices = {
-        { { wps[0].x, wps[0].y, wps[0].z }, finalColorLT },  // left top
-        { { wps[1].x, wps[1].y, wps[1].z }, finalColorRT },  // right top
-        { { wps[2].x, wps[2].y, wps[2].z }, finalColorLB },  // left bottom
-        { { wps[3].x, wps[3].y, wps[3].z }, finalColorRB }   // right bottom
-    };
-    // Define indices for two triangles
-    vector<uint16_t> indices = { 0, 1, 2, 1, 3, 2 };
-
-    RegisterBatchData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, p_triangleEffect3D, GetCurrentClipRect(), UICameraUI::GetSingletonInstance());
+    Draw3DWorldRectSolid(wps[0], wps[1], wps[2], wps[3], colorLT, colorRT, colorLB, colorRB, alpha, UICameraUI3D::GetSingletonInstance());
 }
 
 void UIDXFoundation::Draw3DRectSolid(const XMFLOAT2& start, const XMFLOAT2& end, float z,
@@ -1783,18 +1690,7 @@ void UIDXFoundation::Draw3DImage(size_t textureIndex,
     vector<XMFLOAT3> wps;
     UIZPlaneTransform::TransformRectPoints(transformMatrix, ps, pe, z, wps);
 
-    // create vertices with texture coordinates
-    vector<VertexPositionTexture> vertices = {
-        { {wps[0].x, wps[0].y, wps[0].z}, XMFLOAT2((float)srcRect.left / (float)GetRectWidth()(textureRect), (float)srcRect.top / (float)GetRectHeight()(textureRect)) },
-        { {wps[1].x, wps[1].y, wps[1].z}, XMFLOAT2((float)srcRect.right / (float)GetRectWidth()(textureRect), (float)srcRect.top / (float)GetRectHeight()(textureRect)) },
-        { {wps[2].x, wps[2].y, wps[2].z}, XMFLOAT2((float)srcRect.left / (float)GetRectWidth()(textureRect), (float)srcRect.bottom / (float)GetRectHeight()(textureRect)) },
-        { {wps[3].x, wps[3].y, wps[3].z}, XMFLOAT2((float)srcRect.right / (float)GetRectWidth()(textureRect), (float)srcRect.bottom / (float)GetRectHeight()(textureRect)) }
-    };
-    // Define indices for two triangles
-    vector<uint16_t> indices = { 0, 1, 2, 1, 3, 2 };
-
-    RegisterBatchTextureData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, p_triangleTexturedEffect3D, 
-                             _textureResources[textureIndex]._gpuDescriptor, p_states->LinearClamp(), alpha, GetCurrentClipRect(), UICameraUI::GetSingletonInstance());
+    Draw3DWorldImage(textureIndex, srcRect, wps[0], wps[1], wps[2], wps[3], alpha, UICameraUI3D::GetSingletonInstance());
 }
 
 void UIDXFoundation::Draw3DImage(const wstring& dllPath, UINT id, const UIColor& colorKey,
@@ -1828,7 +1724,7 @@ void UIDXFoundation::Draw3DImage(const wstring& filePath, const UIColor& colorKe
     Draw3DImage(textureIndex, srcRect, dstStart, dstEnd, z, alpha, transformMatrix);
 }
 
-void UIDXFoundation::Draw3DWorldPoint(const XMFLOAT3& point, const UIColor& color, UICameraBase* pCamera) {
+void UIDXFoundation::Draw3DWorldPoint(const XMFLOAT3& point, const UIColor& color, UICameraBase3D* pCamera) {
     // Create point vertex
     vector<VertexPositionColor> vertices = {
         {{point.x, point.y, point.z}, color.ToXMVECTORF32()}
@@ -1840,7 +1736,29 @@ void UIDXFoundation::Draw3DWorldPoint(const XMFLOAT3& point, const UIColor& colo
     RegisterBatchData(D3D_PRIMITIVE_TOPOLOGY_POINTLIST, vertices, indices, p_pointEffect3D, GetCurrentClipRect(), pCamera);
 }
 
-void UIDXFoundation::Draw3DWorldLine(const DirectX::XMFLOAT3& start, const DirectX::XMFLOAT3& end, const UIColor& colorS, const UIColor& colorE, UICameraBase* pCamera) {
+void UIDXFoundation::Draw3DWorldLine(const DirectX::XMFLOAT3& start, const DirectX::XMFLOAT3& end, const UIColor& colorS, const UIColor& colorE, float lineWidth, UICameraBase3D* pCamera) {
+    if (lineWidth <= 1.0f) {
+        Draw3DWorldLine(start, end, colorS, colorE, lineWidth,pCamera);
+    } else {
+        UIColor avgColor(
+			(colorS._r + colorE._r) / 2,
+			(colorS._g + colorE._g) / 2,
+			(colorS._b + colorE._b) / 2,
+			(colorS._a + colorE._a) / 2
+		);
+        Draw3DWorldThickLine(start, end, lineWidth, avgColor, pCamera);
+    }
+}
+
+void UIDXFoundation::Draw3DWorldLine(const DirectX::XMFLOAT3& start, const DirectX::XMFLOAT3& end, const UIColor& color, float lineWidth, UICameraBase3D* pCamera) {
+    if (lineWidth <= 1.0f) {
+        Draw3DWorldLine(start, end, color, pCamera);
+    } else {
+        Draw3DWorldThickLine(start, end, lineWidth, color, pCamera);
+    }
+}
+
+void UIDXFoundation::Draw3DWorldLine(const DirectX::XMFLOAT3& start, const DirectX::XMFLOAT3& end, const UIColor& colorS, const UIColor& colorE, UICameraBase3D* pCamera) {
     // Create line vertices with gradient colors
     vector<VertexPositionColor> vertices = {
         {{start.x, start.y, start.z}, colorS.ToXMVECTORF32()},  // Start vertex with start color
@@ -1853,11 +1771,11 @@ void UIDXFoundation::Draw3DWorldLine(const DirectX::XMFLOAT3& start, const Direc
     RegisterBatchData(D3D_PRIMITIVE_TOPOLOGY_LINELIST, vertices, indices, p_lineEffect3D, GetCurrentClipRect(), pCamera);
 }
 	
-void UIDXFoundation::Draw3DWorldLine(const XMFLOAT3& start, const XMFLOAT3& end, const UIColor& color, UICameraBase* pCamera) {
+void UIDXFoundation::Draw3DWorldLine(const XMFLOAT3& start, const XMFLOAT3& end, const UIColor& color, UICameraBase3D* pCamera) {
     Draw3DWorldLine(start, end, color, color, pCamera);
 }
 
-void UIDXFoundation::Draw3DWorldThickLine(const XMFLOAT3& start, const XMFLOAT3& end, float lineWidth, const UIColor& color, UICameraBase* pCamera) {
+void UIDXFoundation::Draw3DWorldThickLine(const XMFLOAT3& start, const XMFLOAT3& end, float lineWidth, const UIColor& color, UICameraBase3D* pCamera) {
     const int segments = 8; // Number of cylinder segments
     
     XMVECTOR startVec = XMLoadFloat3(&start);
@@ -1909,22 +1827,22 @@ void UIDXFoundation::Draw3DWorldThickLine(const XMFLOAT3& start, const XMFLOAT3&
         int current = i * 2;
         int next = ((i + 1) % segments) * 2;
         
-    // First triangle
-    indices.push_back(static_cast<uint16_t>(current));     // Current start
-    indices.push_back(static_cast<uint16_t>(current + 1)); // Current end
-    indices.push_back(static_cast<uint16_t>(next));        // Next start
-        
-    // Second triangle
-    indices.push_back(static_cast<uint16_t>(current + 1)); // Current end
-    indices.push_back(static_cast<uint16_t>(next + 1));    // Next end
-    indices.push_back(static_cast<uint16_t>(next));        // Next start
+        // First triangle
+        indices.push_back(static_cast<uint16_t>(current));     // Current start
+        indices.push_back(static_cast<uint16_t>(current + 1)); // Current end
+        indices.push_back(static_cast<uint16_t>(next));        // Next start
+            
+        // Second triangle
+        indices.push_back(static_cast<uint16_t>(current + 1)); // Current end
+        indices.push_back(static_cast<uint16_t>(next + 1));    // Next end
+        indices.push_back(static_cast<uint16_t>(next));        // Next start
     }
     
     RegisterBatchData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, 
                       p_triangleEffect3D, GetCurrentClipRect(), pCamera);
 }
 
-void UIDXFoundation::Draw3DWorldCircle(const XMFLOAT3& center, float pixelRadius, const UIColor& color, UCHAR alpha, UICameraBase* pCamera) {
+void UIDXFoundation::Draw3DWorldCircle(const XMFLOAT3& center, float pixelRadius, const UIColor& color, UCHAR alpha, UICameraBase3D* pCamera) {
     // Calculate camera-facing billboard
     Matrix view = pCamera->GetViewMatrix();
     XMVECTOR right = XMVectorSet(view.m[0][0], view.m[1][0], view.m[2][0], 0);
@@ -1975,7 +1893,7 @@ void UIDXFoundation::Draw3DWorldCircle(const XMFLOAT3& center, float pixelRadius
                       p_triangleEffect3D, GetCurrentClipRect(), pCamera);
 }
 
-void UIDXFoundation::Draw3DWorldTriangle(const XMFLOAT3& p1, const XMFLOAT3& p2, const XMFLOAT3& p3, const UIColor& color, UCHAR alpha, UICameraBase* pCamera) {
+void UIDXFoundation::Draw3DWorldTriangle(const XMFLOAT3& p1, const XMFLOAT3& p2, const XMFLOAT3& p3, const UIColor& color, UCHAR alpha, UICameraBase3D* pCamera) {
     vector<VertexPositionColor> vertices;
     vector<uint16_t> indices;
     
@@ -1999,7 +1917,7 @@ void UIDXFoundation::Draw3DWorldTriangle(const XMFLOAT3& p1, const XMFLOAT3& p2,
 }
 
 void UIDXFoundation::Draw3DWorldTriangle(const XMFLOAT3& p1, const XMFLOAT3& p2, const XMFLOAT3& p3, 
-                                        const UIColor& color1, const UIColor& color2, const UIColor& color3, UCHAR alpha, UICameraBase* pCamera) {
+                                        const UIColor& color1, const UIColor& color2, const UIColor& color3, UCHAR alpha, UICameraBase3D* pCamera) {
     vector<VertexPositionColor> vertices;
     vector<uint16_t> indices;
     
@@ -2024,8 +1942,104 @@ void UIDXFoundation::Draw3DWorldTriangle(const XMFLOAT3& p1, const XMFLOAT3& p2,
                       p_triangleEffect3D, GetCurrentClipRect(), pCamera);
 }
 
+void UIDXFoundation::Draw3DWorldTextureTriangle(const XMFLOAT3& p1, const XMFLOAT3& p2, const XMFLOAT3& p3,
+                                                const XMFLOAT2& uv1, const XMFLOAT2& uv2, const XMFLOAT2& uv3,
+                                                size_t textureIndex, UCHAR alpha, UICameraBase3D* pCamera) {
+    // Get texture resource
+    TextureResource& resource = _textureResources[textureIndex];
+    
+    // Create vertices with texture coordinates
+    vector<VertexPositionTexture> vertices = {
+        { {p1.x, p1.y, p1.z}, uv1 },
+        { {p2.x, p2.y, p2.z}, uv2 },
+        { {p3.x, p3.y, p3.z}, uv3 }
+    };
+    
+    // Triangle indices
+    vector<uint16_t> indices = { 0, 1, 2 };
+    
+    // Register batch data for rendering
+    RegisterBatchTextureData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, p_triangleTexturedEffect3D, 
+                             resource._gpuDescriptor, p_states->LinearClamp(), alpha, GetCurrentClipRect(), pCamera);
+}
+
+void UIDXFoundation::Draw3DWorldRectOutline(const XMFLOAT3& pLT, const XMFLOAT3& pRT, const XMFLOAT3& pLB, const XMFLOAT3& pRB,
+                                            const UIColor& color, float lineWidth, UICameraBase3D* pCamera) {
+    Draw3DWorldLine(pLT, pRT, color, lineWidth, pCamera);  // Top edge
+    Draw3DWorldLine(pRT, pRB, color, lineWidth, pCamera);  // Right edge
+    Draw3DWorldLine(pRB, pLB, color, lineWidth, pCamera);  // Bottom edge
+    Draw3DWorldLine(pLB, pLT, color, lineWidth, pCamera);  // Left edge
+}
+
+void UIDXFoundation::Draw3DWorldRectSolid(const XMFLOAT3& pLT, const XMFLOAT3& pRT, const XMFLOAT3& pLB, const XMFLOAT3& pRB,
+                                          const UIColor& color, UCHAR alpha, UICameraBase3D* pCamera) {
+    Draw3DWorldRectSolid(pLT, pRT, pLB, pRB, color, color, color, color, alpha, pCamera);
+}
+
+void UIDXFoundation::Draw3DWorldRectSolid(const XMFLOAT3& pLT, const XMFLOAT3& pRT, const XMFLOAT3& pLB, const XMFLOAT3& pRB,
+                                          const UIColor& colorLT, const UIColor& colorRT, const UIColor& colorLB, const UIColor& colorRB,
+                                          UCHAR alpha, UICameraBase3D* pCamera) {
+    // Convert colors to XMFLOAT4
+    XMFLOAT4 color4_LT, color4_RT, color4_LB, color4_RB;
+    XMStoreFloat4(&color4_LT, colorLT.ToXMVECTORF32(alpha));
+    XMStoreFloat4(&color4_RT, colorRT.ToXMVECTORF32(alpha));
+    XMStoreFloat4(&color4_LB, colorLB.ToXMVECTORF32(alpha));
+    XMStoreFloat4(&color4_RB, colorRB.ToXMVECTORF32(alpha));
+    
+    // Create vertices (pLT=LT, pRT=RT, pLB=LB, pRB=RB)
+    vector<VertexPositionColor> vertices = {
+        { {pLT.x, pLT.y, pLT.z}, color4_LT },  // Left-top
+        { {pRT.x, pRT.y, pRT.z}, color4_RT },  // Right-top
+        { {pLB.x, pLB.y, pLB.z}, color4_LB },  // Left-bottom
+        { {pRB.x, pRB.y, pRB.z}, color4_RB }   // Right-bottom
+    };
+    
+    // Define indices for two triangles (0=LT, 1=RT, 2=LB, 3=RB)
+    vector<uint16_t> indices = { 0, 1, 2, 1, 3, 2 };
+    
+    // Register batch data
+    RegisterBatchData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, 
+                      p_triangleEffect3D, GetCurrentClipRect(), pCamera);
+}
+
+void UIDXFoundation::Draw3DWorldImage(size_t textureIndex, const RECT& srcRect, const DirectX::XMFLOAT3& pLT, const DirectX::XMFLOAT3& pRT, 
+						              const DirectX::XMFLOAT3& pLB, const DirectX::XMFLOAT3& pRB, UCHAR alpha, UICameraBase3D* pCamera) {
+    // Get texture resource
+    TextureResource& resource = _textureResources[textureIndex];
+    
+    // Get original texture size 
+    const RECT textureRect = Get2DTextureRect(resource._texture);
+    
+    // Use provided srcRect or full texture
+    RECT actualSrcRect = srcRect;
+    if (IsRectEmpty(&srcRect)) {
+        actualSrcRect = textureRect;
+    }
+    
+    // Calculate texture coordinates
+    float texLeft = (float)actualSrcRect.left / (float)GetRectWidth()(textureRect);
+    float texTop = (float)actualSrcRect.top / (float)GetRectHeight()(textureRect);
+    float texRight = (float)actualSrcRect.right / (float)GetRectWidth()(textureRect);
+    float texBottom = (float)actualSrcRect.bottom / (float)GetRectHeight()(textureRect);
+    
+    // Create vertices with texture coordinates (pLT=LT, pRT=RT, pLB=LB, pRB=RB)
+    vector<VertexPositionTexture> vertices = {
+        { {pLT.x, pLT.y, pLT.z}, XMFLOAT2(texLeft, texTop) },      // Left-top
+        { {pRT.x, pRT.y, pRT.z}, XMFLOAT2(texRight, texTop) },     // Right-top
+        { {pLB.x, pLB.y, pLB.z}, XMFLOAT2(texLeft, texBottom) },   // Left-bottom
+        { {pRB.x, pRB.y, pRB.z}, XMFLOAT2(texRight, texBottom) }   // Right-bottom
+    };
+    
+    // Define indices for two triangles
+    vector<uint16_t> indices = { 0, 1, 2, 1, 3, 2 };
+    
+    // Register batch texture data
+    RegisterBatchTextureData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, p_triangleTexturedEffect3D, 
+                             resource._gpuDescriptor, p_states->LinearClamp(), alpha, GetCurrentClipRect(), pCamera);
+}
+
 // Helper function to calculate world length from pixel length
-float UIDXFoundation::CalculateWorldLengthFromPixelLength(float pixelLength, const XMFLOAT3& worldPosition, UICameraBase* pCamera) {
+float UIDXFoundation::CalculateWorldLengthFromPixelLength(float pixelLength, const XMFLOAT3& worldPosition, UICameraBase3D* pCamera) {
     // Get camera matrices
     XMMATRIX view = pCamera->GetViewMatrix();
     XMMATRIX proj = pCamera->GetProjectionMatrix();
@@ -2059,7 +2073,7 @@ float UIDXFoundation::CalculateWorldLengthFromPixelLength(float pixelLength, con
 }
 
 void UIDXFoundation::Draw3DWorldTextFT(const std::wstring& text, const DirectX::XMFLOAT3& worldPosition,
-                                       const UIColor& color, float fontSize, UICameraBase* pCamera) {
+                                       const UIColor& color, float fontSize, UICameraBase3D* pCamera) {
     float x = worldPosition.x;
     float y = worldPosition.y;
     float z = worldPosition.z;
@@ -2095,7 +2109,7 @@ void UIDXFoundation::Draw3DWorldTextFT(const std::wstring& text, const DirectX::
     }
 }
 
-void UIDXFoundation::Draw3DWorldCharTextureFT(size_t textureIndex, DirectX::XMFLOAT3 worldPosition, float scale, UCHAR alpha, UICameraBase* pCamera) {
+void UIDXFoundation::Draw3DWorldCharTextureFT(size_t textureIndex, DirectX::XMFLOAT3 worldPosition, float scale, UCHAR alpha, UICameraBase3D* pCamera) {
     // Get texture resource
     CharTextureResource& resource = _charTextureResources[textureIndex];
     
@@ -2123,8 +2137,6 @@ void UIDXFoundation::Draw3DWorldCharTextureFT(size_t textureIndex, DirectX::XMFL
                              resource._gpuDescriptor, p_states->LinearClamp(), alpha, GetCurrentClipRect(), pCamera);
 }
 
-
-
 // Helper method to clear the back buffers.
 void UIDXFoundation::Clear() {
     auto commandList = p_deviceResources->GetCommandList();
@@ -2141,8 +2153,8 @@ void UIDXFoundation::Clear() {
     // Set the viewport.
     //auto viewport = p_deviceResources->GetScreenViewport();
     //commandList->RSSetViewports(1, &viewport);
-    commandList->RSSetViewports(1, &UICameraUI::GetSingletonInstance()->GetViewport());
-    _pCurrentCamera = UICameraUI::GetSingletonInstance();
+    commandList->RSSetViewports(1, &UICameraUI2D::GetSingletonInstance()->GetViewport());
+    _pCurrentCamera = UICameraUI2D::GetSingletonInstance();
 
     // Set the scissor rect.
     ResetClipRect();
@@ -2358,36 +2370,30 @@ void UIDXFoundation::CreateDeviceDependentResourcesXTK() {
 void UIDXFoundation::CreateWindowSizeDependentResourcesXTK() {
     auto size = p_deviceResources->_outputSize;
 
-    UICameraUI::GetSingletonInstance()->SetUpCamera({0, 0, size.right, size.bottom});
+    UICameraUI2D::GetSingletonInstance()->SetUpCamera({0, 0, size.right, size.bottom});
+    UICameraUI3D::GetSingletonInstance()->SetUpCamera({0, 0, size.right, size.bottom});
     UICameraGame::GetSingletonInstance()->SetUpCamera({0, 0, size.right, size.bottom});
 
     // 2D resources
     //auto viewport = p_deviceResources->GetScreenViewport();
     //p_sprites->SetViewport(viewport);
     
-    // create 2D orthographic projection matrix
-    _orthoMatrix2D = Matrix::CreateOrthographicOffCenter(
-        0.0f, static_cast<float>(size.right),
-        static_cast<float>(size.bottom), 0.0f,
-        0.0f, 1.0f //-1.0f, 1.0f
-    );
-    
     // set the matrices for 2D drawing
     p_pointEffect2D->SetWorld(Matrix::Identity);
-    p_pointEffect2D->SetView(Matrix::Identity);
-    p_pointEffect2D->SetProjection(_orthoMatrix2D);
+    p_pointEffect2D->SetView(UICameraUI2D::GetSingletonInstance()->GetViewMatrix());
+    p_pointEffect2D->SetProjection(UICameraUI2D::GetSingletonInstance()->GetProjectionMatrix());
 
     p_lineEffect2D->SetWorld(Matrix::Identity);
-    p_lineEffect2D->SetView(Matrix::Identity);
-    p_lineEffect2D->SetProjection(_orthoMatrix2D);
+    p_lineEffect2D->SetView(UICameraUI2D::GetSingletonInstance()->GetViewMatrix());
+    p_lineEffect2D->SetProjection(UICameraUI2D::GetSingletonInstance()->GetProjectionMatrix());
 
     p_triangleEffect2D->SetWorld(Matrix::Identity);
-    p_triangleEffect2D->SetView(Matrix::Identity);
-    p_triangleEffect2D->SetProjection(_orthoMatrix2D);
+    p_triangleEffect2D->SetView(UICameraUI2D::GetSingletonInstance()->GetViewMatrix());
+    p_triangleEffect2D->SetProjection(UICameraUI2D::GetSingletonInstance()->GetProjectionMatrix());
 
     p_triangleTexturedEffect2D->SetWorld(Matrix::Identity);
-    p_triangleTexturedEffect2D->SetView(Matrix::Identity);
-    p_triangleTexturedEffect2D->SetProjection(_orthoMatrix2D);
+    p_triangleTexturedEffect2D->SetView(UICameraUI2D::GetSingletonInstance()->GetViewMatrix());
+    p_triangleTexturedEffect2D->SetProjection(UICameraUI2D::GetSingletonInstance()->GetProjectionMatrix());
 }
 
 void UIDXFoundation::CreateResources() {
@@ -2504,25 +2510,27 @@ bool UIDXFoundation::GetFTSizeFont(float fontSize, FTSizeFont& ftSizeFont) {
 }
 
 /*
+  FreeType Glyph Bitmap Layout and Metrics
+  
                        bitmap.width
                     <-------------->
-                    ┌──────────────�?      �?
-                    �?             �?      �?
-                    �?             �?      �?bitmap.rows
-      baseline      �?   glyph     �?      �?
-      ──────────────┼──────────────┼───────┼────────────────────────
-                    �?             �?      �?
-                    └──────────────�?      �?
+                    +---------------+      ^
+                    |               |      |
+                    |               |      | bitmap.rows
+      baseline      |    glyph      |      |
+      ==============+===============+======v================
+                    |               |      
+                    +---------------+      
                     ^              ^
-                    �?             �?
-                    �?             └─── right edge of bitmap
-                    �?
-                    └─── left edge of bitmap
+                    |              |
+                    |              +---- right edge of bitmap
+                    |
+                    +---- left edge of bitmap
 
       <-bitmap_left->|              |<----------advance.x---------->|
       
       ^
-      �?
+      |
       origin point       
 
 
@@ -2532,11 +2540,11 @@ bool UIDXFoundation::GetFTSizeFont(float fontSize, FTSizeFont& ftSizeFont) {
     bitmap_left: the horizontal distance from the left edge of the glyph bitmap to the origin point
     bitmap_top: the vertical distance from the top edge of the glyph bitmap to the baseline
 
-    for space char�?
-    bitmap.width & bitmap.rows:0
-    bitmap_left & bitmap_top:0
+    For space character:
+    bitmap.width & bitmap.rows: 0
+    bitmap_left & bitmap_top: 0
     advance.x >> 6 will decide the width of the space
-    Note�?> 6 is a displacement operation that converts FreeType's 1/64 pixel units to integer pixel units.
+    Note: >> 6 is a bit shift operation that converts FreeType's 1/64 pixel units to integer pixel units.
 */
 bool UIDXFoundation::GetCharTextureResourceFT(const wchar_t& wch, float fontSize, const UIColor& color, size_t& textureIndex) {
     // use wchar+color as the key
@@ -2697,10 +2705,10 @@ void UIDXFoundation::Draw2DCharTextureFT(size_t textureIndex, XMFLOAT2 position,
     dstEnd.x = position.x + (float)(GetRectWidth()(textureRect)) * scale;
     dstEnd.y = position.y + (float)(GetRectHeight()(textureRect)) * scale;
 
-    // get view space Z value using 2D transform
-    float viewZ = CalculateViewZByOrtho(z);
+    // Get view space Z value using 2D transform
+    float viewZ = UICameraUI2D::GetSingletonInstance()->CalculateViewZByOrtho(z);
 
-    // create vertex data
+    // Create vertex data
     vector<VertexPositionTexture> vertices = {
         { {position.x, position.y, viewZ}, XMFLOAT2(0.f, 0.f) },
         { {dstEnd.x, position.y, viewZ}, XMFLOAT2(1.f, 0.f) },
@@ -2712,7 +2720,7 @@ void UIDXFoundation::Draw2DCharTextureFT(size_t textureIndex, XMFLOAT2 position,
     vector<uint16_t> indices = { 0, 1, 2, 1, 3, 2 };
 
     RegisterBatchTextureData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, p_triangleTexturedEffect2D, 
-                             resource._gpuDescriptor, p_states->LinearClamp(), alpha, GetCurrentClipRect(), UICameraUI::GetSingletonInstance());
+                             resource._gpuDescriptor, p_states->LinearClamp(), alpha, GetCurrentClipRect(), UICameraUI2D::GetSingletonInstance());
     
 
     // p_sprites use more memory and is slower than PrimitiveBatch!!!
@@ -2757,21 +2765,21 @@ void UIDXFoundation::Draw3DCharTextureFT(size_t textureIndex, XMFLOAT2 position,
     XMFLOAT2 ps, pe;
     Calculate2DRectPoints(position, dstEnd, ps, pe);
     vector<XMFLOAT3> wps;
-    UIZPlaneTransform::TransformRectPoints(transformMatrix, ps, pe, z - 0.1f, wps);
+    UIZPlaneTransform::TransformRectPoints(transformMatrix, ps, pe, z, wps);
 
     // create vertices with texture coordinates
     vector<VertexPositionTexture> vertices = {
-        { {wps[0].x, wps[0].y, wps[0].z}, XMFLOAT2(0.f, 0.f) },
-        { {wps[1].x, wps[1].y, wps[1].z}, XMFLOAT2(1.f, 0.f) },
-        { {wps[2].x, wps[2].y, wps[2].z}, XMFLOAT2(0.f, 1.f) },
-        { {wps[3].x, wps[3].y, wps[3].z}, XMFLOAT2(1.f, 1.f) }
+        { {wps[0].x, wps[0].y, wps[0].z - 50.0f}, XMFLOAT2(0.f, 0.f) },
+        { {wps[1].x, wps[1].y, wps[1].z - 50.0f}, XMFLOAT2(1.f, 0.f) },
+        { {wps[2].x, wps[2].y, wps[2].z - 50.0f}, XMFLOAT2(0.f, 1.f) },
+        { {wps[3].x, wps[3].y, wps[3].z - 50.0f}, XMFLOAT2(1.f, 1.f) }
     };
     // Define indices for two triangles
     vector<uint16_t> indices = { 0, 1, 2, 1, 3, 2 };
 
     RegisterBatchTextureData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, p_triangleTexturedEffect3D, 
                              _charTextureResources[textureIndex]._gpuDescriptor, 
-                             p_states->LinearClamp(), alpha, GetCurrentClipRect(), UICameraUI::GetSingletonInstance());
+                             p_states->LinearClamp(), alpha, GetCurrentClipRect(), UICameraUI3D::GetSingletonInstance());
 }
 
 void UIDXFoundation::Draw2DTextFT(const wstring& text, const XMFLOAT2& position, float z, const UIColor& color, float fontSize) {
@@ -3283,8 +3291,7 @@ void UIDXFoundation::UpdateBatchState(const BatchData& batch, ID3D12GraphicsComm
     bool effectChanged = (_pCurrentEffect != batch._pEffect);
 
     if (cameraChanged || effectChanged) {
-        if (batch._pEffect != p_pointEffect2D.get() && batch._pEffect != p_lineEffect2D.get() && 
-            batch._pEffect != p_triangleEffect2D.get() && batch._pEffect != p_triangleTexturedEffect2D.get()) {
+        if (batch._pCamera != UICameraUI2D::GetSingletonInstance()) {
             batch._pEffect->SetWorld(Matrix::Identity);
             batch._pEffect->SetView(batch._pCamera->GetViewMatrix());
             batch._pEffect->SetProjection(batch._pCamera->GetProjectionMatrix());
