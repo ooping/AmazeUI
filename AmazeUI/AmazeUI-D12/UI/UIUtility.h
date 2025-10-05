@@ -156,17 +156,6 @@ namespace UIShape2D {
 	};
 };
 
-using UICreateRect = UIShape2D::CreateRect();
-using UICreatePoint = UIShape2D::CreatePoint();
-using UICreateSize = UIShape2D::CreateSize();
-using UIGetRectWidth = UIShape2D::GetRectWidth();
-using UIGetRectHeight = UIShape2D::GetRectHeight();
-using UIGetRectCenter = UIShape2D::GetRectCenter();
-using UICompareRects = UIShape2D::CompareRects();
-using UIIntersectRects = UIShape2D::IntersectRects();
-using UIComparePoints = UIShape2D::ComparePoints();
-using UIContainsPoint = UIShape2D::ContainsPoint();
-using UIScaleRect = UIShape2D::ScaleRect();
 
 // Control Dynamic Scaling Auxiliary Class
 /*	father window

@@ -1,9 +1,10 @@
 #include "UIElement.h"
 #include "UIDXFoundation.h"
+
 using namespace std;
 using namespace DirectX;
-using namespace UIShape2D;
 using namespace SimpleMath;
+using namespace UIShape2D;
 
 UIScreenClipRectGuard::UIScreenClipRectGuard(const RECT& clipRC, bool execute) {
 	_execute = execute;
@@ -280,93 +281,7 @@ SIZE UIFont::GetDrawAreaSize(std::wstring text) {
 	return UIDXFoundation::GetSingletonInstance()->GetTextSizeFT(text, _fontSize);
 }
 
-// Note: Camera implementations (UICameraBase3D, UICameraUI2D, UICameraUI3D, UICameraGame, UICameraCtrl)
-// have been moved to UICamera.cpp
 
-XMMATRIX UIZPlaneTransform::GetTransformMatrix(bool isRotationZ, float xByZ, float yByZ, float zAngle,
-											   bool isRotationX, float yByX, float xAngle,
-											   bool isRotationY, float xByY, float yAngle,
-											   float z) {
-	XMMATRIX finalMatrix = XMMatrixIdentity();
-
-	// z axis rotation matrix in 2D space
-	if (isRotationZ) {
-		XMFLOAT3 zPivot = UICameraUI3D::GetSingletonInstance()->ConvertScreen2DTo3D(XMFLOAT3(xByZ, yByZ, z));
-		XMVECTOR pivotPoint = XMLoadFloat3(&zPivot);
-		
-		XMMATRIX toOrigin = XMMatrixTranslationFromVector(-pivotPoint);
-		XMMATRIX rotation = XMMatrixRotationZ(zAngle);
-		XMMATRIX fromOrigin = XMMatrixTranslationFromVector(pivotPoint);
-		
-		finalMatrix = finalMatrix * (toOrigin * rotation * fromOrigin);
-	}
-
-	// xy axis rotation matrix, in the same z plane
-	if (isRotationX || isRotationY) {
-		XMFLOAT3 xyPivot = UICameraUI3D::GetSingletonInstance()->ConvertScreen2DTo3D(XMFLOAT3(isRotationY ? xByY : 0.f, isRotationX ? yByX : 0.f, z));
-		XMVECTOR pivotPoint = XMLoadFloat3(&xyPivot);
-
-		// move to origin
-		XMMATRIX toOrigin = XMMatrixTranslationFromVector(-pivotPoint);
-
-		// rotate
-		XMMATRIX rotation = XMMatrixIdentity();         
-		if (isRotationX) {
-			rotation = rotation * XMMatrixRotationX(xAngle);
-		}
-		if (isRotationY) {
-			rotation = rotation * XMMatrixRotationY(yAngle);
-		}
-		
-		// move back
-		XMMATRIX fromOrigin = XMMatrixTranslationFromVector(pivotPoint);
-		
-		finalMatrix = finalMatrix * (toOrigin * rotation * fromOrigin);
-	}
-
-	return finalMatrix;
-}
-
-void UIZPlaneTransform::TransformPoint(const XMMATRIX& transform, const XMFLOAT2& point, float z, XMFLOAT3& wp) {
-	wp = UICameraUI3D::GetSingletonInstance()->ConvertScreen2DTo3D(XMFLOAT3(point.x, point.y, z));
-	XMVECTOR v = XMVector3Transform(XMLoadFloat3(&wp), transform);
-	XMStoreFloat3(&wp, v);
-}
-
-void UIZPlaneTransform::TransformPoints(const XMMATRIX& transform, const vector<XMFLOAT2>& points, float z, vector<XMFLOAT3>& wps) {
-	wps.clear();
-	for (const auto& point : points) {
-		TransformPoint(transform, point, z, wps.emplace_back());
-	}
-}
-
-void UIZPlaneTransform::TransformLinePoints(const XMMATRIX& transform, const XMFLOAT2& ps, const XMFLOAT2& pe, float z, vector<XMFLOAT3>& wps) {
-	wps.resize(2);
-	TransformPoints(transform, {ps, pe}, z, wps);
-}
-
-void UIZPlaneTransform::TransformRectPoints(const XMMATRIX& transform, const XMFLOAT2& ps, const XMFLOAT2& pe, float z, vector<XMFLOAT3>& wps) {
-	wps.resize(4);
-	TransformPoints(transform, {ps, {pe.x, ps.y}, {ps.x, pe.y}, pe}, z, wps);
-}
-
-void UI3DRotation::SetRotationZ(bool isRotationZ, LONG xbyZ, LONG ybyZ, float zAngle) {
-	_isRotationZ = isRotationZ;
-	_XYByZ = XMFLOAT2((float)xbyZ, (float)ybyZ);
-	_zAngle = zAngle;
-}
-
-void UI3DRotation::SetRotationX(bool isRotationX, LONG yByx, float xAngle) {
-	_isRotationX = isRotationX;
-	_XY.y = (float)yByx;
-	_xAngle = xAngle;
-}
-
-void UI3DRotation::SetRotationY(bool isRotationY, LONG xByY, float yAngle) {
-	_isRotationY = isRotationY;
-	_XY.x = (float)xByY;
-	_yAngle = yAngle;
-}
 
 // UIPoint3D implementation
 UIPoint3D::UIPoint3D(float x, float y, float z) : _point(x, y, z) {}

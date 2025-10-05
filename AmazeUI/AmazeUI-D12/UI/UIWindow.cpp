@@ -5,8 +5,8 @@
 #include "UIElement.h"
 
 using namespace std;
-using namespace UIShape2D;
 using namespace DirectX;
+using namespace UIShape2D;
 
 const float gLevelZ = 0.01f;
 const float gPopupZ = 0.5f;
