@@ -85,9 +85,9 @@ struct StringHelper {
         }
 
     #ifdef _WIN32
-        int size = MultiByteToWideChar(CP_UTF8, 0, str.c_str(), static_cast<int>(str.length()), nullptr, 0);
+        int size = MultiByteToWideChar(CP_ACP, 0, str.c_str(), static_cast<int>(str.length()), nullptr, 0);
         std::wstring result(size, 0);
-        MultiByteToWideChar(CP_UTF8, 0, str.c_str(), static_cast<int>(str.length()), &result[0], size);
+        MultiByteToWideChar(CP_ACP, 0, str.c_str(), static_cast<int>(str.length()), &result[0], size);
         return result;
     #endif
     }
@@ -98,9 +98,9 @@ struct StringHelper {
         }
  
     #ifdef _WIN32
-        int size = WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), static_cast<int>(wstr.length()), nullptr, 0, nullptr, nullptr);
+        int size = WideCharToMultiByte(CP_ACP, 0, wstr.c_str(), static_cast<int>(wstr.length()), nullptr, 0, nullptr, nullptr);
         std::string result(size, 0);
-        WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), static_cast<int>(wstr.length()), &result[0], size, nullptr, nullptr);
+        WideCharToMultiByte(CP_ACP, 0, wstr.c_str(), static_cast<int>(wstr.length()), &result[0], size, nullptr, nullptr);
         return result;
     #endif
     }

@@ -2814,7 +2814,7 @@ void UIDXFoundation::Draw2DTextFT(const wstring& text, const XMFLOAT2& position,
     }
 }
 
-void UIDXFoundation::Draw2DTextFT(const wstring& text, const RECT& rc, int posFlag, float z, const UIColor& color, float fontSize) {
+void UIDXFoundation::Draw2DTextFT(const wstring& text, const RECT& rc, UIFontPos alignment, float z, const UIColor& color, float fontSize) {
     FTSizeFont ftSizeFont;
     GetFTSizeFont(fontSize, ftSizeFont);
     
@@ -2828,6 +2828,7 @@ void UIDXFoundation::Draw2DTextFT(const wstring& text, const RECT& rc, int posFl
     //float y = static_cast<float>(rc.top);
 
     // horizontal alignment
+	int posFlag = static_cast<int>(alignment);
     if (posFlag & 0x01) {  // center
         x = rc.left + (rc.right - rc.left - textWidth) / 2;
     } else if (posFlag & 0x02) {  // right
@@ -2903,7 +2904,7 @@ void UIDXFoundation::Draw3DTextFT(const wstring& text, const XMFLOAT2& position,
     }
 }
 
-void UIDXFoundation::Draw3DTextFT(const wstring& text, const RECT& rc, int posFlag, float z, const UIColor& color, float fontSize,
+void UIDXFoundation::Draw3DTextFT(const wstring& text, const RECT& rc, UIFontPos alignment, float z, const UIColor& color, float fontSize,
 					         const XMMATRIX& transformMatrix) {
     FTSizeFont ftSizeFont;
     GetFTSizeFont(fontSize, ftSizeFont);
@@ -2918,6 +2919,7 @@ void UIDXFoundation::Draw3DTextFT(const wstring& text, const RECT& rc, int posFl
     //float y = static_cast<float>(rc.top);
 
     // horizontal alignment
+	int posFlag = static_cast<int>(alignment);
     if (posFlag & 0x01) {  // center
         x = rc.left + (rc.right - rc.left - textWidth) / 2;
     } else if (posFlag & 0x02) {  // right
@@ -3006,7 +3008,7 @@ void UIDXFoundation::Draw2DTextMultiLineFT(const wstring& text, const XMFLOAT2& 
     }
 }
 
-void UIDXFoundation::Draw2DTextMultiLineFT(const wstring& text, const RECT& rc, int posFlag, float z, const UIColor& color, float fontSize, float lineSpacing) {
+void UIDXFoundation::Draw2DTextMultiLineFT(const wstring& text, const RECT& rc, UIFontPos alignment, float z, const UIColor& color, float fontSize, float lineSpacing) {
     if (text.empty()) {
         return;
     }
@@ -3051,6 +3053,7 @@ void UIDXFoundation::Draw2DTextMultiLineFT(const wstring& text, const RECT& rc, 
     float startY = static_cast<float>(rc.top);
 
     // vertical alignment calculation
+	int posFlag = static_cast<int>(alignment);
     if (posFlag & 0x04) { // center
         startY = rc.top + (GetRectHeight()(rc) - totalTextHeight) / 2;
     } else if (posFlag & 0x08) { // bottom
@@ -3077,7 +3080,7 @@ void UIDXFoundation::Draw2DTextMultiLineFT(const wstring& text, const RECT& rc, 
         };
 
         // call existing single-line drawing function
-        Draw2DTextFT(line, lineRect, posFlag, z, color, fontSize);
+        Draw2DTextFT(line, lineRect, alignment, z, color, fontSize);
     }
 }
 
@@ -3128,7 +3131,7 @@ void UIDXFoundation::Draw3DTextMultiLineFT(const wstring& text, const XMFLOAT2& 
     }
 }
 
-void UIDXFoundation::Draw3DTextMultiLineFT(const wstring& text, const RECT& rc, int posFlag, float z, const UIColor& color, float fontSize, float lineSpacing, 
+void UIDXFoundation::Draw3DTextMultiLineFT(const wstring& text, const RECT& rc, UIFontPos alignment, float z, const UIColor& color, float fontSize, float lineSpacing,
 					  		               const XMMATRIX& transformMatrix) {
     if (text.empty()) {
         return;
@@ -3174,6 +3177,7 @@ void UIDXFoundation::Draw3DTextMultiLineFT(const wstring& text, const RECT& rc, 
     float startY = static_cast<float>(rc.top);
 
     // vertical alignment calculation
+	int posFlag = static_cast<int>(alignment);
     if (posFlag & 0x04) { // center
         startY = rc.top + (GetRectHeight()(rc) - totalTextHeight) / 2;
     } else if (posFlag & 0x08) { // bottom
@@ -3200,7 +3204,7 @@ void UIDXFoundation::Draw3DTextMultiLineFT(const wstring& text, const RECT& rc, 
         };
 
         // call existing single-line drawing function
-        Draw3DTextFT(line, lineRect, posFlag, z, color, fontSize, transformMatrix);
+        Draw3DTextFT(line, lineRect, alignment, z, color, fontSize, transformMatrix);
     }
 }
 

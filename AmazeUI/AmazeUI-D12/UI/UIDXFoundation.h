@@ -234,23 +234,28 @@ private:
 
 /*************************************************** FreeType APIs ***************************************************/
 public:
+	// ========== 2D Screen Text ==========
 	void Draw2DTextFT(const std::wstring& text, const DirectX::XMFLOAT2& position, float z, const UIColor& color, float fontSize);
-	void Draw2DTextFT(const std::wstring& text, const RECT& rc, int posFlag, float z, const UIColor& color, float fontSize);
-	void Draw3DTextFT(const std::wstring& text, const DirectX::XMFLOAT2& position, float z, const UIColor& color, float fontSize,
-					  const DirectX::XMMATRIX& transformMatrix = DirectX::XMMatrixIdentity());
-	void Draw3DTextFT(const std::wstring& text, const RECT& rc, int posFlag, float z, const UIColor& color, float fontSize,
-					  const DirectX::XMMATRIX& transformMatrix = DirectX::XMMatrixIdentity());
-	SIZE GetTextSizeFT(const std::wstring& text, float fontSize);
-	// Draw multi-line text
+	void Draw2DTextFT(const std::wstring& text, const RECT& rc, UIFontPos alignment, float z, const UIColor& color, float fontSize);
 	void Draw2DTextMultiLineFT(const std::wstring& text, const DirectX::XMFLOAT2& position, float z, const UIColor& color, float fontSize, float lineSpacing = 1.2f);
-	void Draw2DTextMultiLineFT(const std::wstring& text, const RECT& rc, int posFlag, float z, const UIColor& color, float fontSize, float lineSpacing = 1.2f);
-	void Draw3DTextMultiLineFT(const std::wstring& text, const DirectX::XMFLOAT2& position, float z, const UIColor& color, float fontSize, float lineSpacing = 1.2f,
-					  		   const DirectX::XMMATRIX& transformMatrix = DirectX::XMMatrixIdentity());
-	void Draw3DTextMultiLineFT(const std::wstring& text, const RECT& rc, int posFlag, float z, const UIColor& color, float fontSize, float lineSpacing = 1.2f,
-					  		   const DirectX::XMMATRIX& transformMatrix = DirectX::XMMatrixIdentity());
+	void Draw2DTextMultiLineFT(const std::wstring& text, const RECT& rc, UIFontPos alignment, float z, const UIColor& color, float fontSize, float lineSpacing = 1.2f);
 
-	void Draw3DWorldTextFT(const std::wstring& text, const DirectX::XMFLOAT3& worldPosition, 
-						   const UIColor& color, float fontSize, UICameraBase3D* pCamera);
+	// ========== 3D Screen Text ==========
+	void Draw3DTextFT(const std::wstring& text, const DirectX::XMFLOAT2& position, float z, const UIColor& color, float fontSize,
+		const DirectX::XMMATRIX& transformMatrix = DirectX::XMMatrixIdentity());
+	void Draw3DTextFT(const std::wstring& text, const RECT& rc, UIFontPos alignment, float z, const UIColor& color, float fontSize,
+		const DirectX::XMMATRIX& transformMatrix = DirectX::XMMatrixIdentity());
+	void Draw3DTextMultiLineFT(const std::wstring& text, const DirectX::XMFLOAT2& position, float z, const UIColor& color, float fontSize, float lineSpacing = 1.2f,
+		const DirectX::XMMATRIX& transformMatrix = DirectX::XMMatrixIdentity());
+	void Draw3DTextMultiLineFT(const std::wstring& text, const RECT& rc, UIFontPos alignment, float z, const UIColor& color, float fontSize, float lineSpacing = 1.2f,
+		const DirectX::XMMATRIX& transformMatrix = DirectX::XMMatrixIdentity());
+
+	// ========== 3D World Text (unchanged for now) ==========
+	void Draw3DWorldTextFT(const std::wstring& text, const DirectX::XMFLOAT3& worldPosition,
+		const UIColor& color, float fontSize, UICameraBase3D* pCamera);
+
+	// ========== Utility Functions ==========
+	SIZE GetTextSizeFT(const std::wstring& text, float fontSize);
 
 private:
 	void CreateResourcesFT();

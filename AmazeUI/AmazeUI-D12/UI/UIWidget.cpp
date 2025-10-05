@@ -118,7 +118,7 @@ void UILayoutGrid::CalcGridPos() {
 UILabel::UILabel() {
 	_color = Colors::Black;
 	_fontHeight = gDefaultFontSize;
-	_pos = UIFont::HLEFT_VCENTER;
+	_pos = UIFontPos::MiddleLeft;
 	_supportMultiLine = false;
 }
 
@@ -138,7 +138,7 @@ void UILabel::Draw() {
 	}
 }
 
-void UILabel::SetText(UIString text, DWORD pos) {
+void UILabel::SetText(UIString text, UIFontPos pos) {
 	_text = text;
 	_pos = pos;
 }
@@ -155,7 +155,7 @@ void UILabel::SetFontHeight(float h) {
 	_fontHeight = h;
 }
 
-void UILabel::SetPos(DWORD pos) {
+void UILabel::SetPos(UIFontPos pos) {
 	_pos = pos;
 }
 
@@ -274,7 +274,7 @@ void UIButton::Draw() {
 		rc = _strRect2;
 	}
 	OffsetRect(&rc, x_, y_);
-	fontHelp(_text, rc, UIColor::Black, UIFont::HCENTER_VCENTER, transformMatrix);
+	fontHelp(_text, rc, UIColor::Black, UIFontPos::MiddleCenter, transformMatrix);
 }
 
 void UIButton::CalcArea() {
@@ -389,7 +389,7 @@ void UICheckButton::Draw() {
 	RECT rc = _strRect;
 	OffsetRect(&rc, x_, y_);
 	UIFont fontHelp(_z, _fontHeight);
-	fontHelp(_text, rc, UIColor::Black, UIFont::HLEFT_VCENTER, transformMatrix);
+	fontHelp(_text, rc, UIColor::Black, UIFontPos::MiddleLeft, transformMatrix);
 }
 
 void UICheckButton::CalcArea() {
@@ -561,7 +561,7 @@ void UIEdit::Draw() {
 
 		RECT drawRect = _drawRectReal;
 		OffsetRect(&drawRect, x_, y_);
-		fontHelp(_text, drawRect, _fontColor, UIFont::HLEFT_VCENTER, transformMatrix);
+		fontHelp(_text, drawRect, _fontColor, UIFontPos::MiddleLeft, transformMatrix);
 	}
 }
 
@@ -998,7 +998,7 @@ void UISelectList::Draw() {
 		}
 
 		UIFont fontHelp(_z, gDefaultFontSize);
-		fontHelp(_list[i], rc, UIColor::Black, UIFont::HLEFT_VCENTER, transformMatrix);
+		fontHelp(_list[i], rc, UIColor::Black, UIFontPos::MiddleLeft, transformMatrix);
 	}
 }
 
@@ -1104,7 +1104,7 @@ void UIComboBox::Draw() {
 
 		rc.left += 5;
 		UIFont fontHelp(_z, gDefaultFontSize);
-		fontHelp(str, rc, UIColor::Black, UIFont::HLEFT_VCENTER, transformMatrix);
+		fontHelp(str, rc, UIColor::Black, UIFontPos::MiddleLeft, transformMatrix);
 	}
 
 	if (_isDropDown) {
@@ -1424,7 +1424,7 @@ bool UIScrollBar::OnLButtonDbClk(POINT pt) {
 
 UIGrid::GridCellInfo::GridCellInfo(wstring str) {
 	_text = str;
-	//_wordPos = UIFont::HLEFT_VCENTER;
+	//_wordPos = UIFontPos::MiddleLeft;
 
 	// Default is edit control
 	_pCtrl = NULL;
@@ -1906,7 +1906,7 @@ void UIGrid::DrawCells() {
 				rc = CreateRect()(cell._pos.left + _firstColumnPos + 5, cell._pos.top + _firstRowPos, cell._pos.right + _firstColumnPos - 5, cell._pos.bottom + _firstRowPos);
 				OffsetRect(&rc, x_, y_);
 				rc.left += 2;
-				fontHelp(cell._text, rc, cell._color, UIFont::HLEFT_VCENTER, _inheritedTransformMatrix);
+				fontHelp(cell._text, rc, cell._color, UIFontPos::MiddleLeft, _inheritedTransformMatrix);
 			}
 			else if (cell._pCtrl != NULL) {
 				rc = CreateRect()(cell._pos.left + _firstColumnPos, cell._pos.top + _firstRowPos, cell._pos.right + _firstColumnPos, cell._pos.bottom + _firstRowPos);
@@ -1927,7 +1927,7 @@ void UIGrid::DrawCells() {
 			if (cell._pCtrl == NULL) {
 				rc = CreateRect()(cell._pos.left + _firstColumnPos, _gridArea.top, cell._pos.right + _firstColumnPos, _gridArea.top + _rowHeightList[0]);
 				OffsetRect(&rc, x_, y_);
-				fontHelp(cell._text, rc, cell._color, UIFont::HCENTER_VCENTER, _inheritedTransformMatrix);
+				fontHelp(cell._text, rc, cell._color, UIFontPos::MiddleCenter, _inheritedTransformMatrix);
 			}
 			else if (cell._pCtrl != NULL) {
 				rc = CreateRect()(cell._pos.left + _firstColumnPos, _gridArea.top, cell._pos.right + _firstColumnPos, _gridArea.top + _rowHeightList[0]);
@@ -1948,7 +1948,7 @@ void UIGrid::DrawCells() {
 			if (cell._pCtrl == NULL) {
 				rc = CreateRect()(_gridArea.left, cell._pos.top + _firstRowPos, _gridArea.left + _columnWidthList[0], cell._pos.bottom + _firstRowPos);
 				OffsetRect(&rc, x_, y_);
-				fontHelp(cell._text, rc, cell._color, UIFont::HCENTER_VCENTER, _inheritedTransformMatrix);
+				fontHelp(cell._text, rc, cell._color, UIFontPos::MiddleCenter, _inheritedTransformMatrix);
 			}
 			else if (cell._pCtrl != NULL) {
 				rc = CreateRect()(_gridArea.left, cell._pos.top + _firstRowPos, _gridArea.left + _columnWidthList[0], cell._pos.bottom + _firstRowPos);
@@ -1969,7 +1969,7 @@ void UIGrid::DrawCells() {
 			if (cell._pCtrl == NULL) {
 				rc = CreateRect()(_gridArea.left, _gridArea.top, _gridArea.left + _columnWidthList[0], _gridArea.top + _rowHeightList[0]);
 				OffsetRect(&rc, x_, y_);
-				fontHelp(cell._text, rc, cell._color, UIFont::HCENTER_VCENTER, _inheritedTransformMatrix);
+				fontHelp(cell._text, rc, cell._color, UIFontPos::MiddleCenter, _inheritedTransformMatrix);
 			}
 			else if (cell._pCtrl != NULL) {
 				rc = CreateRect()(cell._pos.left, cell._pos.top, cell._pos.right, cell._pos.bottom);
@@ -3603,7 +3603,7 @@ void UIChart::DrawXCoordLable() {
 	SIZE szLabel = fontHelp.GetDrawAreaSize(L"X");
 	RECT rc = CreateRect()(UIShape2D::CreatePoint()((_clientRC.right - szLabel.cx) / 2, _clientRC.bottom - szLabel.cy - 3), szLabel);
 	OffsetRect(&rc, x_, y_);
-	fontHelp(L"X", rc, UIColor::Black, UIFont::HLEFT_VCENTER, _inheritedTransformMatrix);
+	fontHelp(L"X", rc, UIColor::Black, UIFontPos::MiddleLeft, _inheritedTransformMatrix);
 }
 
 void UIChart::DrawY1CoordLable() {
@@ -3616,7 +3616,7 @@ void UIChart::DrawY1CoordLable() {
 	SIZE szLabel = fontHelp.GetDrawAreaSize(L"Y1");
 	RECT rc = CreateRect()(UIShape2D::CreatePoint()(3, (_clientRC.bottom - szLabel.cy) / 2), szLabel);
 	OffsetRect(&rc, x_, y_);
-	fontHelp(L"Y1", rc, UIColor::Black, UIFont::HLEFT_VCENTER, _inheritedTransformMatrix);
+	fontHelp(L"Y1", rc, UIColor::Black, UIFontPos::MiddleLeft, _inheritedTransformMatrix);
 }
 
 void UIChart::DrawY2CoordLable() {
@@ -3629,7 +3629,7 @@ void UIChart::DrawY2CoordLable() {
 	SIZE szLabel = fontHelp.GetDrawAreaSize(L"Y2");
 	RECT rc = CreateRect()(UIShape2D::CreatePoint()(_clientRC.right - szLabel.cx - 3, (_clientRC.bottom - szLabel.cy) / 2), szLabel);
 	OffsetRect(&rc, x_, y_);
-	fontHelp(L"Y2", rc, UIColor::Black, UIFont::HLEFT_VCENTER, _inheritedTransformMatrix);
+	fontHelp(L"Y2", rc, UIColor::Black, UIFontPos::MiddleLeft, _inheritedTransformMatrix);
 }
 
 void UIChart::DrawXCoord() {
@@ -3649,7 +3649,7 @@ void UIChart::DrawXCoord() {
 
 		RECT rc = CreateRect()(UIShape2D::CreatePoint()(xPos - strSize.cx / 2, _gridRect.bottom + strSize.cy / 2), strSize);
 		OffsetRect(&rc, x_, y_);
-		fontHelp(str, rc, UIColor::Black, UIFont::HLEFT_VCENTER, _inheritedTransformMatrix);
+		fontHelp(str, rc, UIColor::Black, UIFontPos::MiddleLeft, _inheritedTransformMatrix);
 
 		xCoord += dxCoord;
 		xPos += dxPos;
@@ -3677,7 +3677,7 @@ void UIChart::DrawY1Coord() {
 
 			RECT rc = CreateRect()(UIShape2D::CreatePoint()(_gridRect.left - strSize.cx > 0 ? _gridRect.left - strSize.cx : 0, yPos - strSize.cy / 2), strSize);
 			OffsetRect(&rc, x_, y_);
-			fontHelp(str, rc, UIColor::Black, UIFont::HLEFT_VCENTER, _inheritedTransformMatrix);
+			fontHelp(str, rc, UIColor::Black, UIFontPos::MiddleLeft, _inheritedTransformMatrix);
 
 			yCoord += dyCoord;
 			yPos -= dyPos;
@@ -3704,7 +3704,7 @@ void UIChart::DrawY2Coord() {
 
 			RECT rc = CreateRect()(UIShape2D::CreatePoint()(_gridRect.right + strSize.cx < _clientRC.right ? _gridRect.right : _clientRC.right - strSize.cx - 5, yPos - strSize.cy / 2), strSize);
 			OffsetRect(&rc, x_, y_);
-			fontHelp(str, rc, UIColor::Black, UIFont::HLEFT_VCENTER, _inheritedTransformMatrix);
+			fontHelp(str, rc, UIColor::Black, UIFontPos::MiddleLeft, _inheritedTransformMatrix);
 
 			yCoord += dyCoord;
 			yPos -= dyPos;
@@ -3730,7 +3730,7 @@ void UIChart::DrawMousePosAndToolTip() {
 
 		RECT rc = CreateRect()(UIShape2D::CreatePoint()(_gridRect.right - strSize.cx - 2, _gridRect.top - strSize.cy - 2), strSize);
 		OffsetRect(&rc, x_, y_);
-		fontHelp(_mouseCoordStr, rc, UIColor::Black, UIFont::HLEFT_VCENTER, _inheritedTransformMatrix);
+		fontHelp(_mouseCoordStr, rc, UIColor::Black, UIFontPos::MiddleLeft, _inheritedTransformMatrix);
 	}
 
 	if (_isShowToolTip) {
@@ -3738,7 +3738,7 @@ void UIChart::DrawMousePosAndToolTip() {
 
 		RECT rc = CreateRect()(UIShape2D::CreatePoint()(_gridRect.left + 2, _gridRect.top - strSize.cy - 2), strSize);
 		OffsetRect(&rc, x_, y_);
-		fontHelp(_tooltipStr, rc, UIColor::Black, UIFont::HLEFT_VCENTER, _inheritedTransformMatrix);
+		fontHelp(_tooltipStr, rc, UIColor::Black, UIFontPos::MiddleLeft, _inheritedTransformMatrix);
 	}
 }
 
@@ -4976,7 +4976,7 @@ void UITab::DrawTab() {
 			UIRect(rc, _z)(UIColor::PrimaryPurpleLight, 255, _inheritedTransformMatrix);
 		}
 
-		UIFont(_z, gDefaultFontSize).operator()(_cellList[i]._title, rc, UIColor::Black, UIFont::HCENTER_VCENTER, _inheritedTransformMatrix);
+		UIFont(_z, gDefaultFontSize).operator()(_cellList[i]._title, rc, UIColor::Black, UIFontPos::MiddleCenter, _inheritedTransformMatrix);
 	}
 }
 
@@ -5270,7 +5270,7 @@ void UICanvas3D::Draw() {
 	XMMATRIX transformMatrix = GetInheritedTransformMatrix();
 
 	UIRect(rc, _z + gDeltaZ)(UIColor::Gray95, 255, transformMatrix);
-	//UIFont(_z - gDeltaZ * 10, 40).operator()(L"UICanvas3D", rc, UIColor::Black, UIFont::HCENTER_VCENTER, transformMatrix);
+	//UIFont(_z - gDeltaZ * 10, 40).operator()(L"UICanvas3D", rc, UIColor::Black, UIFontPos::MiddleCenter, transformMatrix);
 
 	if (p_UIContainer != NULL) {
 		// RECT rc = _clientRC;

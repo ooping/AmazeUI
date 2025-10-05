@@ -138,6 +138,29 @@ private:
 	int _rightBarWidth;
 };
 
+// Text alignment flags for FreeType text rendering
+enum class UIFontPos : uint8_t {
+	// Horizontal alignment (lower 2 bits)
+	HLeft = 0b00,
+	HCenter = 0b01,
+	HRight = 0b10,
+
+	// Vertical alignment (upper 2 bits)
+	VTop = 0b0000,
+	VMiddle = 0b0100,
+	VBottom = 0b1000,
+
+	// Combined constants
+	TopLeft = VTop | HLeft,
+	TopCenter = VTop | HCenter,
+	TopRight = VTop | HRight,
+	MiddleLeft = VMiddle | HLeft,
+	MiddleCenter = VMiddle | HCenter,
+	MiddleRight = VMiddle | HRight,
+	BottomLeft = VBottom | HLeft,
+	BottomCenter = VBottom | HCenter,
+	BottomRight = VBottom | HRight
+};
 
 struct UIFont {
 	UIFont(float z, float fontSize);
@@ -146,18 +169,10 @@ struct UIFont {
 	SIZE GetDrawAreaSize(std::wstring str);
 
 	void operator()(std::wstring text, const POINT& postion, const UIColor& color = UIColor::Black, const DirectX::XMMATRIX& transformMatrix = DirectX::XMMatrixIdentity());
-	void operator()(std::wstring text, const RECT& rc, const UIColor& color = UIColor::Black, int posFlag = HLEFT_VCENTER, const DirectX::XMMATRIX& transformMatrix = DirectX::XMMatrixIdentity());
+	void operator()(std::wstring text, const RECT& rc, const UIColor& color = UIColor::Black, UIFontPos posFlag = UIFontPos::MiddleLeft, const DirectX::XMMATRIX& transformMatrix = DirectX::XMMatrixIdentity());
 
 	void operator()(std::wstring text, const POINT& postion, const UIColor& color, float lineSpacing, const DirectX::XMMATRIX& transformMatrix = DirectX::XMMatrixIdentity());
-	void operator()(std::wstring text, const RECT& rc, const UIColor& color, int posFlag, float lineSpacing, const DirectX::XMMATRIX& transformMatrix = DirectX::XMMatrixIdentity());
-
-	enum FontPos {
-		HLEFT_VTOP = 0,
-		HLEFT_VCENTER = 0x04,
-		HCENTER_VCENTER = 0x01|0x04,
-		HRIGHT_VCENTER = 0x02|0x04,
-		HCENTER_VTOP = 0x01,
-	};
+	void operator()(std::wstring text, const RECT& rc, const UIColor& color, UIFontPos posFlag, float lineSpacing, const DirectX::XMMATRIX& transformMatrix = DirectX::XMMatrixIdentity());
 
 	float _z;
 	float _fontSize;

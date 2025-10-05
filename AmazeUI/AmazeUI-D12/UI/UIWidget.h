@@ -297,18 +297,18 @@ public:
 
 	void Draw();
 
-	void SetText(UIString text, DWORD pos=UIFont::HLEFT_VCENTER);
+	void SetText(UIString text, UIFontPos pos = UIFontPos::MiddleLeft);
 	UIString GetText();
 	void SetColor(UIColor& color);
 	void SetFontHeight(float h);
-	void SetPos(DWORD pos);
-	void SetSupportMultiLine(bool support, float lineSpacing=1.2f);
+	void SetPos(UIFontPos pos);
+	void SetSupportMultiLine(bool support, float lineSpacing = 1.2f);
 
 private:
 	std::wstring _text;
 	UIColor _color;
 	float _fontHeight;
-	DWORD _pos;
+	UIFontPos _pos;
 	bool _supportMultiLine;
 	float _lineSpacing;
 };
