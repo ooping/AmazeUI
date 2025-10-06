@@ -255,7 +255,7 @@ public:
 		const UIColor& color, float fontSize, UICameraBase3D* pCamera);
 
 	// ========== Utility Functions ==========
-	SIZE GetTextSizeFT(const std::wstring& text, float fontSize);
+	SIZE GetTextSizeFT(const std::wstring& text, float fontSize, float lineSpacing = 1.0f);
 
 private:
 	void CreateResourcesFT();
@@ -265,8 +265,10 @@ private:
 
 	void Draw2DCharTextureFT(size_t textureIndex, DirectX::XMFLOAT2 position, float z, float scale, UCHAR alpha);
 	void Draw3DCharTextureFT(size_t textureIndex, DirectX::XMFLOAT2 position, float z, float scale, UCHAR alpha, const DirectX::XMMATRIX& transformMatrix);
-
 	void Draw3DWorldCharTextureFT(size_t textureIndex, DirectX::XMFLOAT3 worldPosition, float scale, UCHAR alpha, UICameraBase3D* pCamera);
+
+	DirectX::XMFLOAT2 CalculateTextPosition(const std::wstring& text, const RECT& rc, UIFontPos alignment, float fontSize, float lineSpacing = 1.0f);
+	std::vector<std::wstring> SplitTextIntoLines(const std::wstring& text);
 
 	struct FTSizeFont;
 	bool GetFTSizeFont(float fontSize, FTSizeFont& ftSizeFont);
