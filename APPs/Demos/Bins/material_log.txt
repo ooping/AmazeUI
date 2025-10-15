@@ -1,0 +1,19 @@
+=== Material Loading Log ===
+Number of materials: 2
+
+Material[0]: MatI_Ride_FengHuang_01a
+  Diffuse: Tex_Ride_FengHuang_01a_D_A.tga
+  Path before .png check: Phoenix\textures\Tex_Ride_FengHuang_01a_D_A.tga
+  Path after adding .png: Phoenix\textures\Tex_Ride_FengHuang_01a_D_A.tga.png
+  Final path: Phoenix\textures\Tex_Ride_FengHuang_01a_D_A.tga.png
+  Diffuse loaded: SUCCESS
+
+Material[1]: MatI_Ride_FengHuang_01b
+  Diffuse: Tex_Ride_FengHuang_01b_D_A.tga
+  Path before .png check: Phoenix\textures\Tex_Ride_FengHuang_01b_D_A.tga
+  Path after adding .png: Phoenix\textures\Tex_Ride_FengHuang_01b_D_A.tga.png
+  Final path: Phoenix\textures\Tex_Ride_FengHuang_01b_D_A.tga.png
+  Diffuse loaded: SUCCESS
+
+
+=== Material Loading Complete ===

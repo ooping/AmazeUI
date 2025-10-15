@@ -43,15 +43,15 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <OutDir>..\Bins</OutDir>
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);C:\WorkSpace_SOFT\UIWare\AmazeUI\AmazeUI-D12\ThirdParty\freetype-2.13.3\include;</IncludePath>
-    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);C:\WorkSpace_SOFT\UIWare\AmazeUI\AmazeUI-D12\ThirdParty\freetype-2.13.3\objs;</LibraryPath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);..\..\..\AmazeUI\AmazeUI-D12\ThirdParty\freetype-2.13.3\include;..\..\..\AmazeUI\AmazeUI-D12\ThirdParty\assimp-6.0.2\include;</IncludePath>
+    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);..\..\..\AmazeUI\AmazeUI-D12\ThirdParty\freetype-2.13.3\objs;..\..\..\AmazeUI\AmazeUI-D12\ThirdParty\assimp-6.0.2\lib;</LibraryPath>
     <TargetName>Demo - 3D</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>..\Bins</OutDir>
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);C:\WorkSpace_SOFT\UIWare\AmazeUI\AmazeUI-D12\ThirdParty\freetype-2.13.3\include;</IncludePath>
-    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);C:\WorkSpace_SOFT\UIWare\AmazeUI\AmazeUI-D12\ThirdParty\freetype-2.13.3\objs;</LibraryPath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);..\..\..\AmazeUI\AmazeUI-D12\ThirdParty\freetype-2.13.3\include;..\..\..\AmazeUI\AmazeUI-D12\ThirdParty\assimp-6.0.2\include;</IncludePath>
+    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);..\..\..\AmazeUI\AmazeUI-D12\ThirdParty\freetype-2.13.3\objs;..\..\..\AmazeUI\AmazeUI-D12\ThirdParty\assimp-6.0.2\lib;</LibraryPath>
     <TargetName>Demo - 3D</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -68,7 +68,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>d3d12.lib;dxgi.lib;dxguid.lib;uuid.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;runtimeobject.lib;%(AdditionalDependencies);freetype.lib;</AdditionalDependencies>
+      <AdditionalDependencies>d3d12.lib;dxgi.lib;dxguid.lib;uuid.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;runtimeobject.lib;%(AdditionalDependencies);freetype.lib;assimp-vc143-mt.lib;</AdditionalDependencies>
     </Link>
     <FXCompile>
       <ShaderModel>5.1</ShaderModel>
@@ -92,7 +92,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>d3d12.lib;dxgi.lib;dxguid.lib;uuid.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;runtimeobject.lib;%(AdditionalDependencies);freetype.lib;</AdditionalDependencies>
+      <AdditionalDependencies>d3d12.lib;dxgi.lib;dxguid.lib;uuid.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;runtimeobject.lib;%(AdditionalDependencies);freetype.lib;assimp-vc143-mt.lib;</AdditionalDependencies>
     </Link>
     <FXCompile>
       <ShaderModel>5.1</ShaderModel>
@@ -102,24 +102,28 @@
     <ClInclude Include="..\..\..\AmazeUI\AmazeUI-D12\Core\Common.h" />
     <ClInclude Include="..\..\..\AmazeUI\AmazeUI-D12\UI\UIAnimation.h" />
     <ClInclude Include="..\..\..\AmazeUI\AmazeUI-D12\UI\UIApplication.h" />
+    <ClInclude Include="..\..\..\AmazeUI\AmazeUI-D12\UI\UICamera.h" />
     <ClInclude Include="..\..\..\AmazeUI\AmazeUI-D12\UI\UIDXFoundation.h" />
     <ClInclude Include="..\..\..\AmazeUI\AmazeUI-D12\UI\UIElement.h" />
     <ClInclude Include="..\..\..\AmazeUI\AmazeUI-D12\UI\UIUtility.h" />
     <ClInclude Include="..\..\..\AmazeUI\AmazeUI-D12\UI\UIWidget.h" />
     <ClInclude Include="..\..\..\AmazeUI\AmazeUI-D12\UI\UIWindow.h" />
     <ClInclude Include="Demo.h" />
+    <ClInclude Include="StaticMesh.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\AmazeUI\AmazeUI-D12\Core\Common.cpp" />
     <ClCompile Include="..\..\..\AmazeUI\AmazeUI-D12\UI\UIAnimation.cpp" />
     <ClCompile Include="..\..\..\AmazeUI\AmazeUI-D12\UI\UIApplication.cpp" />
+    <ClCompile Include="..\..\..\AmazeUI\AmazeUI-D12\UI\UICamera.cpp" />
     <ClCompile Include="..\..\..\AmazeUI\AmazeUI-D12\UI\UIDXFoundation.cpp" />
     <ClCompile Include="..\..\..\AmazeUI\AmazeUI-D12\UI\UIElement.cpp" />
     <ClCompile Include="..\..\..\AmazeUI\AmazeUI-D12\UI\UIUtility.cpp" />
     <ClCompile Include="..\..\..\AmazeUI\AmazeUI-D12\UI\UIWidget.cpp" />
     <ClCompile Include="..\..\..\AmazeUI\AmazeUI-D12\UI\UIWindow.cpp" />
     <ClCompile Include="Demo.cpp" />
+    <ClCompile Include="StaticMesh.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
@@ -141,11 +145,13 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
     <Import Project="packages\directxtk12_desktop_2019.2025.3.21.3\build\native\directxtk12_desktop_2019.targets" Condition="Exists('packages\directxtk12_desktop_2019.2025.3.21.3\build\native\directxtk12_desktop_2019.targets')" />
+    <Import Project="packages\Assimp.redist.3.0.0\build\native\Assimp.redist.targets" Condition="Exists('packages\Assimp.redist.3.0.0\build\native\Assimp.redist.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>这台计算机上缺少此项目引用的 NuGet 程序包。使用“NuGet 程序包还原”可下载这些程序包。有关更多信息，请参见 http://go.microsoft.com/fwlink/?LinkID=322105。缺少的文件是 {0}。</ErrorText>
     </PropertyGroup>
     <Error Condition="!Exists('packages\directxtk12_desktop_2019.2025.3.21.3\build\native\directxtk12_desktop_2019.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\directxtk12_desktop_2019.2025.3.21.3\build\native\directxtk12_desktop_2019.targets'))" />
+    <Error Condition="!Exists('packages\Assimp.redist.3.0.0\build\native\Assimp.redist.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\Assimp.redist.3.0.0\build\native\Assimp.redist.targets'))" />
   </Target>
 </Project>

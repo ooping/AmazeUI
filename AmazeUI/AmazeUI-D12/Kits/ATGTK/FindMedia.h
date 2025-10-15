@@ -37,7 +37,7 @@ namespace DX
             //L"Assets",
             //L"Assets\\Fonts",
             //L"Assets\\Textures",
-            //L"Media",
+            L"Media",
             L"Media\\Textures",
             L"Media\\Fonts",
             L"Media\\Meshes",

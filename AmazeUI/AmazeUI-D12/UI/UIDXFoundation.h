@@ -145,12 +145,10 @@ public:
 	std::unique_ptr<UIDeviceResources>& GetDeviceResources();
 	std::unique_ptr<DirectX::PrimitiveBatch<DirectX::VertexPositionColor>>& GetPrimitiveBatch();
 
-private:
-    void Clear();
+	// Get BasicEffect for custom rendering
+	DirectX::BasicEffect* Get3DShapeEffect() const { return p_shapeEffect3D.get(); }
 
-    void CreateDeviceDependentResourcesXTK();
-    void CreateWindowSizeDependentResourcesXTK();
-
+public:  // Public access for texture loading
     // Device resources.
     std::unique_ptr<UIDeviceResources>        								p_deviceResources;
 
@@ -158,6 +156,23 @@ private:
     std::unique_ptr<DirectX::GraphicsMemory>                                p_graphicsMemory;
     std::unique_ptr<DirectX::DescriptorHeap>                                p_resourceDescriptors;
     std::unique_ptr<DirectX::CommonStates>                                  p_states;
+
+    // Descriptors
+    enum Descriptors {
+        WindowsLogo,
+		MSYHFont,
+        Count = 10000,
+		Offset1 = 10,           // UI textures start offset
+		Offset2 = 1000,         // Additional offset
+        ModelTexturesStart = 2000,  // 3D model textures start offset (reserve 2000 slots for UI)
+        ModelTexturesCount = 1000   // Reserve 1000 slots for model textures
+    };
+
+private:
+    void Clear();
+
+    void CreateDeviceDependentResourcesXTK();
+    void CreateWindowSizeDependentResourcesXTK();
 
     std::unique_ptr<DirectX::PrimitiveBatch<DirectX::VertexPositionColor>>  p_batch;
 	std::unique_ptr<DirectX::PrimitiveBatch<DirectX::VertexPositionTexture>>  p_batchTexture;
@@ -174,22 +189,6 @@ private:
 	std::unique_ptr<DirectX::BasicEffect> 									p_triangleEffect3D;
 	std::unique_ptr<DirectX::BasicEffect>                                   p_triangleTexturedEffect3D;
 	std::unique_ptr<DirectX::BasicEffect>                                   p_shapeEffect3D;
-
-    std::unique_ptr<DirectX::GeometricPrimitive>                            p_shape;
-    std::unique_ptr<DirectX::Model>                                         p_model;
-    DirectX::Model::EffectCollection                                        _modelEffects3D;
-    std::unique_ptr<DirectX::EffectTextureFactory>                          p_modelResources;
-
-    Microsoft::WRL::ComPtr<ID3D12Resource>                                  _texture1;
-
-    // Descriptors
-    enum Descriptors {
-        WindowsLogo,
-		MSYHFont,
-        Count = 10000,
-		Offset1 = 10,
-		Offset2 = 1000
-    };
 
 /*************************************************** clip rect ***************************************************/
 public:

@@ -380,17 +380,6 @@ void UIDeviceResources::CreateWindowSizeDependentResources() {
 
         _d3dDevice->CreateDepthStencilView(_depthStencil.Get(), &dsvDesc, _dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
     }
-
-    // Set the 3D rendering viewport and scissor rectangle to target the entire window.
-    // _screenViewport.TopLeftX = _screenViewport.TopLeftY = 0.f;
-    // _screenViewport.Width = static_cast<float>(backBufferWidth);
-    // _screenViewport.Height = static_cast<float>(backBufferHeight);
-    // _screenViewport.MinDepth = D3D12_MIN_DEPTH;
-    // _screenViewport.MaxDepth = D3D12_MAX_DEPTH;
-
-    // _scissorRect.left = _scissorRect.top = 0;
-    // _scissorRect.right = static_cast<LONG>(backBufferWidth);
-    // _scissorRect.bottom = static_cast<LONG>(backBufferHeight);
 }
 
 // This method is called when the Win32 window is created (or re-created).
@@ -418,6 +407,7 @@ bool UIDeviceResources::HandleWindowSizeChanged(int width, int height) {
 
     _outputSize = newRc;
     CreateWindowSizeDependentResources();
+    
     return true;
 }
 
@@ -732,31 +722,8 @@ unique_ptr<PrimitiveBatch<VertexPositionColor>>& UIDXFoundation::GetPrimitiveBat
 }
 
 void UIDXFoundation::Render3D() {
-    {
-        auto commandList = p_deviceResources->GetCommandList();
-
-        static int ii = 0;
-        static DirectX::SimpleMath::Matrix _world = Matrix::CreateRotationY(float(++ii * XM_PIDIV4));
-
-        // Draw 3D object
-        // Draw teapot
-        XMMATRIX local = _world * Matrix::CreateTranslation(-2.f, -2.f, 4.f);
-        p_shapeEffect3D->SetWorld(local);
-        p_shapeEffect3D->Apply(commandList);
-        p_shape->Draw(commandList);
-
-        //Draw model
-        ID3D12DescriptorHeap* heaps[] = { p_modelResources->Heap(), p_states->Heap() };
-        commandList->SetDescriptorHeaps(_countof(heaps), heaps);
-
-        const XMVECTORF32 scale = { 0.01f, 0.01f, 0.01f };
-        const XMVECTORF32 translate = { 3.f, -2.f, 4.f };
-        XMVECTOR rotate = Quaternion::CreateFromYawPitchRoll(XM_PI / 2.f, 0.f, -XM_PI / 2.f);
-        local = _world * XMMatrixTransformation(g_XMZero, Quaternion::Identity, scale, g_XMZero, rotate, translate);
-        Model::UpdateEffectMatrices(_modelEffects3D, local, UICameraGame::GetSingletonInstance()->GetViewMatrix(), UICameraGame::GetSingletonInstance()->GetProjectionMatrix());
-        
-        p_model->Draw(commandList, _modelEffects3D.begin());
-    }
+    // 3D rendering (currently unused - handled by UIGame3D control)
+    // This function is kept for potential future 3D demo scenes
 }
 
 // Draws the scene.
@@ -2179,62 +2146,12 @@ void UIDXFoundation::CreateDeviceDependentResourcesXTK() {
     p_resourceDescriptors = make_unique<DescriptorHeap>(device, Descriptors::Count);
     p_batch = make_unique<PrimitiveBatch<VertexPositionColor>>(device);
     p_batchTexture = make_unique<PrimitiveBatch<VertexPositionTexture>>(device);
-    p_shape = GeometricPrimitive::CreateTeapot(4.f, 8);
-
-
-    // SDKMESH has to use clockwise winding with right-handed coordinates, so textures are flipped in U
-    wchar_t strFilePath[MAX_PATH] = {};
-    DX::FindMediaFile(strFilePath, MAX_PATH, L"tiny.sdkmesh");
-
-    wchar_t txtPath[MAX_PATH] = {};
-    {
-        wchar_t drive[_MAX_DRIVE];
-        wchar_t path[_MAX_PATH];
-
-        if (_wsplitpath_s(strFilePath, drive, _MAX_DRIVE, path, _MAX_PATH, nullptr, 0, nullptr, 0)) {
-            throw exception("_wsplitpath_s");
-        }
-
-        if (_wmakepath_s(txtPath, _MAX_PATH, drive, path, nullptr, nullptr)) {
-            throw exception("_wmakepath_s");
-        }
-    }
-
-    p_model = Model::CreateFromSDKMESH(device, strFilePath);
 
     {
         ResourceUploadBatch resourceUpload(device);
         resourceUpload.Begin();
 
         RenderTargetState rtState(p_deviceResources->GetBackBufferFormat(), p_deviceResources->GetDepthBufferFormat());
-
-        p_model->LoadStaticBuffers(device, resourceUpload);
-
-        p_modelResources = p_model->LoadTextures(device, resourceUpload, txtPath);
-
-        {
-            EffectPipelineStateDescription psd(
-                nullptr,
-                CommonStates::Opaque,
-                CommonStates::DepthDefault,
-                CommonStates::CullClockwise,    // Using RH coordinates, and SDKMESH is in LH coordiantes
-                rtState);
-
-            EffectPipelineStateDescription alphapsd(
-                nullptr,
-                CommonStates::NonPremultiplied, // Using straight alpha
-                CommonStates::DepthRead,
-                CommonStates::CullClockwise,    // Using RH coordinates, and SDKMESH is in LH coordiantes
-                rtState);
-
-            _modelEffects3D = p_model->CreateEffects(psd, alphapsd, p_modelResources->Heap(), p_states->Heap());
-        }
-
-        DX::FindMediaFile(strFilePath, MAX_PATH, L"windowslogo.dds");
-        ThrowIfFailed(
-            CreateDDSTextureFromFile(device, resourceUpload, strFilePath, _texture1.ReleaseAndGetAddressOf())
-        );
-        CreateShaderResourceView(device, _texture1.Get(), p_resourceDescriptors->GetCpuHandle(Descriptors::WindowsLogo));
 
         // create common blend description
         D3D12_BLEND_DESC transparentBlendDesc = {};
@@ -2243,7 +2160,6 @@ void UIDXFoundation::CreateDeviceDependentResourcesXTK() {
         auto& rt = transparentBlendDesc.RenderTarget[0];
         rt.BlendEnable = TRUE;
         rt.LogicOpEnable = FALSE;
-        rt.SrcBlend = D3D12_BLEND_SRC_ALPHA;
         rt.SrcBlend = D3D12_BLEND_SRC_ALPHA;
         rt.DestBlend = D3D12_BLEND_INV_SRC_ALPHA;   // Destination color × (1 - Source Alpha)
         rt.BlendOp = D3D12_BLEND_OP_ADD;
@@ -2340,12 +2256,12 @@ void UIDXFoundation::CreateDeviceDependentResourcesXTK() {
                 &GeometricPrimitive::VertexType::InputLayout,
                 CommonStates::Opaque,
                 CommonStates::DepthDefault,
-                CommonStates::CullNone,
+                CommonStates::CullCounterClockwise,  // Enable backface culling to fix Z-fighting
                 rtState);
 
+            // Enable per-pixel lighting with texture support for materials
             p_shapeEffect3D = make_unique<BasicEffect>(device, EffectFlags::PerPixelLighting | EffectFlags::Texture, pd);
             p_shapeEffect3D->EnableDefaultLighting();
-            p_shapeEffect3D->SetTexture(p_resourceDescriptors->GetGpuHandle(Descriptors::WindowsLogo), p_states->AnisotropicWrap());
         }
 
         // // load MSYHFont
@@ -2401,13 +2317,9 @@ void UIDXFoundation::CreateResources() {
 }
 
 void UIDXFoundation::ResetResources() {
-    _texture1.Reset();
-
     //p_font.reset();
     p_batch.reset();
     p_batchTexture.reset();
-    p_shape.reset();
-    p_model.reset();
     p_lineEffect2D.reset();
     p_triangleEffect2D.reset();
     p_triangleTexturedEffect2D.reset();
@@ -2417,8 +2329,6 @@ void UIDXFoundation::ResetResources() {
     p_triangleEffect3D.reset();
     p_triangleTexturedEffect3D.reset();
     p_shapeEffect3D.reset();
-    _modelEffects3D.clear();
-    p_modelResources.reset();
     //p_sprites.reset();
     p_resourceDescriptors.reset();
     p_states.reset();

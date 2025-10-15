@@ -18,17 +18,128 @@ using namespace UIShape2D;
 UIWinTop gWinTop;
 
 
-void UI2DDemo::Draw()
-{
-    UIDXFoundation::GetSingletonInstance()->Render3D();
+UIGame3D::UIGame3D() {
 }
 
-void UIWinTop::OnCreate()
-{
+UIGame3D::~UIGame3D() {
+}
+
+void UIGame3D::CalcArea() {
+	RECT ctrlRC = GetAbsoluteRect();
+	
+	// Set up camera system (like UIChart3D)
+	if (!_cameraCtrl.SetUpCamera(ctrlRC)) {
+		return;
+	}
+}
+
+void UIGame3D::LoadModel(const std::wstring& filePath) {
+	// Create dragon mesh
+	_dragonMesh = std::make_unique<StaticMesh>();
+	
+	// Load model (Assimp 5.x supports FBX)
+	_dragonMesh->LoadFromFile(filePath);
+}
+
+void UIGame3D::Draw() {
+	// Calculate delta time
+	static DWORD lastTime = GetTickCount();
+	DWORD currentTime = GetTickCount();
+	lastTime = currentTime;
+	
+	// Get inherited transform matrix (like UIChart3D)
+	XMMATRIX transformMatrix = GetInheritedTransformMatrix();
+	
+	LONG& x_ = _abusolutePoint.x;
+	LONG& y_ = _abusolutePoint.y;
+	
+	// Draw border
+	RECT rc = _clientRC;
+	OffsetRect(&rc, x_, y_);
+	UIRect(rc, _z)(UIColor::PrimaryBlue, transformMatrix);
+	
+	// Calculate world matrix for dragon
+	XMMATRIX rotationMatrix = XMMatrixRotationRollPitchYaw(
+		XMConvertToRadians(_dragonRotation.x),
+		XMConvertToRadians(_dragonRotation.y),
+		XMConvertToRadians(_dragonRotation.z)
+	);
+	
+	XMMATRIX translationMatrix = XMMatrixTranslation(
+		_dragonPosition.x,
+		_dragonPosition.y,
+		_dragonPosition.z
+	);
+	
+	XMMATRIX scaleMatrix = XMMatrixScaling(_dragonScale, _dragonScale, _dragonScale);
+	
+	// World = Scale * Rotation * Translation
+	XMMATRIX worldMatrix = scaleMatrix * rotationMatrix * translationMatrix;
+	
+	// Render dragon with camera system
+	if (_dragonMesh) {
+		_dragonMesh->Render(&_cameraCtrl, worldMatrix);
+	}
+}
+
+bool UIGame3D::OnRButtonDown(POINT pt) {
+	// Convert to control-relative coordinates
+	POINT point = pt;
+	point.x -= _abusolutePoint.x;
+	point.y -= _abusolutePoint.y;
+	
+	_lastMousePos = point;
+	_moveFlag = true;  // Set right button down flag
+	return true;
+}
+
+bool UIGame3D::OnRButtonUp(POINT) {
+	_moveFlag = false;  // Clear right button down flag
+	return true;
+}
+
+void UIGame3D::OnMouseLeave(POINT) {
+	_moveFlag = false;  // Clear right button down flag when mouse leaves
+}
+
+bool UIGame3D::OnMouseMove(POINT pt) {
+	// Only allow movement when right button is down
+	if (_moveFlag) {
+		POINT point = pt;
+		point.x -= _abusolutePoint.x;
+		point.y -= _abusolutePoint.y;
+
+		// Calculate mouse movement distance
+		int deltaX = point.x - _lastMousePos.x;
+		int deltaY = point.y - _lastMousePos.y;
+
+		// Only rotate when there is actual movement
+		if (deltaX != 0 || deltaY != 0 || _lastMousePos.x != 0 || _lastMousePos.y != 0) {
+			// Convert to rotation angles (further reduced sensitivity)
+			float sensitivity = 0.1f;
+			float deltaYaw = deltaX * sensitivity;
+			float deltaPitch = -deltaY * sensitivity;  // Y-axis inverted
+
+			// Rotate camera
+			_cameraCtrl.RotateCamera(deltaYaw, deltaPitch);
+
+			// Refresh display
+			UIRefresh();
+		}
+
+		// Update last mouse position
+		_lastMousePos = point;
+	}
+
+	return true;
+}
+
+void UIWinTop::OnCreate() {
 	const RECT clientRC = GetClientRect();
 	string str;
 
-    _2D.CreateWindowBase(&gWinTop, clientRC, UILayoutCalc::SIZE_X | UILayoutCalc::SIZE_Y);
+    _game3D.CreateWindowBase(&gWinTop, clientRC, UILayoutCalc::SIZE_X | UILayoutCalc::SIZE_Y);
+	_game3D.LoadModel(L"Phoenix\\source\\fly.fbx");  // FindMediaFile will locate it in Media/Phoenix/source/
 }
 
 void UIWinTop::OnDestroy() {
