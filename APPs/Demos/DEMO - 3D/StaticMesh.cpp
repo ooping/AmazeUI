@@ -11,7 +11,6 @@ using namespace DirectX;
 using namespace Microsoft::WRL;
 using namespace std;
 
-
 // Load model from file using Assimp
 // XXX\\source\\xxx.fbx
 // XXX\\textures\\xxx.png
@@ -39,6 +38,30 @@ bool StaticMesh::LoadFromFile(const wstring& filePath) {
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
         return false;
     }
+    
+    // === DEBUG: Check bone and animation data ===
+    char debugMsg[512];
+    sprintf_s(debugMsg, "=== Model Info ===\n");
+    OutputDebugStringA(debugMsg);
+    sprintf_s(debugMsg, "Meshes: %u\n", scene->mNumMeshes);
+    OutputDebugStringA(debugMsg);
+    sprintf_s(debugMsg, "Animations: %u\n", scene->mNumAnimations);
+    OutputDebugStringA(debugMsg);
+    
+    // Check first mesh for bones
+    if (scene->mNumMeshes > 0) {
+        sprintf_s(debugMsg, "First mesh bones: %u\n", scene->mMeshes[0]->mNumBones);
+        OutputDebugStringA(debugMsg);
+    }
+    
+    // Print animation names and duration
+    for (unsigned int i = 0; i < scene->mNumAnimations; i++) {
+        aiAnimation* anim = scene->mAnimations[i];
+        sprintf_s(debugMsg, "  Animation[%u]: %s (Duration: %.2f, TicksPerSecond: %.2f)\n",
+                  i, anim->mName.C_Str(), (float)anim->mDuration, (float)anim->mTicksPerSecond);
+        OutputDebugStringA(debugMsg);
+    }
+    OutputDebugStringA("==================\n");
     
     // Clear existing data
     _vertices.clear();
@@ -68,6 +91,12 @@ bool StaticMesh::LoadFromFile(const wstring& filePath) {
     }
     
     LoadMaterials(scene, dir + L"textures\\");
+    
+    // Load bone hierarchy
+    LoadBoneHierarchy(scene->mRootNode, -1);
+    
+    // Load animations
+    LoadAnimations(scene);
     
     return true;
 }
@@ -117,6 +146,38 @@ void StaticMesh::ProcessMesh(aiMesh* mesh) {
         }
         
         _vertices.push_back(vertex);
+    }
+    
+    // Process bone weights
+    for (unsigned int boneIdx = 0; boneIdx < mesh->mNumBones; boneIdx++) {
+        aiBone* bone = mesh->mBones[boneIdx];
+        int boneIndex = GetOrCreateBoneIndex(bone->mName.C_Str());
+        
+        // Skip bones beyond MaxBones limit (DirectXTK12 limitation: 72 bones max)
+        if (boneIndex >= DirectX::IEffectSkinning::MaxBones) {
+            continue;
+        }
+        
+        // Store bone offset matrix (inverse bind pose)
+        if (boneIndex < _bones.size()) {
+            aiMatrix4x4& m = bone->mOffsetMatrix;
+            _bones[boneIndex].offsetMatrix = DirectX::XMFLOAT4X4(
+                m.a1, m.b1, m.c1, m.d1,
+                m.a2, m.b2, m.c2, m.d2,
+                m.a3, m.b3, m.c3, m.d3,
+                m.a4, m.b4, m.c4, m.d4
+            );
+        }
+        
+        // Add bone weights to vertices
+        for (unsigned int weightIdx = 0; weightIdx < bone->mNumWeights; weightIdx++) {
+            unsigned int vertexId = baseVertex + bone->mWeights[weightIdx].mVertexId;
+            float weight = bone->mWeights[weightIdx].mWeight;
+            
+            if (vertexId < _vertices.size()) {
+                AddBoneWeight(_vertices[vertexId], boneIndex, weight);
+            }
+        }
     }
     
     // Extract indices
@@ -200,57 +261,101 @@ void StaticMesh::Render(UICameraBase3D* pCamera, const DirectX::XMMATRIX& worldM
     
     auto* pDX12 = UIDXFoundation::GetSingletonInstance();
     auto commandList = pDX12->GetDeviceResources()->GetCommandList();
-    auto* effect = pDX12->Get3DShapeEffect();
     
-    if (!effect) {
-        return;
-    }
-    
-    // Set matrices
-    effect->SetWorld(worldMatrix);
-    effect->SetView(pCamera->GetViewMatrix());
-    effect->SetProjection(pCamera->GetProjectionMatrix());
-    
-    // Setup lighting
-    effect->EnableDefaultLighting();
-    effect->SetLightEnabled(0, true);
-    effect->SetLightDiffuseColor(0, DirectX::XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f));
-    effect->SetLightDirection(0, DirectX::XMVectorSet(-0.5773f, -0.5773f, -0.5773f, 0.0f));
-    
-    effect->SetLightEnabled(1, true);
-    effect->SetLightDiffuseColor(1, DirectX::XMVectorSet(0.5f, 0.5f, 0.6f, 1.0f));
-    effect->SetLightDirection(1, DirectX::XMVectorSet(0.5773f, -0.5773f, -0.5773f, 0.0f));
-    
-    effect->SetLightEnabled(2, true);
-    effect->SetLightDiffuseColor(2, DirectX::XMVectorSet(0.4f, 0.4f, 0.3f, 1.0f));
-    effect->SetLightDirection(2, DirectX::XMVectorSet(0.0f, 0.7071f, -0.7071f, 0.0f));
-    
-    // Set material
-    effect->SetDiffuseColor(DirectX::XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f));
-    effect->SetSpecularColor(DirectX::XMVectorSet(0.3f, 0.3f, 0.3f, 1.0f));
-    effect->SetSpecularPower(16.0f);
-    effect->SetAmbientLightColor(DirectX::XMVectorSet(0.7f, 0.7f, 0.7f, 1.0f));
-    
-    // Set buffers
-    commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    commandList->IASetVertexBuffers(0, 1, &_vertexBufferView);
-    commandList->IASetIndexBuffer(&_indexBufferView);
-    
-    // Render submeshes
-    if (_subMeshes.empty()) {
-        effect->Apply(commandList);
-        commandList->DrawIndexedInstanced(static_cast<UINT>(_indices.size()), 1, 0, 0, 0);
-    } else {
-        for (const SubMesh& submesh : _subMeshes) {
-            if (submesh.materialIndex < _materials.size()) {
-                const Material& mat = _materials[submesh.materialIndex];
-                
-                if (mat.hasDiffuseTexture) {
-                    effect->SetTexture(mat.diffuseSRV, pDX12->p_states->LinearWrap());
+    // Check if we should use SkinnedEffect (for models with bones)
+    auto* skinnedEffect = pDX12->GetSkinnedEffect();
+    if (skinnedEffect && !_bones.empty()) {
+        // Skeletal animation rendering
+        
+        // Set matrices
+        skinnedEffect->SetWorld(worldMatrix);
+        skinnedEffect->SetView(pCamera->GetViewMatrix());
+        skinnedEffect->SetProjection(pCamera->GetProjectionMatrix());
+        
+        // Set bone transforms (max 72 bones)
+        size_t boneCount = min(_bones.size(), size_t(DirectX::IEffectSkinning::MaxBones));
+        XMMATRIX boneTransforms[DirectX::IEffectSkinning::MaxBones];
+        for (size_t i = 0; i < boneCount; i++) {
+            boneTransforms[i] = XMLoadFloat4x4(&_boneMatrices[i]);
+        }
+        skinnedEffect->SetBoneTransforms(boneTransforms, boneCount);
+        
+        // Set buffers
+        commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+        commandList->IASetVertexBuffers(0, 1, &_vertexBufferView);
+        commandList->IASetIndexBuffer(&_indexBufferView);
+        
+        // Render submeshes
+        if (_subMeshes.empty()) {
+            skinnedEffect->Apply(commandList);
+            commandList->DrawIndexedInstanced(static_cast<UINT>(_indices.size()), 1, 0, 0, 0);
+        } else {
+            for (const SubMesh& submesh : _subMeshes) {
+                if (submesh.materialIndex < _materials.size()) {
+                    const Material& mat = _materials[submesh.materialIndex];
+                    
+                    if (mat.hasDiffuseTexture && mat.diffuseSRV.ptr != 0) {
+                        skinnedEffect->SetTexture(mat.diffuseSRV, pDX12->p_states->LinearWrap());
+                    }
+                    skinnedEffect->Apply(commandList);
+                    commandList->DrawIndexedInstanced(submesh.indexCount, 1, submesh.startIndex, 0, 0);
                 }
-                
-                effect->Apply(commandList);
-                commandList->DrawIndexedInstanced(submesh.indexCount, 1, submesh.startIndex, 0, 0);
+            }
+        }
+    }
+    else {
+        // Static mesh rendering (BasicEffect)
+        auto* effect = pDX12->Get3DShapeEffect();
+        if (!effect) {
+            return;
+        }
+        
+        // Set matrices
+        effect->SetWorld(worldMatrix);
+        effect->SetView(pCamera->GetViewMatrix());
+        effect->SetProjection(pCamera->GetProjectionMatrix());
+        
+        // Setup lighting
+        effect->EnableDefaultLighting();
+        effect->SetLightEnabled(0, true);
+        effect->SetLightDiffuseColor(0, DirectX::XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f));
+        effect->SetLightDirection(0, DirectX::XMVectorSet(-0.5773f, -0.5773f, -0.5773f, 0.0f));
+        
+        effect->SetLightEnabled(1, true);
+        effect->SetLightDiffuseColor(1, DirectX::XMVectorSet(0.5f, 0.5f, 0.6f, 1.0f));
+        effect->SetLightDirection(1, DirectX::XMVectorSet(0.5773f, -0.5773f, -0.5773f, 0.0f));
+        
+        effect->SetLightEnabled(2, true);
+        effect->SetLightDiffuseColor(2, DirectX::XMVectorSet(0.4f, 0.4f, 0.3f, 1.0f));
+        effect->SetLightDirection(2, DirectX::XMVectorSet(0.0f, 0.7071f, -0.7071f, 0.0f));
+        
+        // Set material
+        effect->SetDiffuseColor(DirectX::XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f));
+        effect->SetSpecularColor(DirectX::XMVectorSet(0.3f, 0.3f, 0.3f, 1.0f));
+        effect->SetSpecularPower(16.0f);
+        effect->SetAmbientLightColor(DirectX::XMVectorSet(0.7f, 0.7f, 0.7f, 1.0f));
+        
+        // Set buffers
+        commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+        commandList->IASetVertexBuffers(0, 1, &_vertexBufferView);
+        commandList->IASetIndexBuffer(&_indexBufferView);
+        
+        // Render submeshes
+        if (_subMeshes.empty()) {
+            effect->Apply(commandList);
+            commandList->DrawIndexedInstanced(static_cast<UINT>(_indices.size()), 1, 0, 0, 0);
+        } else {
+            for (const SubMesh& submesh : _subMeshes) {
+                if (submesh.materialIndex < _materials.size()) {
+                    const Material& mat = _materials[submesh.materialIndex];
+                    
+                    if (mat.hasDiffuseTexture) {
+                        effect->SetTexture(mat.diffuseSRV, pDX12->p_states->LinearWrap());
+                    }
+                    
+                    effect->Apply(commandList);
+                    commandList->DrawIndexedInstanced(submesh.indexCount, 1, submesh.startIndex, 0, 0);
+                }
             }
         }
     }
@@ -356,4 +461,353 @@ bool StaticMesh::LoadTexture(const wstring& texturePath, ComPtr<ID3D12Resource>&
     uploadFinished.wait();
     
     return true;
+}
+
+// Get or create bone index
+int StaticMesh::GetOrCreateBoneIndex(const std::string& boneName) {
+    auto it = _boneNameToIndex.find(boneName);
+    if (it != _boneNameToIndex.end()) {
+        return it->second;
+    }
+    
+    // Create new bone
+    int index = static_cast<int>(_bones.size());
+    _boneNameToIndex[boneName] = index;
+    
+    Bone bone;
+    bone.name = boneName;
+    _bones.push_back(bone);
+    
+    return index;
+}
+
+// Add bone weight to vertex (up to 4 bones per vertex)
+void StaticMesh::AddBoneWeight(Vertex& vertex, int boneIndex, float weight) {
+    // Safety clamp: ensure bone index is within valid range
+    if (boneIndex >= DirectX::IEffectSkinning::MaxBones) {
+        boneIndex = 0;  // Fallback to root bone
+        weight *= 0.1f; // Reduce visual impact
+    }
+    
+    // Find empty slot or smallest weight to replace
+    for (int i = 0; i < 4; i++) {
+        if (vertex.boneWeights[i] == 0.0f) {
+            vertex.boneIndices[i] = static_cast<uint8_t>(boneIndex);
+            vertex.boneWeights[i] = weight;
+            return;
+        }
+    }
+    
+    // All slots occupied, replace smallest weight if new weight is larger
+    int minIndex = 0;
+    float minWeight = vertex.boneWeights[0];
+    for (int i = 1; i < 4; i++) {
+        if (vertex.boneWeights[i] < minWeight) {
+            minWeight = vertex.boneWeights[i];
+            minIndex = i;
+        }
+    }
+    
+    if (weight > minWeight) {
+        vertex.boneIndices[minIndex] = static_cast<uint8_t>(boneIndex);
+        vertex.boneWeights[minIndex] = weight;
+    }
+}
+
+// Load bone hierarchy from scene nodes
+void StaticMesh::LoadBoneHierarchy(aiNode* node, int parentIndex) {
+    if (!node) return;
+    
+    // Check if this node is a bone
+    std::string nodeName = node->mName.C_Str();
+    auto it = _boneNameToIndex.find(nodeName);
+    
+    int currentBoneIndex = parentIndex;
+    if (it != _boneNameToIndex.end()) {
+        // This node is a bone
+        currentBoneIndex = it->second;
+        _bones[currentBoneIndex].parentIndex = parentIndex;
+        
+        // Store local transform
+        aiMatrix4x4& t = node->mTransformation;
+        _bones[currentBoneIndex].localTransform = DirectX::XMFLOAT4X4(
+            t.a1, t.b1, t.c1, t.d1,
+            t.a2, t.b2, t.c2, t.d2,
+            t.a3, t.b3, t.c3, t.d3,
+            t.a4, t.b4, t.c4, t.d4
+        );
+    }
+    
+    // Recursively process children
+    for (unsigned int i = 0; i < node->mNumChildren; i++) {
+        LoadBoneHierarchy(node->mChildren[i], currentBoneIndex);
+    }
+}
+
+// Load animations from scene
+void StaticMesh::LoadAnimations(const aiScene* scene) {
+    _animations.resize(scene->mNumAnimations);
+    
+    for (unsigned int animIdx = 0; animIdx < scene->mNumAnimations; animIdx++) {
+        aiAnimation* anim = scene->mAnimations[animIdx];
+        AnimationClip& clip = _animations[animIdx];
+        
+        clip.name = anim->mName.C_Str();
+        clip.duration = static_cast<float>(anim->mDuration);
+        clip.ticksPerSecond = static_cast<float>(anim->mTicksPerSecond > 0 ? anim->mTicksPerSecond : 25.0f);
+        
+        // Load all bone animation channels
+        clip.channels.resize(anim->mNumChannels);
+        
+        for (unsigned int chanIdx = 0; chanIdx < anim->mNumChannels; chanIdx++) {
+            aiNodeAnim* channel = anim->mChannels[chanIdx];
+            BoneAnimChannel& boneChannel = clip.channels[chanIdx];
+            
+            boneChannel.boneName = channel->mNodeName.C_Str();
+            
+            // Load position keys
+            boneChannel.positions.resize(channel->mNumPositionKeys);
+            for (unsigned int i = 0; i < channel->mNumPositionKeys; i++) {
+                boneChannel.positions[i].time = static_cast<float>(channel->mPositionKeys[i].mTime);
+                boneChannel.positions[i].value = DirectX::XMFLOAT3(
+                    channel->mPositionKeys[i].mValue.x,
+                    channel->mPositionKeys[i].mValue.y,
+                    channel->mPositionKeys[i].mValue.z
+                );
+            }
+            
+            // Load rotation keys (quaternions)
+            boneChannel.rotations.resize(channel->mNumRotationKeys);
+            for (unsigned int i = 0; i < channel->mNumRotationKeys; i++) {
+                boneChannel.rotations[i].time = static_cast<float>(channel->mRotationKeys[i].mTime);
+                boneChannel.rotations[i].value = DirectX::XMFLOAT4(
+                    channel->mRotationKeys[i].mValue.x,
+                    channel->mRotationKeys[i].mValue.y,
+                    channel->mRotationKeys[i].mValue.z,
+                    channel->mRotationKeys[i].mValue.w
+                );
+            }
+            
+            // Load scaling keys
+            boneChannel.scalings.resize(channel->mNumScalingKeys);
+            for (unsigned int i = 0; i < channel->mNumScalingKeys; i++) {
+                boneChannel.scalings[i].time = static_cast<float>(channel->mScalingKeys[i].mTime);
+                boneChannel.scalings[i].value = DirectX::XMFLOAT3(
+                    channel->mScalingKeys[i].mValue.x,
+                    channel->mScalingKeys[i].mValue.y,
+                    channel->mScalingKeys[i].mValue.z
+                );
+            }
+        }
+    }
+}
+
+// ============================================================================
+// Animation Control Functions
+// ============================================================================
+
+// Play animation by index
+void StaticMesh::PlayAnimation(int animIndex, bool loop) {
+    if (animIndex < 0 || animIndex >= _animations.size()) {
+        return;
+    }
+    
+    _currentAnimIndex = animIndex;
+    _currentTime = 0.0f;
+    _isPlaying = true;
+    _isLooping = loop;
+}
+
+// Play animation by name
+void StaticMesh::PlayAnimation(const std::string& animName, bool loop) {
+    for (size_t i = 0; i < _animations.size(); i++) {
+        if (_animations[i].name == animName) {
+            PlayAnimation(static_cast<int>(i), loop);
+            return;
+        }
+    }
+}
+
+// Stop animation
+void StaticMesh::StopAnimation() {
+    _isPlaying = false;
+}
+
+// Update animation (call every frame)
+void StaticMesh::UpdateAnimation(float deltaTime) {
+    if (!_isPlaying || _currentAnimIndex < 0 || _currentAnimIndex >= _animations.size()) {
+        return;
+    }
+    
+    AnimationClip& anim = _animations[_currentAnimIndex];
+    
+    // Update time
+    _currentTime += deltaTime * _animSpeed * anim.ticksPerSecond;
+    
+    // Handle looping
+    if (_currentTime > anim.duration) {
+        if (_isLooping) {
+            _currentTime = fmod(_currentTime, anim.duration);
+        } else {
+            _currentTime = anim.duration;
+            _isPlaying = false;
+        }
+    }
+    
+    // Update bone transforms
+    UpdateBoneTransforms(_currentTime);
+}
+
+// ============================================================================
+// Bone Transform Calculation
+// ============================================================================
+
+// Update all bone transforms for current animation time
+void StaticMesh::UpdateBoneTransforms(float time) {
+    if (_currentAnimIndex < 0 || _currentAnimIndex >= _animations.size()) {
+        return;
+    }
+    
+    AnimationClip& anim = _animations[_currentAnimIndex];
+    
+    // Update bone local transforms from animation
+    for (const BoneAnimChannel& channel : anim.channels) {
+        auto it = _boneNameToIndex.find(channel.boneName);
+        if (it == _boneNameToIndex.end()) continue;
+        
+        int boneIndex = it->second;
+        Bone& bone = _bones[boneIndex];
+        
+        // Interpolate transformation components
+        DirectX::XMVECTOR position = InterpolatePosition(channel, time);
+        DirectX::XMVECTOR rotation = InterpolateRotation(channel, time);
+        DirectX::XMVECTOR scaling = InterpolateScaling(channel, time);
+        
+        // Build transformation matrix
+        DirectX::XMMATRIX transform = DirectX::XMMatrixScalingFromVector(scaling) *
+                                     DirectX::XMMatrixRotationQuaternion(rotation) *
+                                     DirectX::XMMatrixTranslationFromVector(position);
+        
+        DirectX::XMStoreFloat4x4(&bone.localTransform, transform);
+    }
+    
+    // Calculate global transforms recursively
+    for (size_t i = 0; i < _bones.size(); i++) {
+        if (_bones[i].parentIndex == -1) {
+            CalculateBoneTransform(static_cast<int>(i), DirectX::XMMatrixIdentity());
+        }
+    }
+    
+    // Generate final bone matrices for GPU
+    for (size_t i = 0; i < _bones.size() && i < MAX_BONES; i++) {
+        DirectX::XMMATRIX offset = DirectX::XMLoadFloat4x4(&_bones[i].offsetMatrix);
+        DirectX::XMMATRIX global = DirectX::XMLoadFloat4x4(&_bones[i].globalTransform);
+        DirectX::XMMATRIX finalTransform = offset * global;
+        DirectX::XMStoreFloat4x4(&_boneMatrices[i], DirectX::XMMatrixTranspose(finalTransform));
+    }
+}
+
+// Calculate bone global transform recursively
+void StaticMesh::CalculateBoneTransform(int boneIndex, const DirectX::XMMATRIX& parentTransform) {
+    Bone& bone = _bones[boneIndex];
+    
+    // Global = Parent * Local
+    DirectX::XMMATRIX local = DirectX::XMLoadFloat4x4(&bone.localTransform);
+    DirectX::XMMATRIX global = local * parentTransform;
+    DirectX::XMStoreFloat4x4(&bone.globalTransform, global);
+    
+    // Recursively update children
+    for (size_t i = 0; i < _bones.size(); i++) {
+        if (_bones[i].parentIndex == boneIndex) {
+            CalculateBoneTransform(static_cast<int>(i), global);
+        }
+    }
+}
+
+// ============================================================================
+// Keyframe Interpolation Functions
+// ============================================================================
+
+// Interpolate position between keyframes
+DirectX::XMVECTOR StaticMesh::InterpolatePosition(const BoneAnimChannel& channel, float time) {
+    if (channel.positions.empty()) {
+        return DirectX::XMVectorSet(0, 0, 0, 0);
+    }
+    
+    if (channel.positions.size() == 1) {
+        return DirectX::XMLoadFloat3(&channel.positions[0].value);
+    }
+    
+    // Find keyframes to interpolate between
+    for (size_t i = 0; i < channel.positions.size() - 1; i++) {
+        if (time < channel.positions[i + 1].time) {
+            float t0 = channel.positions[i].time;
+            float t1 = channel.positions[i + 1].time;
+            float factor = (time - t0) / (t1 - t0);
+            
+            DirectX::XMVECTOR v0 = DirectX::XMLoadFloat3(&channel.positions[i].value);
+            DirectX::XMVECTOR v1 = DirectX::XMLoadFloat3(&channel.positions[i + 1].value);
+            
+            return DirectX::XMVectorLerp(v0, v1, factor);
+        }
+    }
+    
+    // Use last keyframe
+    return DirectX::XMLoadFloat3(&channel.positions.back().value);
+}
+
+// Interpolate rotation (quaternion slerp)
+DirectX::XMVECTOR StaticMesh::InterpolateRotation(const BoneAnimChannel& channel, float time) {
+    if (channel.rotations.empty()) {
+        return DirectX::XMQuaternionIdentity();
+    }
+    
+    if (channel.rotations.size() == 1) {
+        return DirectX::XMLoadFloat4(&channel.rotations[0].value);
+    }
+    
+    // Find keyframes to interpolate between
+    for (size_t i = 0; i < channel.rotations.size() - 1; i++) {
+        if (time < channel.rotations[i + 1].time) {
+            float t0 = channel.rotations[i].time;
+            float t1 = channel.rotations[i + 1].time;
+            float factor = (time - t0) / (t1 - t0);
+            
+            DirectX::XMVECTOR q0 = DirectX::XMLoadFloat4(&channel.rotations[i].value);
+            DirectX::XMVECTOR q1 = DirectX::XMLoadFloat4(&channel.rotations[i + 1].value);
+            
+            return DirectX::XMQuaternionSlerp(q0, q1, factor);
+        }
+    }
+    
+    // Use last keyframe
+    return DirectX::XMLoadFloat4(&channel.rotations.back().value);
+}
+
+// Interpolate scaling
+DirectX::XMVECTOR StaticMesh::InterpolateScaling(const BoneAnimChannel& channel, float time) {
+    if (channel.scalings.empty()) {
+        return DirectX::XMVectorSet(1, 1, 1, 0);
+    }
+    
+    if (channel.scalings.size() == 1) {
+        return DirectX::XMLoadFloat3(&channel.scalings[0].value);
+    }
+    
+    // Find keyframes to interpolate between
+    for (size_t i = 0; i < channel.scalings.size() - 1; i++) {
+        if (time < channel.scalings[i + 1].time) {
+            float t0 = channel.scalings[i].time;
+            float t1 = channel.scalings[i + 1].time;
+            float factor = (time - t0) / (t1 - t0);
+            
+            DirectX::XMVECTOR v0 = DirectX::XMLoadFloat3(&channel.scalings[i].value);
+            DirectX::XMVECTOR v1 = DirectX::XMLoadFloat3(&channel.scalings[i + 1].value);
+            
+            return DirectX::XMVectorLerp(v0, v1, factor);
+        }
+    }
+    
+    // Use last keyframe
+    return DirectX::XMLoadFloat3(&channel.scalings.back().value);
 }

@@ -30,8 +30,8 @@ private:
 	
 	// Dragon transform
 	DirectX::XMFLOAT3 _dragonPosition = { 0.0f, 0.0f, 0.0f };
-	DirectX::XMFLOAT3 _dragonRotation = { 0.0f, 0.0f, 0.0f };  // Euler angles (degrees)
-	float _dragonScale = 0.006f;
+	DirectX::XMFLOAT3 _dragonRotation = { 180.0f, 0.0f, 0.0f };  // Flip upside down (X-axis 180 degrees)
+	float _dragonScale = 0.004f;
 	
 	// Independent camera system (like UIChart3D)
 	UICameraCtrl _cameraCtrl;

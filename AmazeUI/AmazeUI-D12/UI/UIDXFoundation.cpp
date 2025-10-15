@@ -24,6 +24,21 @@ namespace {
             default:                                return fmt;
         }
     }
+    
+    // Input layout for skeletal animation vertices
+    // This matches the Vertex structure in StaticMesh with bone weights
+    const D3D12_INPUT_ELEMENT_DESC SkinnedVertexInputElements[] = {
+        { "SV_Position",  0, DXGI_FORMAT_R32G32B32_FLOAT,    0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+        { "NORMAL",       0, DXGI_FORMAT_R32G32B32_FLOAT,    0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+        { "TEXCOORD",     0, DXGI_FORMAT_R32G32_FLOAT,       0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+        { "BLENDINDICES", 0, DXGI_FORMAT_R8G8B8A8_UINT,      0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+        { "BLENDWEIGHT",  0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+    };
+    
+    const D3D12_INPUT_LAYOUT_DESC SkinnedVertexInputLayout = {
+        SkinnedVertexInputElements,
+        5  // Number of elements
+    };
 };
 
 // Constructor for UIDeviceResources.
@@ -2263,6 +2278,42 @@ void UIDXFoundation::CreateDeviceDependentResourcesXTK() {
             p_shapeEffect3D = make_unique<BasicEffect>(device, EffectFlags::PerPixelLighting | EffectFlags::Texture, pd);
             p_shapeEffect3D->EnableDefaultLighting();
         }
+        
+        // Create SkinnedEffect for skeletal animation rendering
+        {
+            EffectPipelineStateDescription pd(
+                &SkinnedVertexInputLayout,  // Use our custom input layout with bone data
+                CommonStates::Opaque,
+                CommonStates::DepthDefault,
+                CommonStates::CullCounterClockwise,
+                rtState,
+                D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE);
+            
+            pd.renderTargetState.sampleDesc.Count = 1;
+            pd.renderTargetState.sampleDesc.Quality = 0;
+            
+            // Create SkinnedEffect with lighting and texture support
+            p_skinnedEffect3D = make_unique<SkinnedEffect>(device, EffectFlags::Lighting | EffectFlags::Texture, pd);
+            p_skinnedEffect3D->EnableDefaultLighting();
+            
+            // Three-point lighting setup
+            p_skinnedEffect3D->SetAmbientLightColor(DirectX::XMVectorSet(0.6f, 0.6f, 0.6f, 1.0f));
+            
+            // Key light
+            p_skinnedEffect3D->SetLightEnabled(0, true);
+            p_skinnedEffect3D->SetLightDiffuseColor(0, DirectX::XMVectorSet(0.9f, 0.9f, 0.9f, 1.0f));
+            p_skinnedEffect3D->SetLightDirection(0, DirectX::XMVectorSet(-0.5773f, -0.5773f, -0.5773f, 0.0f));
+            
+            // Fill light
+            p_skinnedEffect3D->SetLightEnabled(1, true);
+            p_skinnedEffect3D->SetLightDiffuseColor(1, DirectX::XMVectorSet(0.5f, 0.5f, 0.6f, 1.0f));
+            p_skinnedEffect3D->SetLightDirection(1, DirectX::XMVectorSet(0.7071f, -0.3f, -0.5f, 0.0f));
+            
+            // Rim light
+            p_skinnedEffect3D->SetLightEnabled(2, true);
+            p_skinnedEffect3D->SetLightDiffuseColor(2, DirectX::XMVectorSet(0.4f, 0.4f, 0.5f, 1.0f));
+            p_skinnedEffect3D->SetLightDirection(2, DirectX::XMVectorSet(0.0f, 0.7071f, 0.7071f, 0.0f));
+        }
 
         // // load MSYHFont
         // DX::FindMediaFile(strFilePath, MAX_PATH, format(L"MSYH_{}.spritefont", gLoadFontSize).c_str());
@@ -2329,6 +2380,7 @@ void UIDXFoundation::ResetResources() {
     p_triangleEffect3D.reset();
     p_triangleTexturedEffect3D.reset();
     p_shapeEffect3D.reset();
+    p_skinnedEffect3D.reset();  // Reset skeletal animation effect
     //p_sprites.reset();
     p_resourceDescriptors.reset();
     p_states.reset();

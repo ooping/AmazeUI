@@ -147,6 +147,9 @@ public:
 
 	// Get BasicEffect for custom rendering
 	DirectX::BasicEffect* Get3DShapeEffect() const { return p_shapeEffect3D.get(); }
+	
+	// Get SkinnedEffect for skeletal animation rendering
+	DirectX::SkinnedEffect* GetSkinnedEffect() const { return p_skinnedEffect3D.get(); }
 
 public:  // Public access for texture loading
     // Device resources.
@@ -189,6 +192,7 @@ private:
 	std::unique_ptr<DirectX::BasicEffect> 									p_triangleEffect3D;
 	std::unique_ptr<DirectX::BasicEffect>                                   p_triangleTexturedEffect3D;
 	std::unique_ptr<DirectX::BasicEffect>                                   p_shapeEffect3D;
+	std::unique_ptr<DirectX::SkinnedEffect>                                 p_skinnedEffect3D;  // For skeletal animation
 
 /*************************************************** clip rect ***************************************************/
 public:

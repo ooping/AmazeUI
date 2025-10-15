@@ -39,13 +39,31 @@ void UIGame3D::LoadModel(const std::wstring& filePath) {
 	
 	// Load model (Assimp 5.x supports FBX)
 	_dragonMesh->LoadFromFile(filePath);
+	
+	// Start playing animation if available
+	if (_dragonMesh->GetAnimationCount() > 0) {
+		_dragonMesh->PlayAnimation(0, true);  // Play first animation in loop
+	}
 }
 
 void UIGame3D::Draw() {
+	// Lazy load model on first draw (ensures DirectX resources are initialized)
+	static bool modelLoaded = false;
+	if (!modelLoaded) {
+		LoadModel(L"Phoenix\\source\\fly.fbx");
+		modelLoaded = true;
+	}
+	
 	// Calculate delta time
 	static DWORD lastTime = GetTickCount();
 	DWORD currentTime = GetTickCount();
+	float deltaTime = (currentTime - lastTime) / 1000.0f;  // Convert to seconds
 	lastTime = currentTime;
+	
+	// Update animation
+	if (_dragonMesh && _dragonMesh->IsPlaying()) {
+		_dragonMesh->UpdateAnimation(deltaTime);
+	}
 	
 	// Get inherited transform matrix (like UIChart3D)
 	XMMATRIX transformMatrix = GetInheritedTransformMatrix();
@@ -139,7 +157,7 @@ void UIWinTop::OnCreate() {
 	string str;
 
     _game3D.CreateWindowBase(&gWinTop, clientRC, UILayoutCalc::SIZE_X | UILayoutCalc::SIZE_Y);
-	_game3D.LoadModel(L"Phoenix\\source\\fly.fbx");  // FindMediaFile will locate it in Media/Phoenix/source/
+	// Model will be loaded on first draw to ensure DirectX resources are ready
 }
 
 void UIWinTop::OnDestroy() {
