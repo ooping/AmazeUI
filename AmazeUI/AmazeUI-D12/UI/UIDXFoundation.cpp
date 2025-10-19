@@ -1377,7 +1377,7 @@ void UIDXFoundation::ResetClipRect() {
     ExecuteClipRect(NULL_RECT);
 }
 
-void UIDXFoundation::Draw2DPoint(const XMFLOAT2& point, float z, const UIColor& color, float pointSize) {
+void UIDXFoundation::Draw2DPoint(const XMFLOAT2& point, float z, const UIColor& color, float pointSize, int renderLevel) {
     float viewZ = UICameraUI2D::GetSingletonInstance()->CalculateViewZByOrtho(z);
 
     XMFLOAT2 p;
@@ -1399,17 +1399,17 @@ void UIDXFoundation::Draw2DPoint(const XMFLOAT2& point, float z, const UIColor& 
         1, 3, 2   // 2nd triangle
     };
 
-    RegisterBatchData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, p_triangleEffect2D, GetCurrentClipRect(), UICameraUI2D::GetSingletonInstance());
+    RegisterBatchData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, p_triangleEffect2D, GetCurrentClipRect(), UICameraUI2D::GetSingletonInstance(), renderLevel);
 }
 
-void UIDXFoundation::Draw2DPoints(const vector<XMFLOAT2>& points, float z, const UIColor& color, float pointSize) {
+void UIDXFoundation::Draw2DPoints(const vector<XMFLOAT2>& points, float z, const UIColor& color, float pointSize, int renderLevel) {
     // call Draw2DPoint for each point
     for (const auto& point : points) {
-        Draw2DPoint(point, z, color, pointSize);
+        Draw2DPoint(point, z, color, pointSize, renderLevel);
     }
 }
 
-void UIDXFoundation::Draw2DLine(const XMFLOAT2& start, const XMFLOAT2& end, float z, const UIColor& color, float lineWidth) {
+void UIDXFoundation::Draw2DLine(const XMFLOAT2& start, const XMFLOAT2& end, float z, const UIColor& color, float lineWidth, int renderLevel) {
     XMVECTORF32 finalColor = color.ToXMVECTORF32();
 
     XMFLOAT2 p1, p2;
@@ -1440,19 +1440,19 @@ void UIDXFoundation::Draw2DLine(const XMFLOAT2& start, const XMFLOAT2& end, floa
     // draw two triangles
     vector<uint16_t> indices = { 0, 1, 2, 1, 3, 2 };
 
-    RegisterBatchData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, p_triangleEffect2D, GetCurrentClipRect(), UICameraUI2D::GetSingletonInstance());
+    RegisterBatchData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, p_triangleEffect2D, GetCurrentClipRect(), UICameraUI2D::GetSingletonInstance(), renderLevel);
 }
 
 // Draw a 2D rectangle with specified color, hollow style
-void UIDXFoundation::Draw2DRectOutline(const XMFLOAT2& start, const XMFLOAT2& end, float z, const UIColor& color, float lineWidth) {    
-    Draw2DLine(XMFLOAT2(start.x, start.y), XMFLOAT2(end.x, start.y), z, color, lineWidth); // up
-    Draw2DLine(XMFLOAT2(end.x, start.y), XMFLOAT2(end.x, end.y), z, color, lineWidth); //right
-    Draw2DLine(XMFLOAT2(start.x, end.y), XMFLOAT2(end.x, end.y), z, color, lineWidth); // down
-    Draw2DLine(XMFLOAT2(start.x, start.y), XMFLOAT2(start.x, end.y), z, color, lineWidth); // left
+void UIDXFoundation::Draw2DRectOutline(const XMFLOAT2& start, const XMFLOAT2& end, float z, const UIColor& color, float lineWidth, int renderLevel) {    
+    Draw2DLine(XMFLOAT2(start.x, start.y), XMFLOAT2(end.x, start.y), z, color, lineWidth, renderLevel); // up
+    Draw2DLine(XMFLOAT2(end.x, start.y), XMFLOAT2(end.x, end.y), z, color, lineWidth, renderLevel); //right
+    Draw2DLine(XMFLOAT2(start.x, end.y), XMFLOAT2(end.x, end.y), z, color, lineWidth, renderLevel); // down
+    Draw2DLine(XMFLOAT2(start.x, start.y), XMFLOAT2(start.x, end.y), z, color, lineWidth, renderLevel); // left
 }
 
 void UIDXFoundation::Draw2DRectSolid(const XMFLOAT2& start, const XMFLOAT2& end, float z, 
-						             const UIColor& colorLT, const UIColor& colorRT, const UIColor& colorLB, const UIColor& colorRB, UCHAR alpha) {
+						             const UIColor& colorLT, const UIColor& colorRT, const UIColor& colorLB, const UIColor& colorRB, UCHAR alpha, int renderLevel) {
     XMVECTORF32  finalColorLT = colorLT.ToXMVECTORF32(alpha);
     XMVECTORF32  finalColorRT = colorRT.ToXMVECTORF32(alpha);
     XMVECTORF32  finalColorLB = colorLB.ToXMVECTORF32(alpha);
@@ -1476,17 +1476,17 @@ void UIDXFoundation::Draw2DRectSolid(const XMFLOAT2& start, const XMFLOAT2& end,
     // Define indices for two triangles
     vector<uint16_t> indices = { 0, 1, 2, 1, 3, 2 };
 
-    RegisterBatchData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, p_triangleEffect2D, GetCurrentClipRect(), UICameraUI2D::GetSingletonInstance());
+    RegisterBatchData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, p_triangleEffect2D, GetCurrentClipRect(), UICameraUI2D::GetSingletonInstance(), renderLevel);
 }
 
 // Draw a 2D rectangle with specified color, alpha transparency and z-depth
-void UIDXFoundation::Draw2DRectSolid(const XMFLOAT2& start, const XMFLOAT2& end, float z, const UIColor& color, UCHAR alpha) {
-    Draw2DRectSolid(start, end, z, color, color, color, color, alpha);
+void UIDXFoundation::Draw2DRectSolid(const XMFLOAT2& start, const XMFLOAT2& end, float z, const UIColor& color, UCHAR alpha, int renderLevel) {
+    Draw2DRectSolid(start, end, z, color, color, color, color, alpha, renderLevel);
 }
 
 void UIDXFoundation::Draw2DImage(size_t textureIndex, 
                             RECT srcRect, XMFLOAT2 dstStart, XMFLOAT2 dstEnd, 
-                            float z, UCHAR alpha) {
+                            float z, UCHAR alpha, int renderLevel) {
     // get texture resource
     TextureResource& resource = _textureResources[textureIndex];
 
@@ -1529,7 +1529,7 @@ void UIDXFoundation::Draw2DImage(size_t textureIndex,
     vector<uint16_t> indices = { 0, 1, 2, 1, 3, 2 };
 
     RegisterBatchTextureData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, p_triangleTexturedEffect2D, 
-                             resource._gpuDescriptor, p_states->LinearClamp(), alpha, GetCurrentClipRect(), UICameraUI2D::GetSingletonInstance());
+                             resource._gpuDescriptor, p_states->LinearClamp(), alpha, GetCurrentClipRect(), UICameraUI2D::GetSingletonInstance(), renderLevel);
 
     // p_sprites use more memory and is slower than PrimitiveBatch!!!
 
@@ -1566,7 +1566,7 @@ void UIDXFoundation::Draw2DImage(size_t textureIndex,
 
 void UIDXFoundation::Draw2DImage(const wstring& filePath, const UIColor& colorKey,
                             const RECT& srcRect, const XMFLOAT2& dstStart, const XMFLOAT2& dstEnd,
-                            float z, UCHAR alpha) {
+                            float z, UCHAR alpha, int renderLevel) {
     size_t textureIndex = 0;
     // check is dds file
     if (filePath.find(L".dds") != wstring::npos) {
@@ -1578,20 +1578,20 @@ void UIDXFoundation::Draw2DImage(const wstring& filePath, const UIColor& colorKe
             return;
         }
     }
-    Draw2DImage(textureIndex, srcRect, dstStart, dstEnd, z, alpha);
+    Draw2DImage(textureIndex, srcRect, dstStart, dstEnd, z, alpha, renderLevel);
 }
 
 void UIDXFoundation::Draw2DImage(const wstring& dllPath, UINT id, const UIColor& colorKey,
                             const RECT& srcRect, const XMFLOAT2& dstStart, const XMFLOAT2& dstEnd,
-                            float z, UCHAR alpha) {
+                            float z, UCHAR alpha, int renderLevel) {
     size_t textureIndex = 0; 
     if (!GetWICTextureIndexFromDLL(dllPath, id, colorKey, textureIndex)) {
         return;
     }
-    Draw2DImage(textureIndex, srcRect, dstStart, dstEnd, z, alpha);
+    Draw2DImage(textureIndex, srcRect, dstStart, dstEnd, z, alpha, renderLevel);
 }
 
-void UIDXFoundation::Draw3DPoint(const XMFLOAT2& point, float z, const UIColor& color, float pointSize, const XMMATRIX& transformMatrix) {
+void UIDXFoundation::Draw3DPoint(const XMFLOAT2& point, float z, const UIColor& color, float pointSize, int renderLevel, const XMMATRIX& transformMatrix) {
     XMVECTORF32 finalColor = color.ToXMVECTORF32();
 
     XMFLOAT2 p;
@@ -1600,57 +1600,57 @@ void UIDXFoundation::Draw3DPoint(const XMFLOAT2& point, float z, const UIColor& 
     XMFLOAT3 wp;
     UIZPlaneTransform::TransformPoint(transformMatrix, p, z, wp);
 
-    Draw3DWorldCircle(wp, pointSize / 2, finalColor, 255, UICameraUI3D::GetSingletonInstance());
+    Draw3DWorldCircle(wp, pointSize / 2, finalColor, 255, renderLevel, UICameraUI3D::GetSingletonInstance());
 }
 
-void UIDXFoundation::Draw3DPoints(const vector<XMFLOAT2>& points, float z, const UIColor& color, float pointSize, 
+void UIDXFoundation::Draw3DPoints(const vector<XMFLOAT2>& points, float z, const UIColor& color, float pointSize, int renderLevel,
                                   const XMMATRIX& transformMatrix) {
     // call Draw3DPoint for each point
     for (const auto& point : points) {
-        Draw3DPoint(point, z, color, pointSize, transformMatrix);
+        Draw3DPoint(point, z, color, pointSize, renderLevel, transformMatrix);
     }
 }
 
-void UIDXFoundation::Draw3DLine(const XMFLOAT2& start, const XMFLOAT2& end, float z, const UIColor& color, float lineWidth, const XMMATRIX& transformMatrix) { 
+void UIDXFoundation::Draw3DLine(const XMFLOAT2& start, const XMFLOAT2& end, float z, const UIColor& color, float lineWidth, int renderLevel, const XMMATRIX& transformMatrix) { 
     XMFLOAT2 p1, p2;
     Calculate2DLinePoints(start, end, p1, p2);
 
     vector<XMFLOAT3> wps;
     UIZPlaneTransform::TransformLinePoints(transformMatrix, p1, p2, z, wps);
 
-    Draw3DWorldLine(wps[0], wps[1], color, lineWidth, UICameraUI3D::GetSingletonInstance());
+    Draw3DWorldLine(wps[0], wps[1], color, lineWidth, renderLevel, UICameraUI3D::GetSingletonInstance());
 }
 
-void UIDXFoundation::Draw3DRectOutline(const XMFLOAT2& start, const XMFLOAT2& end, float z, const UIColor& color, float lineWidth, const XMMATRIX& transformMatrix) {    
+void UIDXFoundation::Draw3DRectOutline(const XMFLOAT2& start, const XMFLOAT2& end, float z, const UIColor& color, float lineWidth, int renderLevel, const XMMATRIX& transformMatrix) {    
     XMFLOAT2 ps, pe;
     Calculate2DRectPoints(start, end, ps, pe);
     vector<XMFLOAT3> wps;
     UIZPlaneTransform::TransformRectPoints(transformMatrix, ps, pe, z, wps);
     
-    Draw3DWorldRectOutline(wps[0], wps[1], wps[2], wps[3], color, lineWidth, UICameraUI3D::GetSingletonInstance());
+    Draw3DWorldRectOutline(wps[0], wps[1], wps[2], wps[3], color, lineWidth, renderLevel, UICameraUI3D::GetSingletonInstance());
 }
 
 // Draw a 3D rectangle with specified color, alpha transparency and z-depth
 void UIDXFoundation::Draw3DRectSolid(const XMFLOAT2& start, const XMFLOAT2& end, float z,
-                                     const UIColor& colorLT, const UIColor& colorRT, const UIColor& colorLB, const UIColor& colorRB, UCHAR alpha,
+                                     const UIColor& colorLT, const UIColor& colorRT, const UIColor& colorLB, const UIColor& colorRB, UCHAR alpha, int renderLevel,
                                      const XMMATRIX& transformMatrix) {
     XMFLOAT2 ps, pe;
     Calculate2DRectPoints(start, end, ps, pe);
     vector<XMFLOAT3> wps;
     UIZPlaneTransform::TransformRectPoints(transformMatrix, ps, pe, z, wps);
     
-    Draw3DWorldRectSolid(wps[0], wps[1], wps[2], wps[3], colorLT, colorRT, colorLB, colorRB, alpha, UICameraUI3D::GetSingletonInstance());
+    Draw3DWorldRectSolid(wps[0], wps[1], wps[2], wps[3], colorLT, colorRT, colorLB, colorRB, alpha, renderLevel, UICameraUI3D::GetSingletonInstance());
 }
 
 void UIDXFoundation::Draw3DRectSolid(const XMFLOAT2& start, const XMFLOAT2& end, float z,
-                                     const UIColor& color, UCHAR alpha,
+                                     const UIColor& color, UCHAR alpha, int renderLevel,
                                      const XMMATRIX& transformMatrix) {
-    Draw3DRectSolid(start, end, z, color, color, color, color, alpha, transformMatrix);
+    Draw3DRectSolid(start, end, z, color, color, color, color, alpha, renderLevel, transformMatrix);
 }
 
 void UIDXFoundation::Draw3DImage(size_t textureIndex, 
                                  RECT srcRect, XMFLOAT2 dstStart, XMFLOAT2 dstEnd, 
-                                 float z, UCHAR alpha, 
+                                 float z, UCHAR alpha, int renderLevel,
                                  const XMMATRIX& transformMatrix) {
     // get the texture rect
     const RECT textureRect = Get2DTextureRect(_textureResources[textureIndex]._texture);
@@ -1671,24 +1671,24 @@ void UIDXFoundation::Draw3DImage(size_t textureIndex,
     vector<XMFLOAT3> wps;
     UIZPlaneTransform::TransformRectPoints(transformMatrix, ps, pe, z, wps);
 
-    Draw3DWorldImage(textureIndex, srcRect, wps[0], wps[1], wps[2], wps[3], alpha, UICameraUI3D::GetSingletonInstance());
+    Draw3DWorldImage(textureIndex, srcRect, wps[0], wps[1], wps[2], wps[3], alpha, renderLevel, UICameraUI3D::GetSingletonInstance());
 }
 
 void UIDXFoundation::Draw3DImage(const wstring& dllPath, UINT id, const UIColor& colorKey,
 					 const RECT& srcRect, const XMFLOAT2& dstStart, const XMFLOAT2& dstEnd, 
-					 float z, UCHAR alpha, 
+					 float z, UCHAR alpha, int renderLevel,
 					 const XMMATRIX& transformMatrix) {
     size_t textureIndex = 0; 
     if (!GetWICTextureIndexFromDLL(dllPath, id, colorKey, textureIndex)) {
         return;
     }
 
-    Draw3DImage(textureIndex, srcRect, dstStart, dstEnd, z, alpha, transformMatrix);
+    Draw3DImage(textureIndex, srcRect, dstStart, dstEnd, z, alpha, renderLevel, transformMatrix);
 }
 
 void UIDXFoundation::Draw3DImage(const wstring& filePath, const UIColor& colorKey,
 					 const RECT& srcRect, const XMFLOAT2& dstStart, const XMFLOAT2& dstEnd, 
-					 float z, UCHAR alpha, 
+					 float z, UCHAR alpha, int renderLevel,
 					 const XMMATRIX& transformMatrix) {
     size_t textureIndex = 0;
     // check is dds file
@@ -1702,10 +1702,10 @@ void UIDXFoundation::Draw3DImage(const wstring& filePath, const UIColor& colorKe
         }
     }
 
-    Draw3DImage(textureIndex, srcRect, dstStart, dstEnd, z, alpha, transformMatrix);
+    Draw3DImage(textureIndex, srcRect, dstStart, dstEnd, z, alpha, renderLevel, transformMatrix);
 }
 
-void UIDXFoundation::Draw3DWorldPoint(const XMFLOAT3& point, const UIColor& color, UICameraBase3D* pCamera) {
+void UIDXFoundation::Draw3DWorldPoint(const XMFLOAT3& point, const UIColor& color, int renderLevel, UICameraBase3D* pCamera) {
     // Create point vertex
     vector<VertexPositionColor> vertices = {
         {{point.x, point.y, point.z}, color.ToXMVECTORF32()}
@@ -1714,12 +1714,12 @@ void UIDXFoundation::Draw3DWorldPoint(const XMFLOAT3& point, const UIColor& colo
     vector<uint16_t> indices = {0};
     
     // Register batch data instead of direct rendering
-    RegisterBatchData(D3D_PRIMITIVE_TOPOLOGY_POINTLIST, vertices, indices, p_pointEffect3D, GetCurrentClipRect(), pCamera);
+    RegisterBatchData(D3D_PRIMITIVE_TOPOLOGY_POINTLIST, vertices, indices, p_pointEffect3D, GetCurrentClipRect(), pCamera, renderLevel);
 }
 
-void UIDXFoundation::Draw3DWorldLine(const DirectX::XMFLOAT3& start, const DirectX::XMFLOAT3& end, const UIColor& colorS, const UIColor& colorE, float lineWidth, UICameraBase3D* pCamera) {
+void UIDXFoundation::Draw3DWorldLine(const DirectX::XMFLOAT3& start, const DirectX::XMFLOAT3& end, const UIColor& colorS, const UIColor& colorE, float lineWidth, int renderLevel, UICameraBase3D* pCamera) {
     if (lineWidth <= 1.0f) {
-        Draw3DWorldLine(start, end, colorS, colorE, lineWidth,pCamera);
+        Draw3DWorldLine(start, end, colorS, colorE, renderLevel, pCamera);
     } else {
         UIColor avgColor(
 			(colorS._r + colorE._r) / 2,
@@ -1727,19 +1727,19 @@ void UIDXFoundation::Draw3DWorldLine(const DirectX::XMFLOAT3& start, const Direc
 			(colorS._b + colorE._b) / 2,
 			(colorS._a + colorE._a) / 2
 		);
-        Draw3DWorldThickLine(start, end, lineWidth, avgColor, pCamera);
+        Draw3DWorldThickLine(start, end, lineWidth, avgColor, renderLevel, pCamera);
     }
 }
 
-void UIDXFoundation::Draw3DWorldLine(const DirectX::XMFLOAT3& start, const DirectX::XMFLOAT3& end, const UIColor& color, float lineWidth, UICameraBase3D* pCamera) {
+void UIDXFoundation::Draw3DWorldLine(const DirectX::XMFLOAT3& start, const DirectX::XMFLOAT3& end, const UIColor& color, float lineWidth, int renderLevel, UICameraBase3D* pCamera) {
     if (lineWidth <= 1.0f) {
-        Draw3DWorldLine(start, end, color, pCamera);
+        Draw3DWorldLine(start, end, color, renderLevel, pCamera);
     } else {
-        Draw3DWorldThickLine(start, end, lineWidth, color, pCamera);
+        Draw3DWorldThickLine(start, end, lineWidth, color, renderLevel, pCamera);
     }
 }
 
-void UIDXFoundation::Draw3DWorldLine(const DirectX::XMFLOAT3& start, const DirectX::XMFLOAT3& end, const UIColor& colorS, const UIColor& colorE, UICameraBase3D* pCamera) {
+void UIDXFoundation::Draw3DWorldLine(const DirectX::XMFLOAT3& start, const DirectX::XMFLOAT3& end, const UIColor& colorS, const UIColor& colorE, int renderLevel, UICameraBase3D* pCamera) {
     // Create line vertices with gradient colors
     vector<VertexPositionColor> vertices = {
         {{start.x, start.y, start.z}, colorS.ToXMVECTORF32()},  // Start vertex with start color
@@ -1749,14 +1749,14 @@ void UIDXFoundation::Draw3DWorldLine(const DirectX::XMFLOAT3& start, const Direc
     vector<uint16_t> indices = {0, 1};
     
     // Register batch data instead of direct rendering
-    RegisterBatchData(D3D_PRIMITIVE_TOPOLOGY_LINELIST, vertices, indices, p_lineEffect3D, GetCurrentClipRect(), pCamera);
+    RegisterBatchData(D3D_PRIMITIVE_TOPOLOGY_LINELIST, vertices, indices, p_lineEffect3D, GetCurrentClipRect(), pCamera, renderLevel);
 }
 	
-void UIDXFoundation::Draw3DWorldLine(const XMFLOAT3& start, const XMFLOAT3& end, const UIColor& color, UICameraBase3D* pCamera) {
-    Draw3DWorldLine(start, end, color, color, pCamera);
+void UIDXFoundation::Draw3DWorldLine(const XMFLOAT3& start, const XMFLOAT3& end, const UIColor& color, int renderLevel, UICameraBase3D* pCamera) {
+    Draw3DWorldLine(start, end, color, color, renderLevel, pCamera);
 }
 
-void UIDXFoundation::Draw3DWorldThickLine(const XMFLOAT3& start, const XMFLOAT3& end, float lineWidth, const UIColor& color, UICameraBase3D* pCamera) {
+void UIDXFoundation::Draw3DWorldThickLine(const XMFLOAT3& start, const XMFLOAT3& end, float lineWidth, const UIColor& color, int renderLevel, UICameraBase3D* pCamera) {
     const int segments = 8; // Number of cylinder segments
     
     XMVECTOR startVec = XMLoadFloat3(&start);
@@ -1820,10 +1820,10 @@ void UIDXFoundation::Draw3DWorldThickLine(const XMFLOAT3& start, const XMFLOAT3&
     }
     
     RegisterBatchData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, 
-                      p_triangleEffect3D, GetCurrentClipRect(), pCamera);
+                      p_triangleEffect3D, GetCurrentClipRect(), pCamera, renderLevel);
 }
 
-void UIDXFoundation::Draw3DWorldCircle(const XMFLOAT3& center, float pixelRadius, const UIColor& color, UCHAR alpha, UICameraBase3D* pCamera) {
+void UIDXFoundation::Draw3DWorldCircle(const XMFLOAT3& center, float pixelRadius, const UIColor& color, UCHAR alpha, int renderLevel, UICameraBase3D* pCamera) {
     // Calculate camera-facing billboard
     Matrix view = pCamera->GetViewMatrix();
     XMVECTOR right = XMVectorSet(view.m[0][0], view.m[1][0], view.m[2][0], 0);
@@ -1871,10 +1871,10 @@ void UIDXFoundation::Draw3DWorldCircle(const XMFLOAT3& center, float pixelRadius
     
     // Register batch data for triangle color rendering
     RegisterBatchData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices,
-                      p_triangleEffect3D, GetCurrentClipRect(), pCamera);
+                      p_triangleEffect3D, GetCurrentClipRect(), pCamera, renderLevel);
 }
 
-void UIDXFoundation::Draw3DWorldTriangle(const XMFLOAT3& p1, const XMFLOAT3& p2, const XMFLOAT3& p3, const UIColor& color, UCHAR alpha, UICameraBase3D* pCamera) {
+void UIDXFoundation::Draw3DWorldTriangle(const XMFLOAT3& p1, const XMFLOAT3& p2, const XMFLOAT3& p3, const UIColor& color, UCHAR alpha, int renderLevel, UICameraBase3D* pCamera) {
     vector<VertexPositionColor> vertices;
     vector<uint16_t> indices;
     
@@ -1894,11 +1894,11 @@ void UIDXFoundation::Draw3DWorldTriangle(const XMFLOAT3& p1, const XMFLOAT3& p2,
     
     // Register batch data for triangle rendering
     RegisterBatchData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices,
-                      p_triangleEffect3D, GetCurrentClipRect(), pCamera);
+                      p_triangleEffect3D, GetCurrentClipRect(), pCamera, renderLevel);
 }
 
 void UIDXFoundation::Draw3DWorldTriangle(const XMFLOAT3& p1, const XMFLOAT3& p2, const XMFLOAT3& p3, 
-                                        const UIColor& color1, const UIColor& color2, const UIColor& color3, UCHAR alpha, UICameraBase3D* pCamera) {
+                                        const UIColor& color1, const UIColor& color2, const UIColor& color3, UCHAR alpha, int renderLevel, UICameraBase3D* pCamera) {
     vector<VertexPositionColor> vertices;
     vector<uint16_t> indices;
     
@@ -1920,12 +1920,12 @@ void UIDXFoundation::Draw3DWorldTriangle(const XMFLOAT3& p1, const XMFLOAT3& p2,
     
     // Register batch data for triangle rendering
     RegisterBatchData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices,
-                      p_triangleEffect3D, GetCurrentClipRect(), pCamera);
+                      p_triangleEffect3D, GetCurrentClipRect(), pCamera, renderLevel);
 }
 
 void UIDXFoundation::Draw3DWorldTextureTriangle(const XMFLOAT3& p1, const XMFLOAT3& p2, const XMFLOAT3& p3,
                                                 const XMFLOAT2& uv1, const XMFLOAT2& uv2, const XMFLOAT2& uv3,
-                                                size_t textureIndex, UCHAR alpha, UICameraBase3D* pCamera) {
+                                                size_t textureIndex, UCHAR alpha, int renderLevel, UICameraBase3D* pCamera) {
     // Get texture resource
     TextureResource& resource = _textureResources[textureIndex];
     
@@ -1941,25 +1941,25 @@ void UIDXFoundation::Draw3DWorldTextureTriangle(const XMFLOAT3& p1, const XMFLOA
     
     // Register batch data for rendering
     RegisterBatchTextureData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, p_triangleTexturedEffect3D, 
-                             resource._gpuDescriptor, p_states->LinearClamp(), alpha, GetCurrentClipRect(), pCamera);
+                             resource._gpuDescriptor, p_states->LinearClamp(), alpha, GetCurrentClipRect(), pCamera, renderLevel);
 }
 
 void UIDXFoundation::Draw3DWorldRectOutline(const XMFLOAT3& pLT, const XMFLOAT3& pRT, const XMFLOAT3& pLB, const XMFLOAT3& pRB,
-                                            const UIColor& color, float lineWidth, UICameraBase3D* pCamera) {
-    Draw3DWorldLine(pLT, pRT, color, lineWidth, pCamera);  // Top edge
-    Draw3DWorldLine(pRT, pRB, color, lineWidth, pCamera);  // Right edge
-    Draw3DWorldLine(pRB, pLB, color, lineWidth, pCamera);  // Bottom edge
-    Draw3DWorldLine(pLB, pLT, color, lineWidth, pCamera);  // Left edge
+                                            const UIColor& color, float lineWidth, int renderLevel, UICameraBase3D* pCamera) {
+    Draw3DWorldLine(pLT, pRT, color, lineWidth, renderLevel, pCamera);  // Top edge
+    Draw3DWorldLine(pRT, pRB, color, lineWidth, renderLevel, pCamera);  // Right edge
+    Draw3DWorldLine(pRB, pLB, color, lineWidth, renderLevel, pCamera);  // Bottom edge
+    Draw3DWorldLine(pLB, pLT, color, lineWidth, renderLevel, pCamera);  // Left edge
 }
 
 void UIDXFoundation::Draw3DWorldRectSolid(const XMFLOAT3& pLT, const XMFLOAT3& pRT, const XMFLOAT3& pLB, const XMFLOAT3& pRB,
-                                          const UIColor& color, UCHAR alpha, UICameraBase3D* pCamera) {
-    Draw3DWorldRectSolid(pLT, pRT, pLB, pRB, color, color, color, color, alpha, pCamera);
+                                          const UIColor& color, UCHAR alpha, int renderLevel, UICameraBase3D* pCamera) {
+    Draw3DWorldRectSolid(pLT, pRT, pLB, pRB, color, color, color, color, alpha, renderLevel, pCamera);
 }
 
 void UIDXFoundation::Draw3DWorldRectSolid(const XMFLOAT3& pLT, const XMFLOAT3& pRT, const XMFLOAT3& pLB, const XMFLOAT3& pRB,
                                           const UIColor& colorLT, const UIColor& colorRT, const UIColor& colorLB, const UIColor& colorRB,
-                                          UCHAR alpha, UICameraBase3D* pCamera) {
+                                          UCHAR alpha, int renderLevel, UICameraBase3D* pCamera) {
     // Convert colors to XMFLOAT4
     XMFLOAT4 color4_LT, color4_RT, color4_LB, color4_RB;
     XMStoreFloat4(&color4_LT, colorLT.ToXMVECTORF32(alpha));
@@ -1980,11 +1980,11 @@ void UIDXFoundation::Draw3DWorldRectSolid(const XMFLOAT3& pLT, const XMFLOAT3& p
     
     // Register batch data
     RegisterBatchData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, 
-                      p_triangleEffect3D, GetCurrentClipRect(), pCamera);
+                      p_triangleEffect3D, GetCurrentClipRect(), pCamera, renderLevel);
 }
 
 void UIDXFoundation::Draw3DWorldImage(size_t textureIndex, const RECT& srcRect, const DirectX::XMFLOAT3& pLT, const DirectX::XMFLOAT3& pRT, 
-						              const DirectX::XMFLOAT3& pLB, const DirectX::XMFLOAT3& pRB, UCHAR alpha, UICameraBase3D* pCamera) {
+						              const DirectX::XMFLOAT3& pLB, const DirectX::XMFLOAT3& pRB, UCHAR alpha, int renderLevel, UICameraBase3D* pCamera) {
     // Get texture resource
     TextureResource& resource = _textureResources[textureIndex];
     
@@ -2016,7 +2016,7 @@ void UIDXFoundation::Draw3DWorldImage(size_t textureIndex, const RECT& srcRect, 
 
     // Register batch texture data
     RegisterBatchTextureData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, p_triangleTexturedEffect3D,
-                             resource._gpuDescriptor, p_states->LinearClamp(), alpha, GetCurrentClipRect(), pCamera);
+                             resource._gpuDescriptor, p_states->LinearClamp(), alpha, GetCurrentClipRect(), pCamera, renderLevel);
 }
 
 // Helper function to calculate world length from pixel length
@@ -2054,7 +2054,7 @@ float UIDXFoundation::CalculateWorldLengthFromPixelLength(float pixelLength, con
 }
 
 void UIDXFoundation::Draw3DWorldTextFT(const std::wstring& text, const DirectX::XMFLOAT3& worldPosition,
-                                       const UIColor& color, float fontSize, UICameraBase3D* pCamera) {
+                                       const UIColor& color, float fontSize, int renderLevel, UICameraBase3D* pCamera) {
     float x = worldPosition.x;
     float y = worldPosition.y;
     float z = worldPosition.z;
@@ -2083,14 +2083,14 @@ void UIDXFoundation::Draw3DWorldTextFT(const std::wstring& text, const DirectX::
         float charY = y - CalculateWorldLengthFromPixelLength((float)(baselineOffset - resource._top), worldPosition, pCamera);
         
         // Pass fontSize as scale parameter for Draw3DWorldCharTextureFT to perform correct pixel-to-world conversion
-        Draw3DWorldCharTextureFT(textureIndex, XMFLOAT3(charX, charY, z), 1, 255, pCamera);
+        Draw3DWorldCharTextureFT(textureIndex, XMFLOAT3(charX, charY, z), 1, 255, renderLevel, pCamera);
         
         // Update pen position (world space)
         x += CalculateWorldLengthFromPixelLength((float)resource._advance, worldPosition, pCamera);
     }
 }
 
-void UIDXFoundation::Draw3DWorldCharTextureFT(size_t textureIndex, DirectX::XMFLOAT3 worldPosition, float scale, UCHAR alpha, UICameraBase3D* pCamera) {
+void UIDXFoundation::Draw3DWorldCharTextureFT(size_t textureIndex, DirectX::XMFLOAT3 worldPosition, float scale, UCHAR alpha, int renderLevel, UICameraBase3D* pCamera) {
     // Get texture resource
     CharTextureResource& resource = _charTextureResources[textureIndex];
     
@@ -2115,7 +2115,7 @@ void UIDXFoundation::Draw3DWorldCharTextureFT(size_t textureIndex, DirectX::XMFL
 
     // Use the provided camera instead of a fixed UI camera, so each control can have its own perspective
     RegisterBatchTextureData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, p_triangleTexturedEffect3D, 
-                             resource._gpuDescriptor, p_states->LinearClamp(), alpha, GetCurrentClipRect(), pCamera);
+                             resource._gpuDescriptor, p_states->LinearClamp(), alpha, GetCurrentClipRect(), pCamera, renderLevel);
 }
 
 // Helper method to clear the back buffers.
@@ -2657,7 +2657,7 @@ SIZE UIDXFoundation::GetTextSizeFT(const wstring& text, float fontSize, float li
     return size;
 }
 
-void UIDXFoundation::Draw2DCharTextureFT(size_t textureIndex, XMFLOAT2 position, float z, float scale, UCHAR alpha) {
+void UIDXFoundation::Draw2DCharTextureFT(size_t textureIndex, XMFLOAT2 position, float z, float scale, UCHAR alpha, int renderLevel) {
     position.x = round(position.x);
     position.y = round(position.y);
 
@@ -2687,7 +2687,7 @@ void UIDXFoundation::Draw2DCharTextureFT(size_t textureIndex, XMFLOAT2 position,
     vector<uint16_t> indices = { 0, 1, 2, 1, 3, 2 };
 
     RegisterBatchTextureData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, p_triangleTexturedEffect2D, 
-                             resource._gpuDescriptor, p_states->LinearClamp(), alpha, GetCurrentClipRect(), UICameraUI2D::GetSingletonInstance());
+                             resource._gpuDescriptor, p_states->LinearClamp(), alpha, GetCurrentClipRect(), UICameraUI2D::GetSingletonInstance(), renderLevel);
     
 
     // p_sprites use more memory and is slower than PrimitiveBatch!!!
@@ -2718,7 +2718,7 @@ void UIDXFoundation::Draw2DCharTextureFT(size_t textureIndex, XMFLOAT2 position,
     // p_sprites->End();
 }
 
-void UIDXFoundation::Draw3DCharTextureFT(size_t textureIndex, XMFLOAT2 position, float z, float scale, UCHAR alpha, const XMMATRIX& transformMatrix) {
+void UIDXFoundation::Draw3DCharTextureFT(size_t textureIndex, XMFLOAT2 position, float z, float scale, UCHAR alpha, int renderLevel, const XMMATRIX& transformMatrix) {
     position.x = round(position.x);
     //position.y = round(position.y);
 
@@ -2746,7 +2746,7 @@ void UIDXFoundation::Draw3DCharTextureFT(size_t textureIndex, XMFLOAT2 position,
 
     RegisterBatchTextureData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, p_triangleTexturedEffect3D, 
                              _charTextureResources[textureIndex]._gpuDescriptor, 
-                             p_states->LinearClamp(), alpha, GetCurrentClipRect(), UICameraUI3D::GetSingletonInstance());
+                             p_states->LinearClamp(), alpha, GetCurrentClipRect(), UICameraUI3D::GetSingletonInstance(), renderLevel);
 }
 
 XMFLOAT2 UIDXFoundation::CalculateTextPosition(const std::wstring& text, const RECT& rc, UIFontPos alignment, float fontSize, float lineSpacing) {
@@ -2802,7 +2802,7 @@ XMFLOAT2 UIDXFoundation::CalculateTextPosition(const std::wstring& text, const R
     return position;
 }
 
-void UIDXFoundation::Draw2DTextFT(const wstring& text, const XMFLOAT2& position, float z, const UIColor& color, float fontSize) {
+void UIDXFoundation::Draw2DTextFT(const wstring& text, const XMFLOAT2& position, float z, const UIColor& color, float fontSize, int renderLevel) {
     float x = position.x;
     float y = position.y;
 
@@ -2827,18 +2827,18 @@ void UIDXFoundation::Draw2DTextFT(const wstring& text, const XMFLOAT2& position,
         float charY = y + baselineYFromTop - resource._top;
         
         // draw character
-        Draw2DCharTextureFT(textureIndex, XMFLOAT2(charX, charY), z, 1.0f, 255);
+        Draw2DCharTextureFT(textureIndex, XMFLOAT2(charX, charY), z, 1.0f, 255, renderLevel);
         
         // update pen position
         x += resource._advance;
     }
 }
 
-void UIDXFoundation::Draw2DTextFT(const wstring& text, const RECT& rc, UIFontPos alignment, float z, const UIColor& color, float fontSize) { 
+void UIDXFoundation::Draw2DTextFT(const wstring& text, const RECT& rc, UIFontPos alignment, float z, const UIColor& color, float fontSize, int renderLevel) { 
     XMFLOAT2 position = CalculateTextPosition(text, rc, alignment, fontSize);
 
     UIScreenClipRectGuard clipRect(rc);
-    Draw2DTextFT(text, position, z, color, fontSize);
+    Draw2DTextFT(text, position, z, color, fontSize, renderLevel);
 }
 
 // Split text into lines by '\n'
@@ -2873,7 +2873,7 @@ vector<wstring> UIDXFoundation::SplitTextIntoLines(const wstring& text) {
     return lines;
 }
 
-void UIDXFoundation::Draw2DTextMultiLineFT(const wstring& text, const XMFLOAT2& position, float z, const UIColor& color, float fontSize, float lineSpacing) {
+void UIDXFoundation::Draw2DTextMultiLineFT(const wstring& text, const XMFLOAT2& position, float z, const UIColor& color, float fontSize, float lineSpacing, int renderLevel) {
     if (text.empty()) {
         return;
     }
@@ -2890,13 +2890,13 @@ void UIDXFoundation::Draw2DTextMultiLineFT(const wstring& text, const XMFLOAT2& 
     XMFLOAT2 currentPos = position;
     for (const auto& line : lines) {
         if (!line.empty()) {
-            Draw2DTextFT(line, currentPos, z, color, fontSize);  // Call Level 1 core function
+            Draw2DTextFT(line, currentPos, z, color, fontSize, renderLevel);  // Call Level 1 core function
         }
         currentPos.y += lineHeight;
     }
 }
 
-void UIDXFoundation::Draw2DTextMultiLineFT(const wstring& text, const RECT& rc, UIFontPos alignment, float z, const UIColor& color, float fontSize, float lineSpacing) {
+void UIDXFoundation::Draw2DTextMultiLineFT(const wstring& text, const RECT& rc, UIFontPos alignment, float z, const UIColor& color, float fontSize, float lineSpacing, int renderLevel) {
     if (text.empty()) {
         return;
     }
@@ -2904,10 +2904,10 @@ void UIDXFoundation::Draw2DTextMultiLineFT(const wstring& text, const RECT& rc, 
     XMFLOAT2 position = CalculateTextPosition(text, rc, alignment, fontSize, lineSpacing);
     
     UIScreenClipRectGuard clipRect(rc);
-    Draw2DTextMultiLineFT(text, position, z, color, fontSize, lineSpacing);
+    Draw2DTextMultiLineFT(text, position, z, color, fontSize, lineSpacing, renderLevel);
 }
 
-void UIDXFoundation::Draw3DTextFT(const wstring& text, const XMFLOAT2& position, float z, const UIColor& color, float fontSize,
+void UIDXFoundation::Draw3DTextFT(const wstring& text, const XMFLOAT2& position, float z, const UIColor& color, float fontSize, int renderLevel,
 					              const XMMATRIX& transformMatrix) {
     FTSizeFont ftSizeFont;
     GetFTSizeFont(fontSize, ftSizeFont);
@@ -2933,14 +2933,14 @@ void UIDXFoundation::Draw3DTextFT(const wstring& text, const XMFLOAT2& position,
         float charY = y + baselineYFromTop - resource._top;
         
         // draw character
-        Draw3DCharTextureFT(textureIndex, XMFLOAT2(charX, charY), z, 1.0f, 255, transformMatrix);
+        Draw3DCharTextureFT(textureIndex, XMFLOAT2(charX, charY), z, 1.0f, 255, renderLevel, transformMatrix);
         
         // update pen position
         x += resource._advance;
     }
 }
 
-void UIDXFoundation::Draw3DTextFT(const wstring& text, const RECT& rc, UIFontPos alignment, float z, const UIColor& color, float fontSize,
+void UIDXFoundation::Draw3DTextFT(const wstring& text, const RECT& rc, UIFontPos alignment, float z, const UIColor& color, float fontSize, int renderLevel,
 					         const XMMATRIX& transformMatrix) {
     if (text.empty()) {
         return;
@@ -2949,10 +2949,10 @@ void UIDXFoundation::Draw3DTextFT(const wstring& text, const RECT& rc, UIFontPos
     XMFLOAT2 position = CalculateTextPosition(text, rc, alignment, fontSize);
 
     //UIScreenClipRectGuard clipRect(rc);
-    Draw3DTextFT(text, position, z, color, fontSize, transformMatrix);
+    Draw3DTextFT(text, position, z, color, fontSize, renderLevel, transformMatrix);
 }
 
-void UIDXFoundation::Draw3DTextMultiLineFT(const wstring& text, const XMFLOAT2& position, float z, const UIColor& color, float fontSize, float lineSpacing,
+void UIDXFoundation::Draw3DTextMultiLineFT(const wstring& text, const XMFLOAT2& position, float z, const UIColor& color, float fontSize, float lineSpacing, int renderLevel,
 					  		               const XMMATRIX& transformMatrix) {
     if (text.empty()) {
         return;
@@ -2970,13 +2970,13 @@ void UIDXFoundation::Draw3DTextMultiLineFT(const wstring& text, const XMFLOAT2& 
     XMFLOAT2 currentPos = position;
     for (const auto& line : lines) {
         if (!line.empty()) {
-            Draw3DTextFT(line, currentPos, z, color, fontSize, transformMatrix);  // Call Level 1 core function
+            Draw3DTextFT(line, currentPos, z, color, fontSize, renderLevel, transformMatrix);  // Call Level 1 core function
         }
         currentPos.y += lineHeight;
     }
 }
 
-void UIDXFoundation::Draw3DTextMultiLineFT(const wstring& text, const RECT& rc, UIFontPos alignment, float z, const UIColor& color, float fontSize, float lineSpacing,
+void UIDXFoundation::Draw3DTextMultiLineFT(const wstring& text, const RECT& rc, UIFontPos alignment, float z, const UIColor& color, float fontSize, float lineSpacing, int renderLevel,
 					  		               const XMMATRIX& transformMatrix) {
     if (text.empty()) {
         return;
@@ -2985,17 +2985,18 @@ void UIDXFoundation::Draw3DTextMultiLineFT(const wstring& text, const RECT& rc, 
     XMFLOAT2 position = CalculateTextPosition(text, rc, alignment, fontSize, lineSpacing);
 
     //UIScreenClipRectGuard clipRect(rc);
-    Draw3DTextMultiLineFT(text, position, z, color, fontSize, lineSpacing, transformMatrix);
+    Draw3DTextMultiLineFT(text, position, z, color, fontSize, lineSpacing, renderLevel, transformMatrix);
 }
 
 /*************************************************** Batch Rendering System Implementation ***************************************************/
 // Batch registration functions
 void UIDXFoundation::RegisterBatchData(D3D_PRIMITIVE_TOPOLOGY topology,
                                        const vector<VertexPositionColor>& vertices, const vector<uint16_t>& indices, 
-                                       unique_ptr<BasicEffect>& effect, const RECT& clipRect, UICameraBase* pCamera) {
+                                       unique_ptr<BasicEffect>& effect, const RECT& clipRect, UICameraBase* pCamera, int renderLevel) {
     // Create new batch data with key information
     BatchData newBatch;
     newBatch._batchID = 1;  // p_batch
+    newBatch._renderLevel = renderLevel;
     newBatch._pEffect = effect.get();
     newBatch._topology = topology;
     newBatch._clipRect = clipRect;
@@ -3020,10 +3021,11 @@ void UIDXFoundation::RegisterBatchTextureData(D3D_PRIMITIVE_TOPOLOGY topology,
                                               const vector<VertexPositionTexture>& vertices, const vector<uint16_t>& indices,
                                               unique_ptr<BasicEffect>& effect, 
                                               D3D12_GPU_DESCRIPTOR_HANDLE srvDescriptor, D3D12_GPU_DESCRIPTOR_HANDLE samplerDescriptor, UCHAR alpha,
-                                              const RECT& clipRect, UICameraBase* pCamera) {
+                                              const RECT& clipRect, UICameraBase* pCamera, int renderLevel) {
     // Create new batch data with key information
     BatchData newBatch;
     newBatch._batchID = 2;  // p_batchTexture
+    newBatch._renderLevel = renderLevel;
     newBatch._pEffect = effect.get();
     newBatch._topology = topology;
     newBatch._srvDescriptor = srvDescriptor;
@@ -3053,9 +3055,15 @@ void UIDXFoundation::ExecuteAllBatches() {
         return;
     }
 
+    // Sort batches by level (ascending order: smaller level draws first)
+    std::sort(_batchDataList.begin(), _batchDataList.end(), 
+        [](const BatchData& a, const BatchData& b) {
+            return a._renderLevel < b._renderLevel;
+        });
+
     auto commandList = p_deviceResources->GetCommandList();
     
-    // Execute each batch in registration order
+    // Execute each batch in level order
     for (const auto& batch : _batchDataList) {
         // Set clipping rectangle for this batch
         ExecuteClipRect(batch._clipRect);

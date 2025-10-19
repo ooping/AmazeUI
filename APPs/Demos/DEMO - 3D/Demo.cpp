@@ -67,6 +67,7 @@ void UIGame3D::Draw() {
 	
 	// Get inherited transform matrix (like UIChart3D)
 	XMMATRIX transformMatrix = GetInheritedTransformMatrix();
+	int renderLevel = GetRenderLayout();
 	
 	LONG& x_ = _abusolutePoint.x;
 	LONG& y_ = _abusolutePoint.y;
@@ -74,7 +75,7 @@ void UIGame3D::Draw() {
 	// Draw border
 	RECT rc = _clientRC;
 	OffsetRect(&rc, x_, y_);
-	UIRect(rc, _z)(UIColor::PrimaryBlue, transformMatrix);
+	UIRect(rc, _z, renderLevel + 1)(UIColor::PrimaryBlue, transformMatrix);
 	
 	// Calculate world matrix for dragon
 	XMMATRIX rotationMatrix = XMMatrixRotationRollPitchYaw(

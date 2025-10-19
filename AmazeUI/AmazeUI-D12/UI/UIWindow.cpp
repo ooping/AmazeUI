@@ -19,8 +19,10 @@ UIWindowBase::UIWindowBase() {
 	_isTransmissionMsg = false;
 	_isPopup = false;
 
-	_layoutLever = 1;
+	_layoutLevel = 1;
 	_z = 0;
+
+	_layoutOrder = 5;
 
 	p_parentUIContainer = nullptr;
 	p_UIContainer = nullptr;
@@ -58,8 +60,8 @@ bool UIWindowBase::CreateWindowBase(UIContainer* pUIContainer, const RECT& relat
 
 	// hierarchy information and z value
 	_isPopup = p_parentUIContainer->IsBindWindowPopup();
-	_layoutLever = p_parentUIContainer->GetBindWindowLayoutLever()+1;
-	_z = (!_isPopup ? 1.0f : gPopupZ) - (_layoutLever - 1) * gLevelZ;
+	_layoutLevel = p_parentUIContainer->GetBindWindowLayoutLevel() + 1;
+	_z = (!_isPopup ? 1.0f : gPopupZ) - (_layoutLevel - 1) * gLevelZ;
 
 	return HandleMessage(WM_CREATE, isOnHeap?1:0, 0);
 }
@@ -196,7 +198,7 @@ void UIWindowBase::SetAsPopup(bool isPopup) {
 	}
 
 	_isPopup = isPopup;
-	_z = (!isPopup ? 1.0f : gPopupZ) - (_layoutLever - 1) * gLevelZ;
+	_z = (!isPopup ? 1.0f : gPopupZ) - (_layoutLevel - 1) * gLevelZ;
 
     if (p_UIContainer != nullptr) {
         p_UIContainer->ForEachWindow([isPopup](UIWindowBase* pWin) {
@@ -216,6 +218,10 @@ XMMATRIX UIWindowBase::GetTransformMatrix() {
 XMMATRIX UIWindowBase::GetInheritedTransformMatrix() {
 	XMMATRIX transformMatrix = p_parentUIContainer->GetBindWindowInheritedTransformMatrix();
 	return transformMatrix * _transformMatrix;
+}
+
+int UIWindowBase::GetRenderLayout() {
+	return (!_isPopup ? _layoutLevel * 100 : 5000) + _layoutOrder * 10;
 }
 
 UIContainer::UIContainer() {
@@ -357,9 +363,9 @@ RECT UIContainer::GetBindWindowAbusoluteRect() {
 	return NULL_RECT;
 }
 
-int UIContainer::GetBindWindowLayoutLever() {
+int UIContainer::GetBindWindowLayoutLevel() {
 	if (_isBindDUI==true) {
-		return _pBindDUIWin->_layoutLever;
+		return _pBindDUIWin->_layoutLevel;
 	}
 
 	return 0;
