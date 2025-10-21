@@ -172,10 +172,12 @@ void UIImage::operator()(LONG dstCenterX, LONG dstCenterY, float scale, UCHAR al
 
 
 bool UIImage::GetSize(RECT& textureRect) {
+	auto textureManager = UIDXFoundation::GetSingletonInstance()->GetTextureManager();
+	
 	if (_sourceFlag == 1) {
-		return UIDXFoundation::GetSingletonInstance()->Get2DImageSize(_path, _colorKey, textureRect);
+		return textureManager->Get2DImageSize(_path, _colorKey, textureRect);
 	} else if (_sourceFlag == 2) {
-		return UIDXFoundation::GetSingletonInstance()->Get2DImageSize(_path, _id, _colorKey, textureRect);
+		return textureManager->Get2DImageSize(_path, _id, _colorKey, textureRect);
 	}
 	return false;
 }

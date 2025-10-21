@@ -524,7 +524,7 @@ void UIEdit::Draw() {
 	// draw border (offset = 1)
 	RECT rc = _clientRC;
 	OffsetRect(&rc, x_, y_);
-	UIRect(rc, _z, renderLevel + 1)(UIColor::PrimaryBlueLight, transformMatrix);
+	UIRect(rc, _z, renderLevel + 2)(UIColor::PrimaryBlueLight, transformMatrix);
 
 	// draw content
 	// calculate and select clip area
@@ -557,7 +557,7 @@ void UIEdit::Draw() {
 		int xPos2 = beginAreaPassSize.cx + _beginDrawXPos + 5;
 		rc = CreateRect()(xPos2 < xPos ? xPos2 : xPos, _drawRectAllow.top + 2, xPos > xPos2 ? xPos : xPos2, _drawRectAllow.bottom - 2);
 		OffsetRect(&rc, _abusolutePoint.x, _abusolutePoint.y);
-		UIRect(rc, _z, renderLevel + 1)(UIColor::PrimaryPinkLight, 220, transformMatrix);
+		UIRect(rc, _z, renderLevel + 2)(UIColor::PrimaryPinkLight, 220, transformMatrix);
 	}
 }
 	// draw wstring (text offset = 5, already set in fontHelp)
@@ -970,8 +970,8 @@ void UISelectList::Draw() {
 	{
 		RECT rc = _clientRC;
 		OffsetRect(&rc, x_, y_);
-		UIRect(rc, _z, renderLevel + 1)(UIColor(246, 250, 252), 220, transformMatrix);
-		UIRect(rc, _z, renderLevel + 1)(UIColor::PrimaryBlueLight, transformMatrix);
+		UIRect(rc, _z, renderLevel + 2)(UIColor(246, 250, 252), 220, transformMatrix);
+		UIRect(rc, _z, renderLevel + 2)(UIColor::PrimaryBlueLight, transformMatrix);
 	}
 
 	// draw the hover (offset = 1)
@@ -981,12 +981,13 @@ void UISelectList::Draw() {
 		rc.bottom = (_hoverIndex + 1) * 20;
 		++rc.left;
 		++rc.top;
-	--rc.right;
-	--rc.bottom;
-	OffsetRect(&rc, x_, y_);
+		--rc.right;
+		--rc.bottom;
+		OffsetRect(&rc, x_, y_);
 
-	UISlicedImage(L"GUIResource.dll", IDB_HOT_EFFECT2, UIColor(255, 0, 255), 2, 2, 2, 2, _z, renderLevel)(rc, 255, transformMatrix);
+		UISlicedImage(L"GUIResource.dll", IDB_HOT_EFFECT2, UIColor(255, 0, 255), 2, 2, 2, 2, _z, renderLevel + 4)(rc, 255, transformMatrix);
 }
+
 	// draw the content (text offset = 5)
 	for (UINT i = 0; i < _list.size(); ++i) {
 		RECT rc = _clientRC;
@@ -1091,7 +1092,7 @@ void UIComboBox::Draw() {
 	RECT rc = _clientRC;
 	OffsetRect(&rc, x_, y_);
 	if (_isDrawBoader) {
-		UIRect(rc, _z, renderLevel + 1)(!_isHover ? UIColor::PrimaryBlueLight : UIColor::Gold, transformMatrix);
+		UIRect(rc, _z, renderLevel + 2)(!_isHover ? UIColor::PrimaryBlueLight : UIColor::Gold, transformMatrix);
 	}
 
 	{	// draw the arrow (offset = 0 for images)
@@ -1100,7 +1101,7 @@ void UIComboBox::Draw() {
 		rc2.right = rc2.left + 32;
 		rc2.top += GetRectHeight()(rc2) / 2 - 16;
 		rc2.bottom = rc2.top + 32;
-		UIImage(L"GUIResource.dll", IDB_ARROW1_DOWN, UIColor::Invalid, _z, renderLevel)(rc2, 1.f, 255, transformMatrix);
+		UIImage(L"GUIResource.dll", IDB_ARROW1_DOWN, UIColor::Invalid, _z, renderLevel + 4)(rc2, 1.f, 255, transformMatrix);
 	}
 
 	// draw the content (text offset = 5)
@@ -1250,7 +1251,7 @@ void UIScrollBar::Draw() {
 	// draw border (background offset = 0)
 	RECT rc = _clientRC;
 	OffsetRect(&rc, x_, y_);
-	UIRect(rc, _z, renderLevel + 1)(UIColor::PrimaryBlueLight, 20, transformMatrix);
+	UIRect(rc, _z, renderLevel + 2)(UIColor::PrimaryBlueLight, 20, transformMatrix);
 
 	// draw bar (offset = 1)
 	rc = _barRect;
@@ -1273,7 +1274,7 @@ void UIScrollBar::Draw() {
 		}
 	}
 	OffsetRect(&rc, x_, y_);
-	UIRect(rc, _z, renderLevel + 1)(UIColor::PrimaryPurple, 180, transformMatrix);
+	UIRect(rc, _z, renderLevel + 2)(UIColor::PrimaryPurple, 180, transformMatrix);
 }
 
 void UIScrollBar::CalcArea() {
@@ -1579,7 +1580,7 @@ void UIGrid::Draw() {
 	LONG& y_ = _abusolutePoint.y;
 	RECT rc = _clientRC;
 	OffsetRect(&rc, x_, y_);
-	UIRect(rc, _z, renderLevel + 1)(UIColor::PrimaryBlue, _inheritedTransformMatrix);
+	UIRect(rc, _z, renderLevel + 2)(UIColor::PrimaryBlue, _inheritedTransformMatrix);
 
 	// Draw the scroll bar
 	DrawScrollBar();
@@ -1622,23 +1623,23 @@ void UIGrid::DrawSelected() {
 	if (_isFirstRowFix && _isFirstColumnFix) {
 		rc = CreateRect()(_gridArea.left, _gridArea.top, _gridArea.right, _gridArea.top + _rowHeightList[0]);
 		OffsetRect(&rc, x_, y_);
-		UIRect(rc, _z, renderLevel + 1)(fixColor, 240, _inheritedTransformMatrix);
+		UIRect(rc, _z, renderLevel + 2)(fixColor, 240, _inheritedTransformMatrix);
 
 		int rcTop = _gridArea.top + _rowHeightList[0] < _gridArea.bottom ? (_gridArea.top + _rowHeightList[0]) : _gridArea.bottom;
 
 		rc = CreateRect()(_gridArea.left, rcTop, _gridArea.left + _columnWidthList[0], _gridArea.bottom);
 		OffsetRect(&rc, x_, y_);
-		UIRect(rc, _z, renderLevel + 1)(fixColor, 240, _inheritedTransformMatrix);
+		UIRect(rc, _z, renderLevel + 2)(fixColor, 240, _inheritedTransformMatrix);
 	}
 	else if (_isFirstRowFix) {
 		rc = CreateRect()(_gridArea.left, _gridArea.top, _gridArea.right, _gridArea.top + _rowHeightList[0]);
 		OffsetRect(&rc, x_, y_);
-		UIRect(rc, _z, renderLevel + 1)(fixColor, 240, _inheritedTransformMatrix);
+		UIRect(rc, _z, renderLevel + 2)(fixColor, 240, _inheritedTransformMatrix);
 	}
 	else if (_isFirstColumnFix) {
 		rc = CreateRect()(_gridArea.left, _gridArea.top, _gridArea.left + _columnWidthList[0], _gridArea.bottom);
 		OffsetRect(&rc, x_, y_);
-		UIRect(rc, _z, renderLevel + 1)(fixColor, 240, _inheritedTransformMatrix);
+		UIRect(rc, _z, renderLevel + 2)(fixColor, 240, _inheritedTransformMatrix);
 	}
 
 	// Draw the selected identifier
@@ -1667,7 +1668,7 @@ void UIGrid::DrawSelectedALL(UIColor& selectColor) {
 	// Draw the unfix area (offset = 0 for selection backgrounds)
 	RECT rc = CreateRect()(_unfixGridArea.left, _unfixGridArea.top, _unfixGridArea.right, _unfixGridArea.bottom);
 	OffsetRect(&rc, x_, y_);
-	UIRect(rc, _z, renderLevel + 1)(selectColor, 180, _inheritedTransformMatrix);
+	UIRect(rc, _z, renderLevel + 2)(selectColor, 180, _inheritedTransformMatrix);
 }
 
 void UIGrid::DrawSelectedCELL() {
@@ -1688,7 +1689,7 @@ void UIGrid::DrawSelectedCELL() {
 		if (pSelCell->_pCtrl == NULL) {
 			rc = CreateRect()(pos.left + _firstColumnPos, pos.top + _firstRowPos, pos.right + _firstColumnPos, pos.bottom + _firstRowPos);
 			OffsetRect(&rc, x_, y_);
-			UIRect(rc, _z - gDeltaZ, renderLevel + 1)(UIColor::PrimaryPurple, _inheritedTransformMatrix); // z-0.01f should > 0.0f
+			UIRect(rc, _z - gDeltaZ, renderLevel + 2)(UIColor::PrimaryPurple, _inheritedTransformMatrix); // z-0.01f should > 0.0f
 		}
 	}
 
@@ -1701,7 +1702,7 @@ void UIGrid::DrawSelectedCELL() {
 
 		rc = CreateRect()(_cellArray[0][0]._pos.left, pos.top + _firstRowPos, _cellArray[0][0]._pos.right, pos.bottom + _firstRowPos);
 		OffsetRect(&rc, x_, y_);
-		UIRect(rc, _z, renderLevel + 1)(UIColor::PrimaryPurple, 250, _inheritedTransformMatrix);
+		UIRect(rc, _z, renderLevel + 2)(UIColor::PrimaryPurple, 250, _inheritedTransformMatrix);
 	}
 	// Draw the selected column information
 	if (_isFirstRowFix) {
@@ -1711,7 +1712,7 @@ void UIGrid::DrawSelectedCELL() {
 
 		rc = CreateRect()(pos.left + _firstColumnPos, _cellArray[0][0]._pos.top, pos.right + _firstColumnPos, _cellArray[0][0]._pos.bottom);
 		OffsetRect(&rc, x_, y_);
-		UIRect(rc, _z, renderLevel + 1)(UIColor::PrimaryPurple, 250, _inheritedTransformMatrix);
+		UIRect(rc, _z, renderLevel + 2)(UIColor::PrimaryPurple, 250, _inheritedTransformMatrix);
 	}
 }
 
@@ -1738,7 +1739,7 @@ void UIGrid::DrawSelectedCELLS(UIColor& selectColor) {
 		// Draw the selected cell
 		rc = CreateRect()(posBegin.left + _firstColumnPos + 1, posBegin.top + _firstRowPos + 1, posEnd.right + _firstColumnPos, posEnd.bottom + _firstRowPos);
 		OffsetRect(&rc, x_, y_);
-		UIRect(rc, _z, renderLevel + 1)(selectColor, 180, _inheritedTransformMatrix);
+		UIRect(rc, _z, renderLevel + 2)(selectColor, 180, _inheritedTransformMatrix);
 	}
 
 	// Draw the fix area cell row and column information (offset = 1)
@@ -1750,7 +1751,7 @@ void UIGrid::DrawSelectedCELLS(UIColor& selectColor) {
 
 		rc = CreateRect()(_cellArray[0][0]._pos.left, posBegin.top + _firstRowPos, _cellArray[0][0]._pos.right, posEnd.bottom + _firstRowPos);
 		OffsetRect(&rc, x_, y_);
-		UIRect(rc, _z, renderLevel + 1)(UIColor::PrimaryPurple, 250, _inheritedTransformMatrix);
+		UIRect(rc, _z, renderLevel + 2)(UIColor::PrimaryPurple, 250, _inheritedTransformMatrix);
 	}
 	// Draw the selected column information
 	if (_isFirstRowFix) {
@@ -1760,7 +1761,7 @@ void UIGrid::DrawSelectedCELLS(UIColor& selectColor) {
 
 		rc = CreateRect()(posBegin.left + _firstColumnPos, _cellArray[0][0]._pos.top, posEnd.right + _firstColumnPos, _cellArray[0][0]._pos.bottom);
 		OffsetRect(&rc, x_, y_);
-		UIRect(rc, _z, renderLevel + 1)(UIColor::PrimaryPurple, 250, _inheritedTransformMatrix);
+		UIRect(rc, _z, renderLevel + 2)(UIColor::PrimaryPurple, 250, _inheritedTransformMatrix);
 	}
 }
 
@@ -1779,7 +1780,7 @@ void UIGrid::DrawSelectedROW(UIColor& selectColor) {
 			RECT& pos = _cellArray[*i][0]._pos;
 			rc = CreateRect()(pos.right, pos.top + _firstRowPos, _gridArea.right, pos.bottom + _firstRowPos);
 			OffsetRect(&rc, x_, y_);
-			UIRect(rc, _z, renderLevel + 1)(selectColor, 180, _inheritedTransformMatrix);
+			UIRect(rc, _z, renderLevel + 2)(selectColor, 180, _inheritedTransformMatrix);
 		}
 	}
 
@@ -1792,7 +1793,7 @@ void UIGrid::DrawSelectedROW(UIColor& selectColor) {
 			RECT& pos = _cellArray[*i][0]._pos;
 			rc = CreateRect()(pos.left, pos.top + _firstRowPos, pos.right, pos.bottom + _firstRowPos);
 			OffsetRect(&rc, x_, y_);
-			UIRect(rc, _z, renderLevel + 1)(UIColor::PrimaryPurple, 250, _inheritedTransformMatrix);
+			UIRect(rc, _z, renderLevel + 2)(UIColor::PrimaryPurple, 250, _inheritedTransformMatrix);
 		}
 	}
 }
@@ -1812,7 +1813,7 @@ void UIGrid::DrawSelectedCOLUMN(UIColor& selectColor) {
 			RECT& pos = _cellArray[0][*i]._pos;
 			rc = CreateRect()(pos.left + _firstColumnPos, pos.bottom, pos.right + _firstColumnPos, _gridArea.bottom);
 			OffsetRect(&rc, x_, y_);
-			UIRect(rc, _z, renderLevel + 1)(selectColor, 180, _inheritedTransformMatrix);
+			UIRect(rc, _z, renderLevel + 2)(selectColor, 180, _inheritedTransformMatrix);
 		}
 	}
 
@@ -1825,7 +1826,7 @@ void UIGrid::DrawSelectedCOLUMN(UIColor& selectColor) {
 			RECT& pos = _cellArray[0][*i]._pos;
 			rc = CreateRect()(pos.left + _firstColumnPos, pos.top, pos.right + _firstColumnPos, pos.bottom);
 			OffsetRect(&rc, x_, y_);
-			UIRect(rc, _z, renderLevel + 1)(UIColor::PrimaryPurple, 250, _inheritedTransformMatrix);
+			UIRect(rc, _z, renderLevel + 2)(UIColor::PrimaryPurple, 250, _inheritedTransformMatrix);
 		}
 	}
 }
@@ -1847,11 +1848,11 @@ void UIGrid::DrawGrid() {
 		break;
 	}
 
-	UILine(_gridArea.left + x_, yPos + y_, _gridArea.right + x_, yPos + y_, _z, 1.0f, renderLevel + 1)(UIColor::PrimaryGrayLight, _inheritedTransformMatrix);
+	UILine(_gridArea.left + x_, yPos + y_, _gridArea.right + x_, yPos + y_, _z, 1.0f, renderLevel + 2)(UIColor::PrimaryGrayLight, _inheritedTransformMatrix);
 }
 if (_beginDrawRow != 0 && _isFirstRowFix) {
 	int yPos = _cellArray[0][0]._pos.bottom;
-	UILine(_gridArea.left + x_, yPos + y_, _gridArea.right + x_, yPos + y_, _z, 1.0f, renderLevel + 1)(UIColor::PrimaryGrayLight, _inheritedTransformMatrix);
+	UILine(_gridArea.left + x_, yPos + y_, _gridArea.right + x_, yPos + y_, _z, 1.0f, renderLevel + 2)(UIColor::PrimaryGrayLight, _inheritedTransformMatrix);
 }
 	// Draw the vertical line (offset = 1 for grid lines)
 	int left = _isFirstColumnFix ? _columnWidthList[0] : 0;
@@ -1865,11 +1866,11 @@ if (_beginDrawRow != 0 && _isFirstRowFix) {
 			break;
 		}
 
-		UILine(xPos + x_, _gridArea.top + y_, xPos + x_, _gridArea.bottom + y_, _z, 1.0f, renderLevel + 1)(UIColor::PrimaryGrayLight, _inheritedTransformMatrix);
+		UILine(xPos + x_, _gridArea.top + y_, xPos + x_, _gridArea.bottom + y_, _z, 1.0f, renderLevel + 2)(UIColor::PrimaryGrayLight, _inheritedTransformMatrix);
 	}
 	if (_beginDrawColumn != 0 && _isFirstColumnFix) {
 		int xPos = _cellArray[0][0]._pos.right;
-		UILine(xPos + x_, _gridArea.top + y_, xPos + x_, _gridArea.bottom + y_, _z, 1.0f, renderLevel + 1)(UIColor::PrimaryGrayLight, _inheritedTransformMatrix);
+		UILine(xPos + x_, _gridArea.top + y_, xPos + x_, _gridArea.bottom + y_, _z, 1.0f, renderLevel + 2)(UIColor::PrimaryGrayLight, _inheritedTransformMatrix);
 	}
 }
 
@@ -3549,7 +3550,7 @@ void UIChart::Draw() {
 	// draw the border
 	RECT rc = _clientRC;
 	OffsetRect(&rc, x_, y_);
-	UIRect(rc, _z, renderLevel + 1)(UIColor::PrimaryBlue, _inheritedTransformMatrix);
+	UIRect(rc, _z, renderLevel + 2)(UIColor::PrimaryBlue, _inheritedTransformMatrix);
 
 	// check if the area is enough to draw
 	if (_isRoomEnoughDraw == false) {
@@ -3590,7 +3591,7 @@ void UIChart::DrawGrid() {
 	// draw the border
 	RECT rc = _gridRect;
 	OffsetRect(&rc, x_, y_);
-	UIRect(rc, _z, renderLevel + 1)(UIColor::Black, _inheritedTransformMatrix);
+	UIRect(rc, _z, renderLevel + 2)(UIColor::Black, _inheritedTransformMatrix);
 
 	int dxPos = GetRectWidth()(_gridRect) / _columnNum;
 	int dyPos = GetRectHeight()(_gridRect) / _rowNum;
@@ -3598,13 +3599,13 @@ void UIChart::DrawGrid() {
 	// draw _rowNum rows
 	for (UINT i = 1; i < _rowNum; ++i) {
 		int yPos = _gridRect.top + dyPos * i;
-		UILine(_gridRect.left + 1 + x_, yPos + y_, _gridRect.right - 1 + x_, yPos + y_, _z, 1.0f, renderLevel + 1)(UIColor::PrimaryGrayLight, _inheritedTransformMatrix);
+		UILine(_gridRect.left + 1 + x_, yPos + y_, _gridRect.right - 1 + x_, yPos + y_, _z, 1.0f, renderLevel + 2)(UIColor::PrimaryGrayLight, _inheritedTransformMatrix);
 	}
 
 	// draw _columnNum column
 	for (UINT i = 1; i < _columnNum; ++i) {
 		int xPos = _gridRect.left + dxPos * i;
-		UILine(xPos + x_, _gridRect.top + 1 + y_, xPos + x_, _gridRect.bottom - 1 + y_, _z, 1.0f, renderLevel + 1)(UIColor::PrimaryGrayLight, _inheritedTransformMatrix);
+		UILine(xPos + x_, _gridRect.top + 1 + y_, xPos + x_, _gridRect.bottom - 1 + y_, _z, 1.0f, renderLevel + 2)(UIColor::PrimaryGrayLight, _inheritedTransformMatrix);
 	}
 }
 
@@ -3847,7 +3848,7 @@ void UIChart::DrawCurve(CurveInfo& curve, int yFlag) {
 				POINT IntersectionPointPos;
 				TransfromCoordToPos(IntersectionPointPos, IntersectionPointCoord, yFlag);
 
-				UILine(prePointPos.x + x_, prePointPos.y + y_, IntersectionPointPos.x + x_, IntersectionPointPos.y + y_, _z, 1.0f, renderLevel + 1)(curve._color, _inheritedTransformMatrix);
+				UILine(prePointPos.x + x_, prePointPos.y + y_, IntersectionPointPos.x + x_, IntersectionPointPos.y + y_, _z, 1.0f, renderLevel + 2)(curve._color, _inheritedTransformMatrix);
 			}
 			// 
 			prePointInBoxFlag = false;
@@ -3861,14 +3862,14 @@ void UIChart::DrawCurve(CurveInfo& curve, int yFlag) {
 			}
 
 			if (prePointInBoxFlag == true) { // the previous point is in the range
-				UILine(prePointPos.x + x_, prePointPos.y + y_, curPointPos.x + x_, curPointPos.y + y_, _z, 1.0f, renderLevel + 1)(curve._color, _inheritedTransformMatrix);
+				UILine(prePointPos.x + x_, prePointPos.y + y_, curPointPos.x + x_, curPointPos.y + y_, _z, 1.0f, renderLevel + 2)(curve._color, _inheritedTransformMatrix);
 			}
 			else { // the previous point is out the range
 				UIPointFloat2 IntersectionPointCoord = CalcIntersectionPoint(*preItor, *itor, 1, yFlag);
 				POINT IntersectionPointPos;
 				TransfromCoordToPos(IntersectionPointPos, IntersectionPointCoord, yFlag);
 
-				UILine(IntersectionPointPos.x + x_, IntersectionPointPos.y + y_, curPointPos.x + x_, curPointPos.y + y_, _z, 1.0f, renderLevel + 1)(curve._color, _inheritedTransformMatrix);
+				UILine(IntersectionPointPos.x + x_, IntersectionPointPos.y + y_, curPointPos.x + x_, curPointPos.y + y_, _z, 1.0f, renderLevel + 2)(curve._color, _inheritedTransformMatrix);
 			}
 			// 
 			prePointPos = curPointPos;
@@ -3887,7 +3888,7 @@ void UIChart::Draw2DPoint(POINT& pointPos, UIColor& color, bool bigPointFlag) {
 	LONG& y_ = _abusolutePoint.y;
 
 	if (bigPointFlag) {
-		UIPoint(pointPos.x + x_, pointPos.y + y_, _z, renderLevel + 1)(color, _inheritedTransformMatrix);
+		UIPoint(pointPos.x + x_, pointPos.y + y_, _z, renderLevel + 2)(color, _inheritedTransformMatrix);
 	}
 }
 
@@ -3901,10 +3902,10 @@ void UIChart::DrawZoomRect() {
 	LONG& y_ = _abusolutePoint.y;
 
 	// start point block
-	UIRect(_lPointBeginPos.x - 2 + x_, _lPointBeginPos.y - 2 + y_, _lPointBeginPos.x + 2 + x_, _lPointBeginPos.y + 2 + y_, _z, renderLevel + 1)(UIColor::PrimaryBlue, 180, _inheritedTransformMatrix);
+	UIRect(_lPointBeginPos.x - 2 + x_, _lPointBeginPos.y - 2 + y_, _lPointBeginPos.x + 2 + x_, _lPointBeginPos.y + 2 + y_, _z, renderLevel + 2)(UIColor::PrimaryBlue, 180, _inheritedTransformMatrix);
 
 	// end point block
-	UIRect(_lPointEndPos.x - 2 + x_, _lPointEndPos.y - 2 + y_, _lPointEndPos.x + 2 + x_, _lPointEndPos.y + 2 + y_, _z, renderLevel + 1)(UIColor::PrimaryBlue, 180, _inheritedTransformMatrix);
+	UIRect(_lPointEndPos.x - 2 + x_, _lPointEndPos.y - 2 + y_, _lPointEndPos.x + 2 + x_, _lPointEndPos.y + 2 + y_, _z, renderLevel + 2)(UIColor::PrimaryBlue, 180, _inheritedTransformMatrix);
 
 	// middle transparent area
 	RECT rc;
@@ -3914,7 +3915,7 @@ void UIChart::DrawZoomRect() {
 	rc.bottom = _lPointBeginPos.y > _lPointEndPos.y ? _lPointBeginPos.y : _lPointEndPos.y;
 	OffsetRect(&rc, x_, y_);
 
-	UIRect(rc, _z, renderLevel + 1)(UIColor::PrimaryBlueLight, 50, _inheritedTransformMatrix);
+	UIRect(rc, _z, renderLevel + 2)(UIColor::PrimaryBlueLight, 50, _inheritedTransformMatrix);
 }
 
 void UIChart::CalcArea() {
@@ -4989,10 +4990,10 @@ void UITab::DrawTab() {
 		OffsetRect(&rc, _abusolutePoint.x, _abusolutePoint.y);
 
 		if (_hoverIndex == (int)i) {
-			UIRect(rc, _z, renderLevel + 1)(UIColor::PrimaryPurpleLight, 150, _inheritedTransformMatrix);
+			UIRect(rc, _z, renderLevel + 2)(UIColor::PrimaryPurpleLight, 150, _inheritedTransformMatrix);
 		}
 		else {
-			UIRect(rc, _z, renderLevel + 1)(UIColor::PrimaryPurpleLight, 255, _inheritedTransformMatrix);
+			UIRect(rc, _z, renderLevel + 2)(UIColor::PrimaryPurpleLight, 255, _inheritedTransformMatrix);
 		}
 
 		UIFont(_z, gDefaultFontSize, renderLevel + 5).operator()(_cellList[i]._title, rc, UIColor::Black, UIFontPos::MiddleCenter, _inheritedTransformMatrix);
@@ -5003,7 +5004,7 @@ void UITab::DrawTabSelLine() {
 	int renderLevel = GetRenderLayout();
 	RECT rc = _lineRC;
 	OffsetRect(&rc, _abusolutePoint.x, _abusolutePoint.y);
-	UIRect(rc, _z, renderLevel + 1)(UIColor::PrimaryGreen, 255, _inheritedTransformMatrix);
+	UIRect(rc, _z, renderLevel + 2)(UIColor::PrimaryGreen, 255, _inheritedTransformMatrix);
 }
 
 void UITab::DrawAnimate1() {
@@ -5088,7 +5089,7 @@ void UITab::DrawAnimate1Tab() {
 
 	RECT rc = _lineRC;
 	OffsetRect(&rc, _abusolutePoint.x, _abusolutePoint.y);
-	UIRect(rc, _z, renderLevel + 1)(UIColor::PrimaryGreen, 255, _inheritedTransformMatrix);
+	UIRect(rc, _z, renderLevel + 2)(UIColor::PrimaryGreen, 255, _inheritedTransformMatrix);
 }
 
 void UITab::SetCellNum(UINT num) {
@@ -5215,7 +5216,7 @@ void UICanvas::Draw() {
 	if (_alpha != 0 && _color != UIColor::Invalid) {
 		RECT rc = _clientRC;
 		OffsetRect(&rc, _abusolutePoint.x, _abusolutePoint.y);
-		UIRect(rc, _z, renderLevel + 1)(_color, _alpha, transformMatrix);
+		UIRect(rc, _z, renderLevel + 2)(_color, _alpha, transformMatrix);
 	}
 
 	if (p_UIContainer != NULL) {
@@ -5543,7 +5544,7 @@ void UIChart3D::Draw() {
 	// draw border
 	RECT rc = _clientRC;
 	OffsetRect(&rc, x_, y_);
-	UIRect(rc, _z, renderLevel + 1)(UIColor::PrimaryBlue, transformMatrix);
+	UIRect(rc, _z, renderLevel + 2)(UIColor::PrimaryBlue, transformMatrix);
 
 	// Draw 3D axes using pre-calculated coordinates
 	DrawAxes3D();

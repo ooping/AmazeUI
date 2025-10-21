@@ -690,89 +690,229 @@ void UIDeviceResources::UpdateColorSpace() {
 }
 
 
+void UIEffectManager::Create() {
+    auto device = UIDXFoundation::GetSingletonInstance()->GetD3DDevice();
+    auto p_deviceResources = UIDXFoundation::GetSingletonInstance()->p_deviceResources.get();
 
-UIDXFoundation::UIDXFoundation() noexcept(false) {
-    p_deviceResources = make_unique<UIDeviceResources>();
-}
+    RenderTargetState rtState(p_deviceResources->GetBackBufferFormat(), p_deviceResources->GetDepthBufferFormat());
 
-UIDXFoundation::~UIDXFoundation() {
-    if (p_deviceResources) {
-        p_deviceResources->WaitForGpu();
+    // create common blend description
+    D3D12_BLEND_DESC transparentBlendDesc = {};
+    transparentBlendDesc.AlphaToCoverageEnable = FALSE;
+    transparentBlendDesc.IndependentBlendEnable = FALSE;
+    auto& rt = transparentBlendDesc.RenderTarget[0];
+    rt.BlendEnable = TRUE;
+    rt.LogicOpEnable = FALSE;
+    rt.SrcBlend = D3D12_BLEND_SRC_ALPHA;
+    rt.DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
+    rt.BlendOp = D3D12_BLEND_OP_ADD;
+    rt.SrcBlendAlpha = D3D12_BLEND_ONE;
+    rt.DestBlendAlpha = D3D12_BLEND_INV_SRC_ALPHA;
+    rt.BlendOpAlpha = D3D12_BLEND_OP_ADD;
+    rt.LogicOp = D3D12_LOGIC_OP_NOOP;
+    rt.RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+
+    D3D12_BLEND_DESC transparentBlendDescForTexture = transparentBlendDesc;
+    transparentBlendDescForTexture.RenderTarget[0].SrcBlend = D3D12_BLEND_ONE;
+
+    // create common depth description
+    D3D12_DEPTH_STENCIL_DESC depthStencilDesc = {};
+    depthStencilDesc.DepthEnable = TRUE;
+    depthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+    depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
+    depthStencilDesc.StencilEnable = FALSE;
+
+    // Create 2D Point Effect
+    {
+        EffectPipelineStateDescription pd(
+            &VertexPositionColor::InputLayout,
+            CommonStates::AlphaBlend,
+            CommonStates::DepthDefault,
+            CommonStates::CullNone,
+            rtState,
+            D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT);
+        pd.blendDesc = transparentBlendDesc;
+        pd.depthStencilDesc = depthStencilDesc;
+        p_pointEffect2D = make_unique<BasicEffect>(device, EffectFlags::VertexColor, pd);
+    }
+
+    // Create 2D Line Effect
+    {
+        EffectPipelineStateDescription pd(
+            &VertexPositionColor::InputLayout,
+            CommonStates::AlphaBlend,
+            CommonStates::DepthDefault,
+            CommonStates::CullNone,
+            rtState,
+            D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE);
+        pd.blendDesc = transparentBlendDesc;
+        pd.depthStencilDesc = depthStencilDesc;
+        p_lineEffect2D = make_unique<BasicEffect>(device, EffectFlags::VertexColor, pd);
+    }
+
+    // Create 2D Triangle Effect
+    {
+        EffectPipelineStateDescription pd(
+            &VertexPositionColor::InputLayout,
+            CommonStates::AlphaBlend,
+            CommonStates::DepthDefault,
+            CommonStates::CullNone,
+            rtState,
+            D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE);
+        pd.blendDesc = transparentBlendDesc;
+        pd.depthStencilDesc = depthStencilDesc;
+        p_triangleEffect2D = make_unique<BasicEffect>(device, EffectFlags::VertexColor, pd);
+    }
+
+    // Create 2D Textured Triangle Effect
+    {
+        EffectPipelineStateDescription pd(
+            &VertexPositionTexture::InputLayout,
+            CommonStates::AlphaBlend,
+            CommonStates::DepthDefault,
+            CommonStates::CullNone,
+            rtState,
+            D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE);
+        pd.blendDesc = transparentBlendDescForTexture;
+        pd.depthStencilDesc = depthStencilDesc;
+        p_triangleTexturedEffect2D = make_unique<BasicEffect>(device, EffectFlags::Texture, pd);
+    }
+
+    // Create 3D Point Effect
+    {
+        EffectPipelineStateDescription pd(
+            &VertexPositionColor::InputLayout,
+            CommonStates::AlphaBlend,
+            CommonStates::DepthDefault,
+            CommonStates::CullNone,
+            rtState,
+            D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT);
+        pd.blendDesc = transparentBlendDesc;
+        pd.depthStencilDesc = depthStencilDesc;
+        p_pointEffect3D = make_unique<BasicEffect>(device, EffectFlags::VertexColor, pd);
+    }
+
+    // Create 3D Line Effect
+    {
+        EffectPipelineStateDescription pd(
+            &VertexPositionColor::InputLayout,
+            CommonStates::AlphaBlend,
+            CommonStates::DepthDefault,
+            CommonStates::CullNone,
+            rtState,
+            D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE);
+        pd.blendDesc = transparentBlendDesc;
+        pd.depthStencilDesc = depthStencilDesc;
+        p_lineEffect3D = make_unique<BasicEffect>(device, EffectFlags::VertexColor, pd);
+    }
+
+    // Create 3D Triangle Effect
+    {
+        EffectPipelineStateDescription pd(
+            &VertexPositionColor::InputLayout,
+            CommonStates::AlphaBlend,
+            CommonStates::DepthDefault,
+            CommonStates::CullNone,
+            rtState,
+            D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE);
+        pd.blendDesc = transparentBlendDesc;
+        pd.depthStencilDesc = depthStencilDesc;
+        p_triangleEffect3D = make_unique<BasicEffect>(device, EffectFlags::VertexColor, pd);
+    }
+
+    // Create 3D Textured Triangle Effect
+    {
+        EffectPipelineStateDescription pd(
+            &VertexPositionTexture::InputLayout,
+            CommonStates::AlphaBlend,
+            CommonStates::DepthDefault,
+            CommonStates::CullNone,
+            rtState,
+            D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE);
+        pd.blendDesc = transparentBlendDescForTexture;
+        pd.depthStencilDesc = depthStencilDesc;
+        p_triangleTexturedEffect3D = make_unique<BasicEffect>(device, EffectFlags::Texture, pd);
+    }
+
+    // Create 3D Shape Effect (for geometric primitives)
+    {
+        EffectPipelineStateDescription pd(
+            &GeometricPrimitive::VertexType::InputLayout,
+            CommonStates::Opaque,
+            CommonStates::DepthDefault,
+            CommonStates::CullCounterClockwise,
+            rtState);
+        p_shapeEffect3D = make_unique<BasicEffect>(device, EffectFlags::PerPixelLighting | EffectFlags::Texture, pd);
+        p_shapeEffect3D->EnableDefaultLighting();
+    }
+
+    // Create Skinned Effect (for skeletal animation)
+    {
+        EffectPipelineStateDescription pd(
+            &SkinnedVertexInputLayout,
+            CommonStates::Opaque,
+            CommonStates::DepthDefault,
+            CommonStates::CullCounterClockwise,
+            rtState,
+            D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE);
+        pd.renderTargetState.sampleDesc.Count = 1;
+        pd.renderTargetState.sampleDesc.Quality = 0;
+        
+        p_skinnedEffect3D = make_unique<SkinnedEffect>(device, EffectFlags::Lighting | EffectFlags::Texture, pd);
+        p_skinnedEffect3D->EnableDefaultLighting();
+        
+        // Three-point lighting setup
+        p_skinnedEffect3D->SetAmbientLightColor(DirectX::XMVectorSet(0.6f, 0.6f, 0.6f, 1.0f));
+        
+        p_skinnedEffect3D->SetLightEnabled(0, true);
+        p_skinnedEffect3D->SetLightDiffuseColor(0, DirectX::XMVectorSet(0.9f, 0.9f, 0.9f, 1.0f));
+        p_skinnedEffect3D->SetLightDirection(0, DirectX::XMVectorSet(-0.5773f, -0.5773f, -0.5773f, 0.0f));
+        
+        p_skinnedEffect3D->SetLightEnabled(1, true);
+        p_skinnedEffect3D->SetLightDiffuseColor(1, DirectX::XMVectorSet(0.5f, 0.5f, 0.6f, 1.0f));
+        p_skinnedEffect3D->SetLightDirection(1, DirectX::XMVectorSet(0.7071f, -0.3f, -0.5f, 0.0f));
+        
+        p_skinnedEffect3D->SetLightEnabled(2, true);
+        p_skinnedEffect3D->SetLightDiffuseColor(2, DirectX::XMVectorSet(0.4f, 0.4f, 0.5f, 1.0f));
+        p_skinnedEffect3D->SetLightDirection(2, DirectX::XMVectorSet(0.0f, 0.7071f, 0.7071f, 0.0f));
     }
 }
 
-// Initialize the Direct3D resources required to run.
-void UIDXFoundation::Initialize(int width, int height) {
-    p_deviceResources->SetWindowHWnd(width, height);
-
-    p_deviceResources->CreateDeviceDependentResources();
-    CreateDeviceDependentResourcesXTK();
-    
-    p_deviceResources->CreateWindowSizeDependentResources();
-    CreateWindowSizeDependentResourcesXTK();
+void UIEffectManager::Reset() {
+    p_pointEffect2D.reset();
+    p_lineEffect2D.reset();
+    p_triangleEffect2D.reset();
+    p_triangleTexturedEffect2D.reset();
+    p_pointEffect3D.reset();
+    p_lineEffect3D.reset();
+    p_triangleEffect3D.reset();
+    p_triangleTexturedEffect3D.reset();
+    p_shapeEffect3D.reset();
+    p_skinnedEffect3D.reset();
 }
 
-RECT UIDXFoundation::GetOutputSize() const {
-    return p_deviceResources->_outputSize;
+UIEffectManager* UIDXFoundation::GetEffectManager() const {
+    return p_effects.get();
 }
 
-LONG UIDXFoundation::GetOutputWidth() const {
-	return GetRectWidth()(p_deviceResources->_outputSize);
+UITextureManager* UIDXFoundation::GetTextureManager() const {
+    return p_textures.get();
 }
 
-LONG UIDXFoundation::GetOutputHeight() const {
-	return GetRectHeight()(p_deviceResources->_outputSize);
+UIDeviceResources* UIDXFoundation::GetDeviceResources() const {
+    return p_deviceResources.get();
 }
 
-ID3D12Device* UIDXFoundation::GetD3DDevice() const {
-    return p_deviceResources->GetD3DDevice();
+DirectX::CommonStates* UIDXFoundation::GetCommonStates() const {
+    return p_states.get();
 }
 
-unique_ptr<UIDeviceResources>& UIDXFoundation::GetDeviceResources() { 
-    return p_deviceResources; 
-}
-
-unique_ptr<PrimitiveBatch<VertexPositionColor>>& UIDXFoundation::GetPrimitiveBatch() {
-    return p_batch;
-}
-
-void UIDXFoundation::Render3D() {
-    // 3D rendering (currently unused - handled by UIGame3D control)
-    // This function is kept for potential future 3D demo scenes
-}
-
-// Draws the scene.
-void UIDXFoundation::Render() {
-    // Prepare the command list to render a new frame.
-    p_deviceResources->Prepare();
-    Clear();
-
-    // Set the descriptor heaps
-    auto commandList = p_deviceResources->GetCommandList();
-    ID3D12DescriptorHeap* heaps[] = { p_resourceDescriptors->Heap(), p_states->Heap() };
-    commandList->SetDescriptorHeaps(_countof(heaps), heaps);
-    
-    //Render3D();
-
-    // Clear all batch data for this frame
-    ClearAllBatches();
-
-    // draw top container
-    UIFrame::GetSingletonInstance()->GetTopUIContainer()->Draw();
-
-    // draw animations
-    UIAnimationManage::GetSingletonInstance()->DrawAnimations();
-
-    // Execute all batch rendering calls - this replaces the multiple individual DrawIndexed calls
-    ExecuteAllBatches();
-
-    // Show the new frame.
-    p_deviceResources->Present();
-    p_graphicsMemory->Commit(p_deviceResources->GetCommandQueue());
+DirectX::DescriptorHeap* UIDXFoundation::GetDescriptorHeap() const {
+    return p_resourceDescriptors.get();
 }
 
 // Get texture rect
-RECT UIDXFoundation::Get2DTextureRect(ID3D12Resource* texture) {
+RECT UITextureManager::Get2DTextureRect(ID3D12Resource* texture) {
     RECT rect = NULL_RECT;
     if (!texture) {
         return rect;
@@ -794,11 +934,11 @@ RECT UIDXFoundation::Get2DTextureRect(ID3D12Resource* texture) {
 }
 
 // ComPtr version overload
-RECT UIDXFoundation::Get2DTextureRect(const ComPtr<ID3D12Resource>& texture) {
+RECT UITextureManager::Get2DTextureRect(const ComPtr<ID3D12Resource>& texture) {
     return Get2DTextureRect(texture.Get());
 }
 
-bool UIDXFoundation::Get2DImageSize(const wstring& imagePath, const UIColor& colorKey, RECT& textureRect) {
+bool UITextureManager::Get2DImageSize(const wstring& imagePath, const UIColor& colorKey, RECT& textureRect) {
     // load texture resource
     size_t textureIndex = 0;
 
@@ -821,7 +961,7 @@ bool UIDXFoundation::Get2DImageSize(const wstring& imagePath, const UIColor& col
     return true;
 }
 
-bool UIDXFoundation::Get2DImageSize(const wstring& dllPath, UINT id, const UIColor& colorKey, RECT& textureRect) {
+bool UITextureManager::Get2DImageSize(const wstring& dllPath, UINT id, const UIColor& colorKey, RECT& textureRect) {
     // load texture resource
     size_t textureIndex = 0;
     if (!GetWICTextureIndexFromDLL(dllPath, id, colorKey, textureIndex)) {
@@ -837,7 +977,7 @@ bool UIDXFoundation::Get2DImageSize(const wstring& dllPath, UINT id, const UICol
 }
 
 // convert image data from file to transparent by color key
-bool UIDXFoundation::ConvertImageTransparencyByWIC(ComPtr<IWICImagingFactory>& wicFactory, ComPtr<IWICBitmapDecoder>& decoder, const UIColor& colorKey, vector<uint8_t>& imageData, UINT& width, UINT& height) {
+bool UITextureManager::ConvertImageTransparencyByWIC(ComPtr<IWICImagingFactory>& wicFactory, ComPtr<IWICBitmapDecoder>& decoder, const UIColor& colorKey, vector<uint8_t>& imageData, UINT& width, UINT& height) {
     if (!wicFactory || !decoder || !colorKey.IsValid()) {
         return false;
     }
@@ -897,7 +1037,7 @@ bool UIDXFoundation::ConvertImageTransparencyByWIC(ComPtr<IWICImagingFactory>& w
     return true;
 }
 
-bool UIDXFoundation::ConvertImageTransparencyByWIC(const void* data, size_t size, const UIColor& colorKey, vector<uint8_t>& imageData, UINT& width, UINT& height) {   
+bool UITextureManager::ConvertImageTransparencyByWIC(const void* data, size_t size, const UIColor& colorKey, vector<uint8_t>& imageData, UINT& width, UINT& height) {   
     if (data == nullptr || size == 0 || !colorKey.IsValid()) {
         return false;
     }
@@ -945,7 +1085,7 @@ bool UIDXFoundation::ConvertImageTransparencyByWIC(const void* data, size_t size
     return ConvertImageTransparencyByWIC(wicFactory, decoder, colorKey, imageData, width, height);
 }
 
-bool UIDXFoundation::ConvertImageTransparencyByWIC(const wstring& filePath, const UIColor& colorKey, vector<uint8_t>& imageData, UINT& width, UINT& height) {
+bool UITextureManager::ConvertImageTransparencyByWIC(const wstring& filePath, const UIColor& colorKey, vector<uint8_t>& imageData, UINT& width, UINT& height) {
     if (filePath.empty() || !colorKey.IsValid()) {
         return false;
     }
@@ -978,7 +1118,9 @@ bool UIDXFoundation::ConvertImageTransparencyByWIC(const wstring& filePath, cons
     return ConvertImageTransparencyByWIC(wicFactory, decoder, colorKey, imageData, width, height);
 }
 
-bool UIDXFoundation::ConvertImageTransparencyByDDS(const wstring& filePath, const UIColor& colorKey, vector<uint8_t>& imageData, UINT& width, UINT& height) { 
+bool UITextureManager::ConvertImageTransparencyByDDS(const wstring& filePath, const UIColor& colorKey, vector<uint8_t>& imageData, UINT& width, UINT& height) { 
+    auto p_deviceResources = UIDXFoundation::GetSingletonInstance()->p_deviceResources.get();
+    
     ComPtr<ID3D12Resource> texture;
     unique_ptr<uint8_t[]> ddsData;
     vector<D3D12_SUBRESOURCE_DATA> subresources;
@@ -1021,7 +1163,7 @@ bool UIDXFoundation::ConvertImageTransparencyByDDS(const wstring& filePath, cons
 }
 
 // Texture creation helper function
-bool UIDXFoundation::CreateTextureFromImageData(ID3D12Device* device, DirectX::ResourceUploadBatch& resourceUpload, 
+bool UITextureManager::CreateTextureFromImageData(ID3D12Device* device, DirectX::ResourceUploadBatch& resourceUpload, 
                                                 ComPtr<ID3D12Resource>& texture, const std::vector<uint8_t>& imageData, UINT width, UINT height) {
     
     // Create texture description
@@ -1075,13 +1217,14 @@ bool UIDXFoundation::CreateTextureFromImageData(ID3D12Device* device, DirectX::R
     return true;
 }
 
-bool UIDXFoundation::GetWICTextureIndexFromFile(const wstring& filePath, const UIColor& colorKey, size_t& textureIndex) {
+bool UITextureManager::GetWICTextureIndexFromFile(const wstring& filePath, const UIColor& colorKey, size_t& textureIndex) {
     // use filePath as key
     wstring resourceKey = filePath + (colorKey.IsValid() ? L"#" + colorKey.ToWStringForU32() : L"");
 
     auto it = _textureResourceMap.find(resourceKey);
     if (it == _textureResourceMap.end()) {
-        auto device = p_deviceResources->GetD3DDevice();
+        auto device = UIDXFoundation::GetSingletonInstance()->p_deviceResources->GetD3DDevice();
+        auto p_deviceResources = UIDXFoundation::GetSingletonInstance()->p_deviceResources.get();
         ResourceUploadBatch resourceUpload(device);
         resourceUpload.Begin();
         
@@ -1112,13 +1255,13 @@ bool UIDXFoundation::GetWICTextureIndexFromFile(const wstring& filePath, const U
         }
 
         // get next available descriptor index
-        size_t descriptorIndex = _textureResourceMap.size()+Descriptors::Offset1;
+        size_t descriptorIndex = _textureResourceMap.size()+UIDXFoundation::Descriptors::UITexturesStart;
         
         // create shader resource view
-        CreateShaderResourceView(device, resource._texture.Get(), p_resourceDescriptors->GetCpuHandle(descriptorIndex));
+        CreateShaderResourceView(device, resource._texture.Get(), UIDXFoundation::GetSingletonInstance()->p_resourceDescriptors->GetCpuHandle(descriptorIndex));
         
         // save GPU descriptor handle
-        resource._gpuDescriptor = p_resourceDescriptors->GetGpuHandle(descriptorIndex);
+        resource._gpuDescriptor = UIDXFoundation::GetSingletonInstance()->p_resourceDescriptors->GetGpuHandle(descriptorIndex);
         
         // wait for resource upload finished
         auto uploadResourcesFinished = resourceUpload.End(p_deviceResources->GetCommandQueue());
@@ -1135,7 +1278,7 @@ bool UIDXFoundation::GetWICTextureIndexFromFile(const wstring& filePath, const U
     return true;
 }   
 
-bool UIDXFoundation::GetWICTextureIndexFromDLL(const wstring& dllPath, UINT id, const UIColor& colorKey, size_t& textureIndex) {
+bool UITextureManager::GetWICTextureIndexFromDLL(const wstring& dllPath, UINT id, const UIColor& colorKey, size_t& textureIndex) {
     // use path+id as key
     wstring resourceKey = dllPath + L"#" + to_wstring(id) + (colorKey.IsValid() ? L"#" + colorKey.ToWStringForU32() : L"");
 
@@ -1158,8 +1301,8 @@ bool UIDXFoundation::GetWICTextureIndexFromDLL(const wstring& dllPath, UINT id, 
         HGLOBAL hGlobal = LoadResource(hDLL, hRes);
         const void* data = LockResource(hGlobal);
         DWORD size = SizeofResource(hDLL, hRes);
-
-        auto device = p_deviceResources->GetD3DDevice();
+        auto device = UIDXFoundation::GetSingletonInstance()->p_deviceResources->GetD3DDevice();
+        auto p_deviceResources = UIDXFoundation::GetSingletonInstance()->p_deviceResources.get();
         ResourceUploadBatch resourceUpload(device);
         resourceUpload.Begin();
 
@@ -1190,13 +1333,13 @@ bool UIDXFoundation::GetWICTextureIndexFromDLL(const wstring& dllPath, UINT id, 
         }
 
         // get next available descriptor index
-        size_t descriptorIndex = _textureResourceMap.size()+Descriptors::Offset1;
+        size_t descriptorIndex = _textureResourceMap.size() + UIDXFoundation::Descriptors::UITexturesStart;
             
         // create shader resource view
-        CreateShaderResourceView(device, resource._texture.Get(), p_resourceDescriptors->GetCpuHandle(descriptorIndex));
+        CreateShaderResourceView(device, resource._texture.Get(), UIDXFoundation::GetSingletonInstance()->p_resourceDescriptors->GetCpuHandle(descriptorIndex));
 
         // save GPU descriptor handle
-        resource._gpuDescriptor = p_resourceDescriptors->GetGpuHandle(descriptorIndex);
+        resource._gpuDescriptor = UIDXFoundation::GetSingletonInstance()->p_resourceDescriptors->GetGpuHandle(descriptorIndex);
 
         // wait for resource upload finished
         auto uploadResourcesFinished = resourceUpload.End(p_deviceResources->GetCommandQueue());
@@ -1214,14 +1357,15 @@ bool UIDXFoundation::GetWICTextureIndexFromDLL(const wstring& dllPath, UINT id, 
     return true;
 }
 
-bool UIDXFoundation::GetDDSTextureIndexFromFile(const wstring& filePath, const UIColor& colorKey, size_t& textureIndex)
+bool UITextureManager::GetDDSTextureIndexFromFile(const wstring& filePath, const UIColor& colorKey, size_t& textureIndex)
 {
     // use filePath as key
     wstring resourceKey = filePath + (colorKey.IsValid() ? L"#" + colorKey.ToWStringForU32() : L"");
 
     auto it = _textureResourceMap.find(resourceKey);
     if (it == _textureResourceMap.end()) {
-        auto device = p_deviceResources->GetD3DDevice();
+        auto device = UIDXFoundation::GetSingletonInstance()->p_deviceResources->GetD3DDevice();
+        auto p_deviceResources = UIDXFoundation::GetSingletonInstance()->p_deviceResources.get();
         ResourceUploadBatch resourceUpload(device);
         resourceUpload.Begin();
         
@@ -1252,13 +1396,13 @@ bool UIDXFoundation::GetDDSTextureIndexFromFile(const wstring& filePath, const U
         }
 
         // get next available descriptor index
-        size_t descriptorIndex = _textureResourceMap.size()+Descriptors::Offset1;
-        
+        size_t descriptorIndex = _textureResourceMap.size() + UIDXFoundation::Descriptors::UITexturesStart;
+
         // create shader resource view
-        CreateShaderResourceView(device, resource._texture.Get(), p_resourceDescriptors->GetCpuHandle(descriptorIndex));
+        CreateShaderResourceView(device, resource._texture.Get(), UIDXFoundation::GetSingletonInstance()->p_resourceDescriptors->GetCpuHandle(descriptorIndex));
         
         // save GPU descriptor handle
-        resource._gpuDescriptor = p_resourceDescriptors->GetGpuHandle(descriptorIndex);
+        resource._gpuDescriptor = UIDXFoundation::GetSingletonInstance()->p_resourceDescriptors->GetGpuHandle(descriptorIndex);
         
         // wait for resource upload finished
         auto uploadResourcesFinished = resourceUpload.End(p_deviceResources->GetCommandQueue());
@@ -1274,6 +1418,84 @@ bool UIDXFoundation::GetDDSTextureIndexFromFile(const wstring& filePath, const U
     }
 
     return true;
+}
+
+
+
+
+
+UIDXFoundation::UIDXFoundation() noexcept(false) {
+    p_deviceResources = make_unique<UIDeviceResources>();
+    p_effects = make_unique<UIEffectManager>();
+    p_textures = make_unique<UITextureManager>();
+}
+
+UIDXFoundation::~UIDXFoundation() {
+    if (p_deviceResources) {
+        p_deviceResources->WaitForGpu();
+    }
+}
+
+// Initialize the Direct3D resources required to run.
+void UIDXFoundation::Initialize(int width, int height) {
+    p_deviceResources->SetWindowHWnd(width, height);
+
+    p_deviceResources->CreateDeviceDependentResources();
+    CreateDeviceDependentResourcesXTK();
+    
+    p_deviceResources->CreateWindowSizeDependentResources();
+    CreateWindowSizeDependentResourcesXTK();
+}
+
+RECT UIDXFoundation::GetOutputSize() const {
+    return p_deviceResources->_outputSize;
+}
+
+LONG UIDXFoundation::GetOutputWidth() const {
+	return GetRectWidth()(p_deviceResources->_outputSize);
+}
+
+LONG UIDXFoundation::GetOutputHeight() const {
+	return GetRectHeight()(p_deviceResources->_outputSize);
+}
+
+ID3D12Device* UIDXFoundation::GetD3DDevice() const {
+    return p_deviceResources->GetD3DDevice();
+}
+
+void UIDXFoundation::Render3D() {
+    // 3D rendering (currently unused - handled by UIGame3D control)
+    // This function is kept for potential future 3D demo scenes
+}
+
+// Draws the scene.
+void UIDXFoundation::Render() {
+    // Prepare the command list to render a new frame.
+    p_deviceResources->Prepare();
+    Clear();
+
+    // Set the descriptor heaps
+    auto commandList = p_deviceResources->GetCommandList();
+    ID3D12DescriptorHeap* heaps[] = { p_resourceDescriptors->Heap(), p_states->Heap() };
+    commandList->SetDescriptorHeaps(_countof(heaps), heaps);
+    
+    //Render3D();
+
+    // Clear all batch data for this frame
+    ClearAllBatches();
+
+    // draw top container
+    UIFrame::GetSingletonInstance()->GetTopUIContainer()->Draw();
+
+    // draw animations
+    UIAnimationManage::GetSingletonInstance()->DrawAnimations();
+
+    // Execute all batch rendering calls - this replaces the multiple individual DrawIndexed calls
+    ExecuteAllBatches();
+
+    // Show the new frame.
+    p_deviceResources->Present();
+    p_graphicsMemory->Commit(p_deviceResources->GetCommandQueue());
 }
 
 void UIDXFoundation::Calculate2DPoint(const XMFLOAT2& point, XMFLOAT2& p) {
@@ -1399,7 +1621,7 @@ void UIDXFoundation::Draw2DPoint(const XMFLOAT2& point, float z, const UIColor& 
         1, 3, 2   // 2nd triangle
     };
 
-    RegisterBatchData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, p_triangleEffect2D, GetCurrentClipRect(), UICameraUI2D::GetSingletonInstance(), renderLevel);
+    RegisterBatchData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, p_effects->p_triangleEffect2D, GetCurrentClipRect(), UICameraUI2D::GetSingletonInstance(), renderLevel);
 }
 
 void UIDXFoundation::Draw2DPoints(const vector<XMFLOAT2>& points, float z, const UIColor& color, float pointSize, int renderLevel) {
@@ -1440,7 +1662,7 @@ void UIDXFoundation::Draw2DLine(const XMFLOAT2& start, const XMFLOAT2& end, floa
     // draw two triangles
     vector<uint16_t> indices = { 0, 1, 2, 1, 3, 2 };
 
-    RegisterBatchData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, p_triangleEffect2D, GetCurrentClipRect(), UICameraUI2D::GetSingletonInstance(), renderLevel);
+    RegisterBatchData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, p_effects->p_triangleEffect2D, GetCurrentClipRect(), UICameraUI2D::GetSingletonInstance(), renderLevel);
 }
 
 // Draw a 2D rectangle with specified color, hollow style
@@ -1476,7 +1698,7 @@ void UIDXFoundation::Draw2DRectSolid(const XMFLOAT2& start, const XMFLOAT2& end,
     // Define indices for two triangles
     vector<uint16_t> indices = { 0, 1, 2, 1, 3, 2 };
 
-    RegisterBatchData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, p_triangleEffect2D, GetCurrentClipRect(), UICameraUI2D::GetSingletonInstance(), renderLevel);
+    RegisterBatchData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, p_effects->p_triangleEffect2D, GetCurrentClipRect(), UICameraUI2D::GetSingletonInstance(), renderLevel);
 }
 
 // Draw a 2D rectangle with specified color, alpha transparency and z-depth
@@ -1488,10 +1710,10 @@ void UIDXFoundation::Draw2DImage(size_t textureIndex,
                             RECT srcRect, XMFLOAT2 dstStart, XMFLOAT2 dstEnd, 
                             float z, UCHAR alpha, int renderLevel) {
     // get texture resource
-    TextureResource& resource = _textureResources[textureIndex];
+    UITextureManager::TextureResource& resource = p_textures->_textureResources[textureIndex];
 
     // get original texture size 
-    const RECT textureRect = Get2DTextureRect(resource._texture);
+    const RECT textureRect = p_textures->Get2DTextureRect(resource._texture);
 
     // if srcRect is NULL_RECT, use textureRect
     if (IsRectEmpty(&srcRect)) {
@@ -1528,7 +1750,7 @@ void UIDXFoundation::Draw2DImage(size_t textureIndex,
     // define index data
     vector<uint16_t> indices = { 0, 1, 2, 1, 3, 2 };
 
-    RegisterBatchTextureData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, p_triangleTexturedEffect2D, 
+    RegisterBatchTextureData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, p_effects->p_triangleTexturedEffect2D, 
                              resource._gpuDescriptor, p_states->LinearClamp(), alpha, GetCurrentClipRect(), UICameraUI2D::GetSingletonInstance(), renderLevel);
 
     // p_sprites use more memory and is slower than PrimitiveBatch!!!
@@ -1570,11 +1792,11 @@ void UIDXFoundation::Draw2DImage(const wstring& filePath, const UIColor& colorKe
     size_t textureIndex = 0;
     // check is dds file
     if (filePath.find(L".dds") != wstring::npos) {
-        if (!GetDDSTextureIndexFromFile(filePath, colorKey, textureIndex)) {
+        if (!p_textures->GetDDSTextureIndexFromFile(filePath, colorKey, textureIndex)) {
             return;
         }
     } else {
-        if (!GetWICTextureIndexFromFile(filePath, colorKey, textureIndex)) {
+        if (!p_textures->GetWICTextureIndexFromFile(filePath, colorKey, textureIndex)) {
             return;
         }
     }
@@ -1585,7 +1807,7 @@ void UIDXFoundation::Draw2DImage(const wstring& dllPath, UINT id, const UIColor&
                             const RECT& srcRect, const XMFLOAT2& dstStart, const XMFLOAT2& dstEnd,
                             float z, UCHAR alpha, int renderLevel) {
     size_t textureIndex = 0; 
-    if (!GetWICTextureIndexFromDLL(dllPath, id, colorKey, textureIndex)) {
+    if (!p_textures->GetWICTextureIndexFromDLL(dllPath, id, colorKey, textureIndex)) {
         return;
     }
     Draw2DImage(textureIndex, srcRect, dstStart, dstEnd, z, alpha, renderLevel);
@@ -1653,7 +1875,7 @@ void UIDXFoundation::Draw3DImage(size_t textureIndex,
                                  float z, UCHAR alpha, int renderLevel,
                                  const XMMATRIX& transformMatrix) {
     // get the texture rect
-    const RECT textureRect = Get2DTextureRect(_textureResources[textureIndex]._texture);
+    const RECT textureRect = p_textures->Get2DTextureRect(p_textures->_textureResources[textureIndex]._texture);
 
     // if srcRect is NULL_RECT, use textureRect
     if (IsRectEmpty(&srcRect)) {
@@ -1679,7 +1901,7 @@ void UIDXFoundation::Draw3DImage(const wstring& dllPath, UINT id, const UIColor&
 					 float z, UCHAR alpha, int renderLevel,
 					 const XMMATRIX& transformMatrix) {
     size_t textureIndex = 0; 
-    if (!GetWICTextureIndexFromDLL(dllPath, id, colorKey, textureIndex)) {
+    if (!p_textures->GetWICTextureIndexFromDLL(dllPath, id, colorKey, textureIndex)) {
         return;
     }
 
@@ -1693,11 +1915,11 @@ void UIDXFoundation::Draw3DImage(const wstring& filePath, const UIColor& colorKe
     size_t textureIndex = 0;
     // check is dds file
     if (filePath.find(L".dds") != wstring::npos) {
-        if (!GetDDSTextureIndexFromFile(filePath, colorKey, textureIndex)) {
+        if (!p_textures->GetDDSTextureIndexFromFile(filePath, colorKey, textureIndex)) {
             return;
         }
     } else {
-        if (!GetWICTextureIndexFromFile(filePath, colorKey, textureIndex)) {
+        if (!p_textures->GetWICTextureIndexFromFile(filePath, colorKey, textureIndex)) {
             return;
         }
     }
@@ -1714,7 +1936,7 @@ void UIDXFoundation::Draw3DWorldPoint(const XMFLOAT3& point, const UIColor& colo
     vector<uint16_t> indices = {0};
     
     // Register batch data instead of direct rendering
-    RegisterBatchData(D3D_PRIMITIVE_TOPOLOGY_POINTLIST, vertices, indices, p_pointEffect3D, GetCurrentClipRect(), pCamera, renderLevel);
+    RegisterBatchData(D3D_PRIMITIVE_TOPOLOGY_POINTLIST, vertices, indices, p_effects->p_pointEffect3D, GetCurrentClipRect(), pCamera, renderLevel);
 }
 
 void UIDXFoundation::Draw3DWorldLine(const DirectX::XMFLOAT3& start, const DirectX::XMFLOAT3& end, const UIColor& colorS, const UIColor& colorE, float lineWidth, int renderLevel, UICameraBase3D* pCamera) {
@@ -1749,7 +1971,7 @@ void UIDXFoundation::Draw3DWorldLine(const DirectX::XMFLOAT3& start, const Direc
     vector<uint16_t> indices = {0, 1};
     
     // Register batch data instead of direct rendering
-    RegisterBatchData(D3D_PRIMITIVE_TOPOLOGY_LINELIST, vertices, indices, p_lineEffect3D, GetCurrentClipRect(), pCamera, renderLevel);
+    RegisterBatchData(D3D_PRIMITIVE_TOPOLOGY_LINELIST, vertices, indices, p_effects->p_lineEffect3D, GetCurrentClipRect(), pCamera, renderLevel);
 }
 	
 void UIDXFoundation::Draw3DWorldLine(const XMFLOAT3& start, const XMFLOAT3& end, const UIColor& color, int renderLevel, UICameraBase3D* pCamera) {
@@ -1820,7 +2042,7 @@ void UIDXFoundation::Draw3DWorldThickLine(const XMFLOAT3& start, const XMFLOAT3&
     }
     
     RegisterBatchData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, 
-                      p_triangleEffect3D, GetCurrentClipRect(), pCamera, renderLevel);
+                      p_effects->p_triangleEffect3D, GetCurrentClipRect(), pCamera, renderLevel);
 }
 
 void UIDXFoundation::Draw3DWorldCircle(const XMFLOAT3& center, float pixelRadius, const UIColor& color, UCHAR alpha, int renderLevel, UICameraBase3D* pCamera) {
@@ -1871,7 +2093,7 @@ void UIDXFoundation::Draw3DWorldCircle(const XMFLOAT3& center, float pixelRadius
     
     // Register batch data for triangle color rendering
     RegisterBatchData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices,
-                      p_triangleEffect3D, GetCurrentClipRect(), pCamera, renderLevel);
+                      p_effects->p_triangleEffect3D, GetCurrentClipRect(), pCamera, renderLevel);
 }
 
 void UIDXFoundation::Draw3DWorldTriangle(const XMFLOAT3& p1, const XMFLOAT3& p2, const XMFLOAT3& p3, const UIColor& color, UCHAR alpha, int renderLevel, UICameraBase3D* pCamera) {
@@ -1894,7 +2116,7 @@ void UIDXFoundation::Draw3DWorldTriangle(const XMFLOAT3& p1, const XMFLOAT3& p2,
     
     // Register batch data for triangle rendering
     RegisterBatchData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices,
-                      p_triangleEffect3D, GetCurrentClipRect(), pCamera, renderLevel);
+                      p_effects->p_triangleEffect3D, GetCurrentClipRect(), pCamera, renderLevel);
 }
 
 void UIDXFoundation::Draw3DWorldTriangle(const XMFLOAT3& p1, const XMFLOAT3& p2, const XMFLOAT3& p3, 
@@ -1920,14 +2142,14 @@ void UIDXFoundation::Draw3DWorldTriangle(const XMFLOAT3& p1, const XMFLOAT3& p2,
     
     // Register batch data for triangle rendering
     RegisterBatchData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices,
-                      p_triangleEffect3D, GetCurrentClipRect(), pCamera, renderLevel);
+                      p_effects->p_triangleEffect3D, GetCurrentClipRect(), pCamera, renderLevel);
 }
 
 void UIDXFoundation::Draw3DWorldTextureTriangle(const XMFLOAT3& p1, const XMFLOAT3& p2, const XMFLOAT3& p3,
                                                 const XMFLOAT2& uv1, const XMFLOAT2& uv2, const XMFLOAT2& uv3,
                                                 size_t textureIndex, UCHAR alpha, int renderLevel, UICameraBase3D* pCamera) {
     // Get texture resource
-    TextureResource& resource = _textureResources[textureIndex];
+    UITextureManager::TextureResource& resource = p_textures->_textureResources[textureIndex];
     
     // Create vertices with texture coordinates
     vector<VertexPositionTexture> vertices = {
@@ -1940,7 +2162,7 @@ void UIDXFoundation::Draw3DWorldTextureTriangle(const XMFLOAT3& p1, const XMFLOA
     vector<uint16_t> indices = { 0, 1, 2 };
     
     // Register batch data for rendering
-    RegisterBatchTextureData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, p_triangleTexturedEffect3D, 
+    RegisterBatchTextureData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, p_effects->p_triangleTexturedEffect3D, 
                              resource._gpuDescriptor, p_states->LinearClamp(), alpha, GetCurrentClipRect(), pCamera, renderLevel);
 }
 
@@ -1980,16 +2202,16 @@ void UIDXFoundation::Draw3DWorldRectSolid(const XMFLOAT3& pLT, const XMFLOAT3& p
     
     // Register batch data
     RegisterBatchData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, 
-                      p_triangleEffect3D, GetCurrentClipRect(), pCamera, renderLevel);
+                      p_effects->p_triangleEffect3D, GetCurrentClipRect(), pCamera, renderLevel);
 }
 
 void UIDXFoundation::Draw3DWorldImage(size_t textureIndex, const RECT& srcRect, const DirectX::XMFLOAT3& pLT, const DirectX::XMFLOAT3& pRT, 
 						              const DirectX::XMFLOAT3& pLB, const DirectX::XMFLOAT3& pRB, UCHAR alpha, int renderLevel, UICameraBase3D* pCamera) {
     // Get texture resource
-    TextureResource& resource = _textureResources[textureIndex];
+    UITextureManager::TextureResource& resource = p_textures->_textureResources[textureIndex];
     
     // Get original texture size 
-    const RECT textureRect = Get2DTextureRect(resource._texture);
+    const RECT textureRect = p_textures->Get2DTextureRect(resource._texture);
     
     // Use provided srcRect or full texture
     RECT actualSrcRect = srcRect;
@@ -2015,7 +2237,7 @@ void UIDXFoundation::Draw3DWorldImage(size_t textureIndex, const RECT& srcRect, 
     vector<uint16_t> indices = { 0, 1, 2, 1, 3, 2 };
 
     // Register batch texture data
-    RegisterBatchTextureData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, p_triangleTexturedEffect3D,
+    RegisterBatchTextureData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, p_effects->p_triangleTexturedEffect3D,
                              resource._gpuDescriptor, p_states->LinearClamp(), alpha, GetCurrentClipRect(), pCamera, renderLevel);
 }
 
@@ -2114,7 +2336,7 @@ void UIDXFoundation::Draw3DWorldCharTextureFT(size_t textureIndex, DirectX::XMFL
     vector<uint16_t> indices = { 0, 1, 2, 1, 3, 2 };
 
     // Use the provided camera instead of a fixed UI camera, so each control can have its own perspective
-    RegisterBatchTextureData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, p_triangleTexturedEffect3D, 
+    RegisterBatchTextureData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, p_effects->p_triangleTexturedEffect3D, 
                              resource._gpuDescriptor, p_states->LinearClamp(), alpha, GetCurrentClipRect(), pCamera, renderLevel);
 }
 
@@ -2158,176 +2380,12 @@ void UIDXFoundation::CreateDeviceDependentResourcesXTK() {
 
     p_graphicsMemory = make_unique<GraphicsMemory>(device);
     p_states = make_unique<CommonStates>(device);
-    p_resourceDescriptors = make_unique<DescriptorHeap>(device, Descriptors::Count);
+    p_resourceDescriptors = make_unique<DescriptorHeap>(device, Descriptors::TotalDescriptorCount);
     p_batch = make_unique<PrimitiveBatch<VertexPositionColor>>(device);
     p_batchTexture = make_unique<PrimitiveBatch<VertexPositionTexture>>(device);
 
-    {
-        ResourceUploadBatch resourceUpload(device);
-        resourceUpload.Begin();
-
-        RenderTargetState rtState(p_deviceResources->GetBackBufferFormat(), p_deviceResources->GetDepthBufferFormat());
-
-        // create common blend description
-        D3D12_BLEND_DESC transparentBlendDesc = {};
-        transparentBlendDesc.AlphaToCoverageEnable = FALSE;
-        transparentBlendDesc.IndependentBlendEnable = FALSE;
-        auto& rt = transparentBlendDesc.RenderTarget[0];
-        rt.BlendEnable = TRUE;
-        rt.LogicOpEnable = FALSE;
-        rt.SrcBlend = D3D12_BLEND_SRC_ALPHA;
-        rt.DestBlend = D3D12_BLEND_INV_SRC_ALPHA;   // Destination color × (1 - Source Alpha)
-        rt.BlendOp = D3D12_BLEND_OP_ADD;
-        rt.SrcBlendAlpha = D3D12_BLEND_ONE;
-        rt.DestBlendAlpha = D3D12_BLEND_INV_SRC_ALPHA;
-        rt.BlendOpAlpha = D3D12_BLEND_OP_ADD;
-        rt.LogicOp = D3D12_LOGIC_OP_NOOP;
-        rt.RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
-
-        D3D12_BLEND_DESC transparentBlendDescForTexture = transparentBlendDesc;
-        transparentBlendDescForTexture.RenderTarget[0].SrcBlend = D3D12_BLEND_ONE; // Source color unchanged
-
-        // create common depth description
-        D3D12_DEPTH_STENCIL_DESC depthStencilDesc = {};
-        depthStencilDesc.DepthEnable = TRUE;
-        depthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
-        depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
-        depthStencilDesc.StencilEnable = FALSE;
-
-        // {
-        //     SpriteBatchPipelineStateDescription pd(rtState);
-        //     pd.blendDesc = transparentBlendDesc;
-        //     pd.depthStencilDesc = depthStencilDesc;
-
-        //     p_sprites = make_unique<SpriteBatch>(device, resourceUpload, pd);
-        // }
-
-        {
-            EffectPipelineStateDescription pd(
-                &VertexPositionColor::InputLayout,
-                CommonStates::AlphaBlend,
-                CommonStates::DepthDefault,
-                CommonStates::CullNone,
-                rtState,
-                D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT);
-
-            pd.blendDesc = transparentBlendDesc;
-            pd.depthStencilDesc = depthStencilDesc;
-
-            p_pointEffect2D = make_unique<BasicEffect>(device, EffectFlags::VertexColor, pd);
-            p_pointEffect3D = make_unique<BasicEffect>(device, EffectFlags::VertexColor, pd);
-        }
-
-        {
-            EffectPipelineStateDescription pd(
-                &VertexPositionColor::InputLayout,
-                CommonStates::AlphaBlend,
-                CommonStates::DepthDefault,
-                CommonStates::CullNone,
-                rtState,
-                D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE);
-
-            pd.blendDesc = transparentBlendDesc;
-            pd.depthStencilDesc = depthStencilDesc;
-
-            p_lineEffect2D = make_unique<BasicEffect>(device, EffectFlags::VertexColor, pd);
-            p_lineEffect3D = make_unique<BasicEffect>(device, EffectFlags::VertexColor, pd);
-        }
-
-        {
-            EffectPipelineStateDescription pd(
-                &VertexPositionColor::InputLayout,
-                CommonStates::AlphaBlend,
-                CommonStates::DepthDefault,
-                CommonStates::CullNone,
-                rtState,
-                D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE);
-
-            pd.blendDesc = transparentBlendDesc;
-            pd.depthStencilDesc = depthStencilDesc;
-
-            p_triangleEffect2D = make_unique<BasicEffect>(device, EffectFlags::VertexColor, pd);
-            p_triangleEffect3D = make_unique<BasicEffect>(device, EffectFlags::VertexColor, pd);
-        }
-
-        {
-            EffectPipelineStateDescription pd(
-                &VertexPositionTexture::InputLayout,
-                CommonStates::AlphaBlend,
-                CommonStates::DepthDefault,
-                CommonStates::CullNone,
-                rtState,
-                D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE);
-
-            pd.blendDesc = transparentBlendDescForTexture;
-            pd.depthStencilDesc = depthStencilDesc;
-
-            p_triangleTexturedEffect2D = make_unique<BasicEffect>(device, EffectFlags::Texture, pd);
-            p_triangleTexturedEffect3D = make_unique<BasicEffect>(device, EffectFlags::Texture, pd);
-        }
-
-        {
-            EffectPipelineStateDescription pd(
-                &GeometricPrimitive::VertexType::InputLayout,
-                CommonStates::Opaque,
-                CommonStates::DepthDefault,
-                CommonStates::CullCounterClockwise,  // Enable backface culling to fix Z-fighting
-                rtState);
-
-            // Enable per-pixel lighting with texture support for materials
-            p_shapeEffect3D = make_unique<BasicEffect>(device, EffectFlags::PerPixelLighting | EffectFlags::Texture, pd);
-            p_shapeEffect3D->EnableDefaultLighting();
-        }
-        
-        // Create SkinnedEffect for skeletal animation rendering
-        {
-            EffectPipelineStateDescription pd(
-                &SkinnedVertexInputLayout,  // Use our custom input layout with bone data
-                CommonStates::Opaque,
-                CommonStates::DepthDefault,
-                CommonStates::CullCounterClockwise,
-                rtState,
-                D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE);
-            
-            pd.renderTargetState.sampleDesc.Count = 1;
-            pd.renderTargetState.sampleDesc.Quality = 0;
-            
-            // Create SkinnedEffect with lighting and texture support
-            p_skinnedEffect3D = make_unique<SkinnedEffect>(device, EffectFlags::Lighting | EffectFlags::Texture, pd);
-            p_skinnedEffect3D->EnableDefaultLighting();
-            
-            // Three-point lighting setup
-            p_skinnedEffect3D->SetAmbientLightColor(DirectX::XMVectorSet(0.6f, 0.6f, 0.6f, 1.0f));
-            
-            // Key light
-            p_skinnedEffect3D->SetLightEnabled(0, true);
-            p_skinnedEffect3D->SetLightDiffuseColor(0, DirectX::XMVectorSet(0.9f, 0.9f, 0.9f, 1.0f));
-            p_skinnedEffect3D->SetLightDirection(0, DirectX::XMVectorSet(-0.5773f, -0.5773f, -0.5773f, 0.0f));
-            
-            // Fill light
-            p_skinnedEffect3D->SetLightEnabled(1, true);
-            p_skinnedEffect3D->SetLightDiffuseColor(1, DirectX::XMVectorSet(0.5f, 0.5f, 0.6f, 1.0f));
-            p_skinnedEffect3D->SetLightDirection(1, DirectX::XMVectorSet(0.7071f, -0.3f, -0.5f, 0.0f));
-            
-            // Rim light
-            p_skinnedEffect3D->SetLightEnabled(2, true);
-            p_skinnedEffect3D->SetLightDiffuseColor(2, DirectX::XMVectorSet(0.4f, 0.4f, 0.5f, 1.0f));
-            p_skinnedEffect3D->SetLightDirection(2, DirectX::XMVectorSet(0.0f, 0.7071f, 0.7071f, 0.0f));
-        }
-
-        // // load MSYHFont
-        // DX::FindMediaFile(strFilePath, MAX_PATH, format(L"MSYH_{}.spritefont", gLoadFontSize).c_str());
-        // p_font = make_unique<SpriteFont>(device, resourceUpload,
-        //     strFilePath,
-        //     p_resourceDescriptors->GetCpuHandle(Descriptors::MSYHFont),
-        //     p_resourceDescriptors->GetGpuHandle(Descriptors::MSYHFont));
-
-        // Upload the resources to the GPU.
-        auto uploadResourcesFinished = resourceUpload.End(p_deviceResources->GetCommandQueue());
-
-        // Wait for the upload thread to terminate
-        uploadResourcesFinished.wait();
-    }
+    // Create all effects through UIEffectManager
+    p_effects->Create();
 
     CreateResourcesFT();
 }
@@ -2345,21 +2403,21 @@ void UIDXFoundation::CreateWindowSizeDependentResourcesXTK() {
     //p_sprites->SetViewport(viewport);
     
     // set the matrices for 2D drawing
-    p_pointEffect2D->SetWorld(Matrix::Identity);
-    p_pointEffect2D->SetView(UICameraUI2D::GetSingletonInstance()->GetViewMatrix());
-    p_pointEffect2D->SetProjection(UICameraUI2D::GetSingletonInstance()->GetProjectionMatrix());
+    p_effects->p_pointEffect2D->SetWorld(Matrix::Identity);
+    p_effects->p_pointEffect2D->SetView(UICameraUI2D::GetSingletonInstance()->GetViewMatrix());
+    p_effects->p_pointEffect2D->SetProjection(UICameraUI2D::GetSingletonInstance()->GetProjectionMatrix());
 
-    p_lineEffect2D->SetWorld(Matrix::Identity);
-    p_lineEffect2D->SetView(UICameraUI2D::GetSingletonInstance()->GetViewMatrix());
-    p_lineEffect2D->SetProjection(UICameraUI2D::GetSingletonInstance()->GetProjectionMatrix());
+    p_effects->p_lineEffect2D->SetWorld(Matrix::Identity);
+    p_effects->p_lineEffect2D->SetView(UICameraUI2D::GetSingletonInstance()->GetViewMatrix());
+    p_effects->p_lineEffect2D->SetProjection(UICameraUI2D::GetSingletonInstance()->GetProjectionMatrix());
 
-    p_triangleEffect2D->SetWorld(Matrix::Identity);
-    p_triangleEffect2D->SetView(UICameraUI2D::GetSingletonInstance()->GetViewMatrix());
-    p_triangleEffect2D->SetProjection(UICameraUI2D::GetSingletonInstance()->GetProjectionMatrix());
+    p_effects->p_triangleEffect2D->SetWorld(Matrix::Identity);
+    p_effects->p_triangleEffect2D->SetView(UICameraUI2D::GetSingletonInstance()->GetViewMatrix());
+    p_effects->p_triangleEffect2D->SetProjection(UICameraUI2D::GetSingletonInstance()->GetProjectionMatrix());
 
-    p_triangleTexturedEffect2D->SetWorld(Matrix::Identity);
-    p_triangleTexturedEffect2D->SetView(UICameraUI2D::GetSingletonInstance()->GetViewMatrix());
-    p_triangleTexturedEffect2D->SetProjection(UICameraUI2D::GetSingletonInstance()->GetProjectionMatrix());
+    p_effects->p_triangleTexturedEffect2D->SetWorld(Matrix::Identity);
+    p_effects->p_triangleTexturedEffect2D->SetView(UICameraUI2D::GetSingletonInstance()->GetViewMatrix());
+    p_effects->p_triangleTexturedEffect2D->SetProjection(UICameraUI2D::GetSingletonInstance()->GetProjectionMatrix());
 }
 
 void UIDXFoundation::CreateResources() {
@@ -2371,16 +2429,10 @@ void UIDXFoundation::ResetResources() {
     //p_font.reset();
     p_batch.reset();
     p_batchTexture.reset();
-    p_lineEffect2D.reset();
-    p_triangleEffect2D.reset();
-    p_triangleTexturedEffect2D.reset();
-    p_pointEffect2D.reset();
-    p_pointEffect3D.reset();
-    p_lineEffect3D.reset();
-    p_triangleEffect3D.reset();
-    p_triangleTexturedEffect3D.reset();
-    p_shapeEffect3D.reset();
-    p_skinnedEffect3D.reset();  // Reset skeletal animation effect
+    
+    // Reset all effects through UIEffectManager
+    p_effects->Reset();
+    
     //p_sprites.reset();
     p_resourceDescriptors.reset();
     p_states.reset();
@@ -2597,19 +2649,19 @@ bool UIDXFoundation::GetCharTextureResourceFT(const wchar_t& wch, float fontSize
             }
         }
 
-        if (!CreateTextureFromImageData(device, resourceUpload, resource._texture, imageData, width, height)) {
+        if (!p_textures->CreateTextureFromImageData(device, resourceUpload, resource._texture, imageData, width, height)) {
             return false;
         }
 
         // get next available descriptor index
-        size_t descriptorIndex = _charTextureResources.size()+Descriptors::Offset2;
+        size_t descriptorIndex = _charTextureResources.size() + UIDXFoundation::Descriptors::FontTexturesStart;
         
         // create shader resource view
         CreateShaderResourceView(device, resource._texture.Get(), p_resourceDescriptors->GetCpuHandle(descriptorIndex));
         
         // save GPU descriptor handle
         resource._gpuDescriptor = p_resourceDescriptors->GetGpuHandle(descriptorIndex);
-        
+
         // wait for resource upload finished
         auto uploadResourcesFinished = resourceUpload.End(p_deviceResources->GetCommandQueue());
         uploadResourcesFinished.wait();
@@ -2665,7 +2717,7 @@ void UIDXFoundation::Draw2DCharTextureFT(size_t textureIndex, XMFLOAT2 position,
     CharTextureResource& resource = _charTextureResources[textureIndex];
 
     // get original texture size
-    const RECT textureRect = Get2DTextureRect(resource._texture);
+    const RECT textureRect = p_textures->Get2DTextureRect(resource._texture);
 
     // calculate destination rectangle end point
     XMFLOAT2 dstEnd;
@@ -2686,7 +2738,7 @@ void UIDXFoundation::Draw2DCharTextureFT(size_t textureIndex, XMFLOAT2 position,
     // define index data
     vector<uint16_t> indices = { 0, 1, 2, 1, 3, 2 };
 
-    RegisterBatchTextureData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, p_triangleTexturedEffect2D, 
+    RegisterBatchTextureData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, p_effects->p_triangleTexturedEffect2D, 
                              resource._gpuDescriptor, p_states->LinearClamp(), alpha, GetCurrentClipRect(), UICameraUI2D::GetSingletonInstance(), renderLevel);
     
 
@@ -2723,7 +2775,7 @@ void UIDXFoundation::Draw3DCharTextureFT(size_t textureIndex, XMFLOAT2 position,
     //position.y = round(position.y);
 
     // get original texture size 
-    const RECT textureRect = Get2DTextureRect(_charTextureResources[textureIndex]._texture);
+    const RECT textureRect = p_textures->Get2DTextureRect(_charTextureResources[textureIndex]._texture);
 
     XMFLOAT2 dstEnd;
     dstEnd.x = position.x + (float)(GetRectWidth()(textureRect)) * scale;
@@ -2744,7 +2796,7 @@ void UIDXFoundation::Draw3DCharTextureFT(size_t textureIndex, XMFLOAT2 position,
     // Define indices for two triangles
     vector<uint16_t> indices = { 0, 1, 2, 1, 3, 2 };
 
-    RegisterBatchTextureData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, p_triangleTexturedEffect3D, 
+    RegisterBatchTextureData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, p_effects->p_triangleTexturedEffect3D, 
                              _charTextureResources[textureIndex]._gpuDescriptor, 
                              p_states->LinearClamp(), alpha, GetCurrentClipRect(), UICameraUI3D::GetSingletonInstance(), renderLevel);
 }
@@ -3159,3 +3211,4 @@ void UIDXFoundation::ClearAllBatches() {
     }
     _batchDataList.clear();
 }
+

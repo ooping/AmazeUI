@@ -262,15 +262,14 @@ void StaticMesh::Render(UICameraBase3D* pCamera, const DirectX::XMMATRIX& worldM
     auto* pDX12 = UIDXFoundation::GetSingletonInstance();
     auto commandList = pDX12->GetDeviceResources()->GetCommandList();
     
-    // Check if we should use SkinnedEffect (for models with bones)
-    auto* skinnedEffect = pDX12->GetSkinnedEffect();
-    if (skinnedEffect && !_bones.empty()) {
-        // Skeletal animation rendering
+    if (!_bones.empty()) {
+        // Check if we should use SkinnedEffect (for models with bones)
+        auto pSkinnedEffect = pDX12->GetEffectManager()->p_skinnedEffect3D.get();
         
         // Set matrices
-        skinnedEffect->SetWorld(worldMatrix);
-        skinnedEffect->SetView(pCamera->GetViewMatrix());
-        skinnedEffect->SetProjection(pCamera->GetProjectionMatrix());
+        pSkinnedEffect->SetWorld(worldMatrix);
+        pSkinnedEffect->SetView(pCamera->GetViewMatrix());
+        pSkinnedEffect->SetProjection(pCamera->GetProjectionMatrix());
         
         // Set bone transforms (max 72 bones)
         size_t boneCount = min(_bones.size(), size_t(DirectX::IEffectSkinning::MaxBones));
@@ -278,7 +277,7 @@ void StaticMesh::Render(UICameraBase3D* pCamera, const DirectX::XMMATRIX& worldM
         for (size_t i = 0; i < boneCount; i++) {
             boneTransforms[i] = XMLoadFloat4x4(&_boneMatrices[i]);
         }
-        skinnedEffect->SetBoneTransforms(boneTransforms, boneCount);
+        pSkinnedEffect->SetBoneTransforms(boneTransforms, boneCount);
         
         // Set buffers
         commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -287,7 +286,7 @@ void StaticMesh::Render(UICameraBase3D* pCamera, const DirectX::XMMATRIX& worldM
         
         // Render submeshes
         if (_subMeshes.empty()) {
-            skinnedEffect->Apply(commandList);
+            pSkinnedEffect->Apply(commandList);
             commandList->DrawIndexedInstanced(static_cast<UINT>(_indices.size()), 1, 0, 0, 0);
         } else {
             for (const SubMesh& submesh : _subMeshes) {
@@ -295,9 +294,9 @@ void StaticMesh::Render(UICameraBase3D* pCamera, const DirectX::XMMATRIX& worldM
                     const Material& mat = _materials[submesh.materialIndex];
                     
                     if (mat.hasDiffuseTexture && mat.diffuseSRV.ptr != 0) {
-                        skinnedEffect->SetTexture(mat.diffuseSRV, pDX12->p_states->LinearWrap());
+                        pSkinnedEffect->SetTexture(mat.diffuseSRV, pDX12->GetCommonStates()->LinearWrap());
                     }
-                    skinnedEffect->Apply(commandList);
+                    pSkinnedEffect->Apply(commandList);
                     commandList->DrawIndexedInstanced(submesh.indexCount, 1, submesh.startIndex, 0, 0);
                 }
             }
@@ -305,35 +304,32 @@ void StaticMesh::Render(UICameraBase3D* pCamera, const DirectX::XMMATRIX& worldM
     }
     else {
         // Static mesh rendering (BasicEffect)
-        auto* effect = pDX12->Get3DShapeEffect();
-        if (!effect) {
-            return;
-        }
-        
+        auto* pShapeEffect = pDX12->GetEffectManager()->p_shapeEffect3D.get();
+
         // Set matrices
-        effect->SetWorld(worldMatrix);
-        effect->SetView(pCamera->GetViewMatrix());
-        effect->SetProjection(pCamera->GetProjectionMatrix());
+        pShapeEffect->SetWorld(worldMatrix);
+        pShapeEffect->SetView(pCamera->GetViewMatrix());
+        pShapeEffect->SetProjection(pCamera->GetProjectionMatrix());
         
         // Setup lighting
-        effect->EnableDefaultLighting();
-        effect->SetLightEnabled(0, true);
-        effect->SetLightDiffuseColor(0, DirectX::XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f));
-        effect->SetLightDirection(0, DirectX::XMVectorSet(-0.5773f, -0.5773f, -0.5773f, 0.0f));
+        pShapeEffect->EnableDefaultLighting();
+        pShapeEffect->SetLightEnabled(0, true);
+        pShapeEffect->SetLightDiffuseColor(0, DirectX::XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f));
+        pShapeEffect->SetLightDirection(0, DirectX::XMVectorSet(-0.5773f, -0.5773f, -0.5773f, 0.0f));
         
-        effect->SetLightEnabled(1, true);
-        effect->SetLightDiffuseColor(1, DirectX::XMVectorSet(0.5f, 0.5f, 0.6f, 1.0f));
-        effect->SetLightDirection(1, DirectX::XMVectorSet(0.5773f, -0.5773f, -0.5773f, 0.0f));
+        pShapeEffect->SetLightEnabled(1, true);
+        pShapeEffect->SetLightDiffuseColor(1, DirectX::XMVectorSet(0.5f, 0.5f, 0.6f, 1.0f));
+        pShapeEffect->SetLightDirection(1, DirectX::XMVectorSet(0.5773f, -0.5773f, -0.5773f, 0.0f));
         
-        effect->SetLightEnabled(2, true);
-        effect->SetLightDiffuseColor(2, DirectX::XMVectorSet(0.4f, 0.4f, 0.3f, 1.0f));
-        effect->SetLightDirection(2, DirectX::XMVectorSet(0.0f, 0.7071f, -0.7071f, 0.0f));
+        pShapeEffect->SetLightEnabled(2, true);
+        pShapeEffect->SetLightDiffuseColor(2, DirectX::XMVectorSet(0.4f, 0.4f, 0.3f, 1.0f));
+        pShapeEffect->SetLightDirection(2, DirectX::XMVectorSet(0.0f, 0.7071f, -0.7071f, 0.0f));
         
         // Set material
-        effect->SetDiffuseColor(DirectX::XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f));
-        effect->SetSpecularColor(DirectX::XMVectorSet(0.3f, 0.3f, 0.3f, 1.0f));
-        effect->SetSpecularPower(16.0f);
-        effect->SetAmbientLightColor(DirectX::XMVectorSet(0.7f, 0.7f, 0.7f, 1.0f));
+        pShapeEffect->SetDiffuseColor(DirectX::XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f));
+        pShapeEffect->SetSpecularColor(DirectX::XMVectorSet(0.3f, 0.3f, 0.3f, 1.0f));
+        pShapeEffect->SetSpecularPower(16.0f);
+        pShapeEffect->SetAmbientLightColor(DirectX::XMVectorSet(0.7f, 0.7f, 0.7f, 1.0f));
         
         // Set buffers
         commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -342,7 +338,7 @@ void StaticMesh::Render(UICameraBase3D* pCamera, const DirectX::XMMATRIX& worldM
         
         // Render submeshes
         if (_subMeshes.empty()) {
-            effect->Apply(commandList);
+            pShapeEffect->Apply(commandList);
             commandList->DrawIndexedInstanced(static_cast<UINT>(_indices.size()), 1, 0, 0, 0);
         } else {
             for (const SubMesh& submesh : _subMeshes) {
@@ -350,10 +346,10 @@ void StaticMesh::Render(UICameraBase3D* pCamera, const DirectX::XMMATRIX& worldM
                     const Material& mat = _materials[submesh.materialIndex];
                     
                     if (mat.hasDiffuseTexture) {
-                        effect->SetTexture(mat.diffuseSRV, pDX12->p_states->LinearWrap());
+                        pShapeEffect->SetTexture(mat.diffuseSRV, pDX12->GetCommonStates()->LinearWrap());
                     }
                     
-                    effect->Apply(commandList);
+                    pShapeEffect->Apply(commandList);
                     commandList->DrawIndexedInstanced(submesh.indexCount, 1, submesh.startIndex, 0, 0);
                 }
             }
@@ -419,7 +415,7 @@ bool StaticMesh::LoadTexture(const wstring& texturePath, ComPtr<ID3D12Resource>&
     }
     
     auto device = foundation->GetD3DDevice();
-    auto commandQueue = foundation->p_deviceResources->GetCommandQueue();
+    auto commandQueue = foundation->GetDeviceResources()->GetCommandQueue();
     
     wchar_t strTexturePath[MAX_PATH] = {};
     DX::FindMediaFile(strTexturePath, MAX_PATH, texturePath.c_str());
@@ -451,10 +447,10 @@ bool StaticMesh::LoadTexture(const wstring& texturePath, ComPtr<ID3D12Resource>&
     DirectX::CreateShaderResourceView(
         device,
         texture.Get(),
-        foundation->p_resourceDescriptors->GetCpuHandle(descriptorIndex)
+        foundation->GetDescriptorHeap()->GetCpuHandle(descriptorIndex)
     );
     
-    srvHandle = foundation->p_resourceDescriptors->GetGpuHandle(descriptorIndex);
+    srvHandle = foundation->GetDescriptorHeap()->GetGpuHandle(descriptorIndex);
     
     // Wait for upload
     auto uploadFinished = resourceUpload.End(commandQueue);

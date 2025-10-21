@@ -117,9 +117,79 @@ private:
 	unsigned int                                        _options;
 };
 
+struct UIEffectManager {
+    void Create();
+    void Reset();
+
+    // 2D Effects
+    std::unique_ptr<DirectX::BasicEffect> p_pointEffect2D;
+    std::unique_ptr<DirectX::BasicEffect> p_lineEffect2D;
+    std::unique_ptr<DirectX::BasicEffect> p_triangleEffect2D;
+    std::unique_ptr<DirectX::BasicEffect> p_triangleTexturedEffect2D;
+
+    // 3D Effects
+    std::unique_ptr<DirectX::BasicEffect> p_pointEffect3D;
+    std::unique_ptr<DirectX::BasicEffect> p_lineEffect3D;
+    std::unique_ptr<DirectX::BasicEffect> p_triangleEffect3D;
+    std::unique_ptr<DirectX::BasicEffect> p_triangleTexturedEffect3D;
+    std::unique_ptr<DirectX::BasicEffect> p_shapeEffect3D;
+
+    // Skeletal Animation
+    std::unique_ptr<DirectX::SkinnedEffect> p_skinnedEffect3D;
+};
+
+class UITextureManager {
+	friend class UIDXFoundation;
+
+public:
+	// Public interface - Get texture size
+	bool Get2DImageSize(const std::wstring& imagePath, const UIColor& colorKey, RECT& textureRect);
+	bool Get2DImageSize(const std::wstring& dllPath, UINT id, const UIColor& colorKey, RECT& textureRect);
+
+private:
+	// Internal methods - Texture loading
+	bool GetWICTextureIndexFromDLL(const std::wstring& dllPath, UINT id, const UIColor& colorKey, size_t& textureIndex);
+	bool GetWICTextureIndexFromFile(const std::wstring& filePath, const UIColor& colorKey, size_t& textureIndex);
+	bool GetDDSTextureIndexFromFile(const std::wstring& filePath, const UIColor& colorKey, size_t& textureIndex);
+
+	// Internal methods - Image conversion
+	bool ConvertImageTransparencyByWIC(Microsoft::WRL::ComPtr<IWICImagingFactory>& wicFactory, 
+									   Microsoft::WRL::ComPtr<IWICBitmapDecoder>& decoder, 
+									   const UIColor& colorKey, std::vector<uint8_t>& imageData, 
+									   UINT& width, UINT& height);
+	bool ConvertImageTransparencyByWIC(const void* data, size_t size, const UIColor& colorKey, 
+									   std::vector<uint8_t>& imageData, UINT& width, UINT& height);
+	bool ConvertImageTransparencyByWIC(const std::wstring& filePath, const UIColor& colorKey, 
+									   std::vector<uint8_t>& imageData, UINT& width, UINT& height);
+	bool ConvertImageTransparencyByDDS(const std::wstring& filePath, const UIColor& colorKey, 
+									   std::vector<uint8_t>& imageData, UINT& width, UINT& height);
+
+	// Shared utility - Create texture from image data (used by both Image and FreeType)
+	bool CreateTextureFromImageData(ID3D12Device* device, DirectX::ResourceUploadBatch& resourceUpload, 
+									Microsoft::WRL::ComPtr<ID3D12Resource>& texture, 
+									const std::vector<uint8_t>& imageData, UINT width, UINT height);
+
+	// Internal methods - Utility functions
+	RECT Get2DTextureRect(ID3D12Resource* texture);
+	RECT Get2DTextureRect(const Microsoft::WRL::ComPtr<ID3D12Resource>& texture);
+
+	// Data members - Texture resources
+	struct TextureResource {
+		Microsoft::WRL::ComPtr<ID3D12Resource> _texture;
+		D3D12_GPU_DESCRIPTOR_HANDLE _gpuDescriptor;
+	};
+
+	std::vector<TextureResource> _textureResources;
+	std::unordered_map<std::wstring, size_t> _textureResourceMap;
+};
+
+
 class UIDXFoundation : public SingletonPattern<UIDXFoundation> {
 	friend class SingletonPattern<UIDXFoundation>;
-	//friend class UIImage;
+	
+	// helper classes
+	friend struct UIEffectManager;
+	friend class UITextureManager;
 
 public:
     UIDXFoundation() noexcept(false);
@@ -142,33 +212,33 @@ public:
 	LONG GetOutputHeight() const;
 
 	ID3D12Device* GetD3DDevice() const;
-	std::unique_ptr<UIDeviceResources>& GetDeviceResources();
-	std::unique_ptr<DirectX::PrimitiveBatch<DirectX::VertexPositionColor>>& GetPrimitiveBatch();
+	UIEffectManager* GetEffectManager() const;
+	UITextureManager* GetTextureManager() const;
+	UIDeviceResources* GetDeviceResources() const;
+	DirectX::CommonStates* GetCommonStates() const;
+	DirectX::DescriptorHeap* GetDescriptorHeap() const;
 
-	// Get BasicEffect for custom rendering
-	DirectX::BasicEffect* Get3DShapeEffect() const { return p_shapeEffect3D.get(); }
-	
-	// Get SkinnedEffect for skeletal animation rendering
-	DirectX::SkinnedEffect* GetSkinnedEffect() const { return p_skinnedEffect3D.get(); }
-
-public:  // Public access for texture loading
-    // Device resources.
-    std::unique_ptr<UIDeviceResources>        								p_deviceResources;
-
-    // DirectXTK objects.
-    std::unique_ptr<DirectX::GraphicsMemory>                                p_graphicsMemory;
-    std::unique_ptr<DirectX::DescriptorHeap>                                p_resourceDescriptors;
-    std::unique_ptr<DirectX::CommonStates>                                  p_states;
-
-    // Descriptors
+    // Descriptor allocation strategy for GPU resource views
     enum Descriptors {
-        WindowsLogo,
-		MSYHFont,
-        Count = 10000,
-		Offset1 = 10,           // UI textures start offset
-		Offset2 = 1000,         // Additional offset
-        ModelTexturesStart = 2000,  // 3D model textures start offset (reserve 2000 slots for UI)
-        ModelTexturesCount = 1000   // Reserve 1000 slots for model textures
+        // System reserved descriptors (0-9)
+        WindowsLogo = 0,
+		MSYHFont = 1,
+        SystemReservedCount = 10,
+        
+        // UI image textures (10-9999)
+        UITexturesStart = 10,
+        UITexturesCount = 9990,
+        
+        // Font character textures (10000-19999)
+        FontTexturesStart = 10000,
+        FontTexturesCount = 10000,
+        
+        // 3D model textures (20000-29999)
+        ModelTexturesStart = 20000,
+        ModelTexturesCount = 10000,
+        
+        // Total descriptor heap size
+        TotalDescriptorCount = 30000
     };
 
 private:
@@ -177,22 +247,18 @@ private:
     void CreateDeviceDependentResourcesXTK();
     void CreateWindowSizeDependentResourcesXTK();
 
+	// Device resources.
+    std::unique_ptr<UIDeviceResources>        								p_deviceResources;
+	std::unique_ptr<UIEffectManager>								        p_effects;
+	std::unique_ptr<UITextureManager>                                       p_textures;
+    std::unique_ptr<DirectX::GraphicsMemory>                                p_graphicsMemory;
+    std::unique_ptr<DirectX::DescriptorHeap>                                p_resourceDescriptors;
+    std::unique_ptr<DirectX::CommonStates>                                  p_states;
+
     std::unique_ptr<DirectX::PrimitiveBatch<DirectX::VertexPositionColor>>  p_batch;
 	std::unique_ptr<DirectX::PrimitiveBatch<DirectX::VertexPositionTexture>>  p_batchTexture;
 	//std::unique_ptr<DirectX::SpriteBatch>                                   p_sprites;
     //std::unique_ptr<DirectX::SpriteFont>                                    p_font;
-
-	std::unique_ptr<DirectX::BasicEffect>                                   p_pointEffect2D;
-	std::unique_ptr<DirectX::BasicEffect>                                   p_lineEffect2D;
-	std::unique_ptr<DirectX::BasicEffect>                                   p_triangleEffect2D;
-	std::unique_ptr<DirectX::BasicEffect>                                   p_triangleTexturedEffect2D;
-
-	std::unique_ptr<DirectX::BasicEffect> 									p_pointEffect3D;
-	std::unique_ptr<DirectX::BasicEffect> 									p_lineEffect3D;
-	std::unique_ptr<DirectX::BasicEffect> 									p_triangleEffect3D;
-	std::unique_ptr<DirectX::BasicEffect>                                   p_triangleTexturedEffect3D;
-	std::unique_ptr<DirectX::BasicEffect>                                   p_shapeEffect3D;
-	std::unique_ptr<DirectX::SkinnedEffect>                                 p_skinnedEffect3D;  // For skeletal animation
 
 /*************************************************** clip rect ***************************************************/
 public:
@@ -204,36 +270,6 @@ public:
 
 private:
 	std::stack<RECT> _clipRectStack;
-
-/*************************************************** Texture ***************************************************/
-public:
-	bool Get2DImageSize(const std::wstring& imagePath, const UIColor& colorKey, RECT& textureRect);
-	bool Get2DImageSize(const std::wstring& dllPath, UINT id, const UIColor& colorKey, RECT& textureRect);
-
-private:
-	bool GetWICTextureIndexFromDLL(const std::wstring& dllPath, UINT id, const UIColor& colorKey, size_t& textureIndex);
-	bool GetWICTextureIndexFromFile(const std::wstring& filePath, const UIColor& colorKey, size_t& textureIndex);
-	bool GetDDSTextureIndexFromFile(const std::wstring& filePath, const UIColor& colorKey, size_t& textureIndex);
-
-	bool ConvertImageTransparencyByWIC(ComPtr<IWICImagingFactory>& wicFactory, ComPtr<IWICBitmapDecoder>& decoder, const UIColor& colorKey, std::vector<uint8_t>& imageData, UINT& width, UINT& height);
-	bool ConvertImageTransparencyByWIC(const void* data, size_t size, const UIColor& colorKey, std::vector<uint8_t>& imageData, UINT& width, UINT& height);
-	bool ConvertImageTransparencyByWIC(const std::wstring& filePath, const UIColor& colorKey, std::vector<uint8_t>& imageData, UINT& width, UINT& height);
-	bool ConvertImageTransparencyByDDS(const std::wstring& filePath, const UIColor& colorKey, std::vector<uint8_t>& imageData, UINT& width, UINT& height);
-
-	RECT Get2DTextureRect(ID3D12Resource* texture);
-	RECT Get2DTextureRect(const ComPtr<ID3D12Resource>& texture);
-
-	bool CreateTextureFromImageData(ID3D12Device* device, DirectX::ResourceUploadBatch& resourceUpload, 
-									ComPtr<ID3D12Resource>& texture, const std::vector<uint8_t>& imageData, UINT width, UINT height);
-
-	struct TextureResource {
-        ComPtr<ID3D12Resource> _texture;
-		D3D12_GPU_DESCRIPTOR_HANDLE _gpuDescriptor;
-		//D3D12_CPU_DESCRIPTOR_HANDLE _cpuDescriptor;
-    };
-
-	std::vector<TextureResource> _textureResources;
-	std::unordered_map<std::wstring, size_t> _textureResourceMap;
 
 /*************************************************** FreeType APIs ***************************************************/
 public:
