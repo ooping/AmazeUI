@@ -84,11 +84,11 @@ void UISetCaretPos(ULONG x, ULONG y, bool IsShowImmd=true, const DirectX::XMMATR
 
 
 // Animation effect helper class
-class UIAnimateFrameHelp : public UIAnimationBase {
+class UIAnimationFrame : public UIAnimationBase {
 public:
-	UIAnimateFrameHelp() = default;
+	UIAnimationFrame() = default;
 
-	void PlayAnimate(int maxFrame = 5);
+	void PlayAnimation(int maxFrame = 5);
 
 protected:
 	bool IsAnimationRun();
@@ -104,14 +104,17 @@ class UIAnimateSecondHelp : public UIAnimationBase {
 public:
 	UIAnimateSecondHelp() = default;
 
-	void PlayAnimate(float duration = 2.0f);
+	void PlayAnimation(float duration = 2.0f);  // duration = -1 means permanent animation (no auto-delete)
+	void StopAnimation();                        // Stop permanent animation
 
 protected:
 	bool IsAnimationRun();
 	bool UpdateAnimation();
 	float GetDeltaTime() const { return _deltaTime; }
+	float GetElapsedTime() const { return _elapsedTime; }
+	bool IsPermanent() const { return _duration < 0.0f; }
 
-	float _duration = 2.0f;           // Animation duration in seconds
+	float _duration = 2.0f;           // Animation duration in seconds (-1 = permanent)
 	float _elapsedTime = 0.0f;        // Elapsed time in seconds  
 	float _deltaTime = 0.0f;          // Time since last update
 	DWORD _lastTickTime = 0;          // Last update timestamp
@@ -121,7 +124,7 @@ protected:
 
 
 // Animation common effects
-class UIAnimateEffectHitDrum : public UIAnimateFrameHelp {
+class UIAnimateEffectHitDrum : public UIAnimationFrame {
 public:
 	UIAnimateEffectHitDrum();
 	~UIAnimateEffectHitDrum() = default;

@@ -144,7 +144,7 @@ void UISetCaretPos(ULONG x, ULONG y, bool IsShowImmd, const DirectX::XMMATRIX& t
 
 
 
-bool UIAnimateFrameHelp::IsAnimationRun() {
+bool UIAnimationFrame::IsAnimationRun() {
 	if (!_isAnimationStarted) {
 		return false;
 	}
@@ -153,11 +153,11 @@ bool UIAnimateFrameHelp::IsAnimationRun() {
 	return _isAnimationStarted;
 }
 
-bool UIAnimateFrameHelp::UpdateAnimation() {
+bool UIAnimationFrame::UpdateAnimation() {
 	return (++_frameIndex) <= _maxFrame;
 }
 
-void UIAnimateFrameHelp::PlayAnimate(int maxFrame) {
+void UIAnimationFrame::PlayAnimation(int maxFrame) {
 	_frameIndex = 0;
 	_maxFrame = maxFrame;
 	_isAnimationStarted = true;
@@ -170,7 +170,7 @@ UIAnimateEffectHitDrum::UIAnimateEffectHitDrum() {
 }
 
 void UIAnimateEffectHitDrum::PlayHitDrumAnimate(int maxFrame) {
-	PlayAnimate(maxFrame);
+	PlayAnimation(maxFrame);
 }
 
 void UIAnimateEffectHitDrum::SetHitPower(float v) {
@@ -193,7 +193,7 @@ void UIAnimateEffectHitDrum::DrawSlicedHitDrumAnimate(UISlicedImage& slicedImage
 }
 
 /*--------------------------------- UIAnimateSecondHelp ---------------------------------*/
-void UIAnimateSecondHelp::PlayAnimate(float duration) {
+void UIAnimateSecondHelp::PlayAnimation(float duration) {
 	_duration = duration;
 	_elapsedTime = 0.0f;
 	_deltaTime = 0.0f;
@@ -202,21 +202,37 @@ void UIAnimateSecondHelp::PlayAnimate(float duration) {
 	UIRegisterAnimate(this);
 }
 
-bool UIAnimateSecondHelp::IsAnimationRun() {
-	return _isAnimationStarted && (_elapsedTime < _duration);
+void UIAnimateSecondHelp::StopAnimation() {
+	_isAnimationStarted = false;
 }
 
-bool UIAnimateSecondHelp::UpdateAnimation() {
+bool UIAnimateSecondHelp::IsAnimationRun() {
 	if (!_isAnimationStarted) {
 		return false;
 	}
+	
+	// Permanent animation (duration < 0) keeps running
+	if (IsPermanent()) {
+		return true;
+	}
+	
+	// Normal animation checks elapsed time
+	_isAnimationStarted = _elapsedTime < _duration;
+	return _isAnimationStarted;
+}
 
+bool UIAnimateSecondHelp::UpdateAnimation() {
 	DWORD currentTime = GetTickCount();
 	_deltaTime = (currentTime - _lastTickTime) / 1000.0f; // Convert to seconds
 	_lastTickTime = currentTime;
 	_elapsedTime += _deltaTime;
 
-	return IsAnimationRun();
+	// Permanent animation (duration < 0) keeps running
+	if (IsPermanent()) {
+		return true;
+	}
+
+	return _elapsedTime < _duration;
 }
 
 
@@ -392,7 +408,7 @@ void UIAnimateParticleFlame::PlayFlameAnimate(const UIPointFloat3& position, UIC
 
 	// Convert to time-based animation (assume 60 FPS)
 	float duration = maxFrame / 60.0f;
-	PlayAnimate(duration);
+	PlayAnimation(duration);
 }
 
 void UIAnimateParticleFlame::SetFlameIntensity(float intensity) {

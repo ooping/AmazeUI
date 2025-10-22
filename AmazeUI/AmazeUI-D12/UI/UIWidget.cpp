@@ -1177,7 +1177,7 @@ void UIComboBox::SetDropDown(bool flag) {
 
 	if (flag) {
 		UIFrame::GetSingletonInstance()->SetHookWindowForPopup(&_dropDownList);
-		_dropDownList.PlayAnimate();
+		_dropDownList.PlayAnimation();
 	}
 }
 
@@ -5116,7 +5116,7 @@ void UITab::SetCurCell(UINT index) {
 		}
 
 		_selectedIndex = index;
-		PlayAnimate(MAX_FRAME1);
+		PlayAnimation(MAX_FRAME1);
 	}
 }
 

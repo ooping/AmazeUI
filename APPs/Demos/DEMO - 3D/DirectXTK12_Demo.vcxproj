@@ -105,11 +105,11 @@
     <ClInclude Include="..\..\..\AmazeUI\AmazeUI-D12\UI\UICamera.h" />
     <ClInclude Include="..\..\..\AmazeUI\AmazeUI-D12\UI\UIDXFoundation.h" />
     <ClInclude Include="..\..\..\AmazeUI\AmazeUI-D12\UI\UIElement.h" />
+    <ClInclude Include="..\..\..\AmazeUI\AmazeUI-D12\UI\UIModel.h" />
     <ClInclude Include="..\..\..\AmazeUI\AmazeUI-D12\UI\UIUtility.h" />
     <ClInclude Include="..\..\..\AmazeUI\AmazeUI-D12\UI\UIWidget.h" />
     <ClInclude Include="..\..\..\AmazeUI\AmazeUI-D12\UI\UIWindow.h" />
     <ClInclude Include="Demo.h" />
-    <ClInclude Include="StaticMesh.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
@@ -119,11 +119,11 @@
     <ClCompile Include="..\..\..\AmazeUI\AmazeUI-D12\UI\UICamera.cpp" />
     <ClCompile Include="..\..\..\AmazeUI\AmazeUI-D12\UI\UIDXFoundation.cpp" />
     <ClCompile Include="..\..\..\AmazeUI\AmazeUI-D12\UI\UIElement.cpp" />
+    <ClCompile Include="..\..\..\AmazeUI\AmazeUI-D12\UI\UIModel.cpp" />
     <ClCompile Include="..\..\..\AmazeUI\AmazeUI-D12\UI\UIUtility.cpp" />
     <ClCompile Include="..\..\..\AmazeUI\AmazeUI-D12\UI\UIWidget.cpp" />
     <ClCompile Include="..\..\..\AmazeUI\AmazeUI-D12\UI\UIWindow.cpp" />
     <ClCompile Include="Demo.cpp" />
-    <ClCompile Include="StaticMesh.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>

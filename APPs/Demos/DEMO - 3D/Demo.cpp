@@ -33,41 +33,17 @@ void UIGame3D::CalcArea() {
 	}
 }
 
-void UIGame3D::LoadModel(const std::wstring& filePath) {
-	// Create dragon mesh
-	_dragonMesh = std::make_unique<StaticMesh>();
-	
-	// Load model (Assimp 5.x supports FBX)
-	_dragonMesh->LoadFromFile(filePath);
-	
-	// Start playing animation if available
-	if (_dragonMesh->GetAnimationCount() > 0) {
-		_dragonMesh->PlayAnimation(0, true);  // Play first animation in loop
-	}
+void UIGame3D::LoadModel() {
+	_phoenixModel.Initialize();
+	//_dragonModel.Initialize();
 }
 
 void UIGame3D::Draw() {
-	// Lazy load model on first draw (ensures DirectX resources are initialized)
-	static bool modelLoaded = false;
-	if (!modelLoaded) {
-		LoadModel(L"Phoenix\\source\\fly.fbx");
-		modelLoaded = true;
-	}
-	
-	// Calculate delta time
-	static DWORD lastTime = GetTickCount();
-	DWORD currentTime = GetTickCount();
-	float deltaTime = (currentTime - lastTime) / 1000.0f;  // Convert to seconds
-	lastTime = currentTime;
-	
-	// Update animation
-	if (_dragonMesh && _dragonMesh->IsPlaying()) {
-		_dragonMesh->UpdateAnimation(deltaTime);
-	}
+	// UIModelAnimation animation updates automatically via UIAnimationManage system
+	// No manual update needed!
 	
 	// Get inherited transform matrix (like UIChart3D)
 	XMMATRIX transformMatrix = GetInheritedTransformMatrix();
-	int renderLevel = GetRenderLayout();
 	
 	LONG& x_ = _abusolutePoint.x;
 	LONG& y_ = _abusolutePoint.y;
@@ -75,30 +51,51 @@ void UIGame3D::Draw() {
 	// Draw border
 	RECT rc = _clientRC;
 	OffsetRect(&rc, x_, y_);
-	UIRect(rc, _z, renderLevel + 1)(UIColor::PrimaryBlue, transformMatrix);
+	//UIRect(rc, _z, GetRenderLayout() + 1)(UIColor::PrimaryBlue, transformMatrix);
 	
-	// Calculate world matrix for dragon
-	XMMATRIX rotationMatrix = XMMatrixRotationRollPitchYaw(
-		XMConvertToRadians(_dragonRotation.x),
-		XMConvertToRadians(_dragonRotation.y),
-		XMConvertToRadians(_dragonRotation.z)
-	);
-	
-	XMMATRIX translationMatrix = XMMatrixTranslation(
-		_dragonPosition.x,
-		_dragonPosition.y,
-		_dragonPosition.z
-	);
-	
-	XMMATRIX scaleMatrix = XMMatrixScaling(_dragonScale, _dragonScale, _dragonScale);
-	
-	// World = Scale * Rotation * Translation
-	XMMATRIX worldMatrix = scaleMatrix * rotationMatrix * translationMatrix;
-	
-	// Render dragon with camera system
-	if (_dragonMesh) {
-		_dragonMesh->Render(&_cameraCtrl, worldMatrix);
+	{	// Calculate world matrix for phoenix
+		XMMATRIX rotationMatrix = XMMatrixRotationRollPitchYaw(
+			XMConvertToRadians(_phoenixModel._rotation.x),
+			XMConvertToRadians(_phoenixModel._rotation.y),
+			XMConvertToRadians(_phoenixModel._rotation.z)
+		);
+		
+		XMMATRIX translationMatrix = XMMatrixTranslation(
+			_phoenixModel._position.x,
+			_phoenixModel._position.y,
+			_phoenixModel._position.z
+		);
+		
+		XMMATRIX scaleMatrix = XMMatrixScaling(_phoenixModel._scale, _phoenixModel._scale, _phoenixModel._scale);
+		
+		// World = Scale * Rotation * Translation
+		XMMATRIX worldMatrix = scaleMatrix * rotationMatrix * translationMatrix;
+		
+		// Render phoenix with camera system
+		_phoenixModel.Render(&_cameraCtrl, worldMatrix);
 	}
+
+	// {	// Calculate world matrix for dragon
+	// 	XMMATRIX rotationMatrix = XMMatrixRotationRollPitchYaw(
+	// 		XMConvertToRadians(_dragonModel._rotation.x),
+	// 		XMConvertToRadians(_dragonModel._rotation.y),
+	// 		XMConvertToRadians(_dragonModel._rotation.z)
+	// 	);
+		
+	// 	XMMATRIX translationMatrix = XMMatrixTranslation(
+	// 		_dragonModel._position.x,
+	// 		_dragonModel._position.y,
+	// 		_dragonModel._position.z
+	// 	);
+		
+	// 	XMMATRIX scaleMatrix = XMMatrixScaling(_dragonModel._scale, _dragonModel._scale, _dragonModel._scale);
+		
+	// 	// World = Scale * Rotation * Translation
+	// 	XMMATRIX worldMatrix = scaleMatrix * rotationMatrix * translationMatrix;
+		
+	// 	// Render dragon with camera system
+	// 	_dragonModel.Render(&_cameraCtrl, worldMatrix);
+	// }
 }
 
 bool UIGame3D::OnRButtonDown(POINT pt) {
@@ -159,6 +156,7 @@ void UIWinTop::OnCreate() {
 
     _game3D.CreateWindowBase(&gWinTop, clientRC, UILayoutCalc::SIZE_X | UILayoutCalc::SIZE_Y);
 	// Model will be loaded on first draw to ensure DirectX resources are ready
+	_game3D.LoadModel();
 }
 
 void UIWinTop::OnDestroy() {

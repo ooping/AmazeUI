@@ -41,6 +41,7 @@ namespace DX
             L"Media\\Textures",
             L"Media\\Fonts",
             L"Media\\Meshes",
+            L"Media\\Models",
             //L"Media\\PBR",
             //L"Media\\CubeMaps",
             //L"Media\\HDR",

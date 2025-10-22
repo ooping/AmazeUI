@@ -1,8 +1,34 @@
 #pragma once
 
 #include "pch.h"
-#include "StaticMesh.h"
 #include <memory>
+
+
+class PhoenixModel : public UIModelAnimation {
+public:
+	void Initialize() {
+		LoadFromFile(L"Phoenix\\source\\fly.fbx");
+		PlayAnimation(0, true, 10.0f);
+	}
+
+	// transform
+	DirectX::XMFLOAT3 _position = { 0.0f, 0.0f, 0.0f };
+	DirectX::XMFLOAT3 _rotation = { 180.0f, 0.0f, 0.0f };  // Flip upside down (X-axis 180 degrees)
+	float _scale = 0.004f;
+};
+
+class DragonModel : public UIModelAnimation {
+public:
+	void Initialize() {
+		LoadFromFile(L"Dragon\\source\\Dwarf Idle.fbx");
+		PlayAnimation(0, true, 5.0f);
+	}
+
+	// transform
+	DirectX::XMFLOAT3 _position = { 0.0f, 0.0f, 0.0f };
+	DirectX::XMFLOAT3 _rotation = { 180.0f, 0.0f, 0.0f };  // Flip upside down (X-axis 180 degrees)
+	float _scale = 0.2f;
+};
 
 
 class UIGame3D : public UIControlBase<UIGame3D> {
@@ -22,17 +48,13 @@ public:
 	void OnMouseLeave(POINT pt);
 	
 	// Game-specific methods
-	void LoadModel(const std::wstring& filePath);
+	void LoadModel();
 
 private:
-	// Dragon mesh
-	std::unique_ptr<StaticMesh> _dragonMesh;
-	
-	// Dragon transform
-	DirectX::XMFLOAT3 _dragonPosition = { 0.0f, 0.0f, 0.0f };
-	DirectX::XMFLOAT3 _dragonRotation = { 180.0f, 0.0f, 0.0f };  // Flip upside down (X-axis 180 degrees)
-	float _dragonScale = 0.004f;
-	
+	// 3D models
+	PhoenixModel _phoenixModel;
+	DragonModel _dragonModel;
+
 	// Independent camera system (like UIChart3D)
 	UICameraCtrl _cameraCtrl;
 	

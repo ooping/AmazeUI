@@ -27,6 +27,7 @@
 #include "..\..\..\AmazeUI\AmazeUI-D12\UI\UIWindow.h"
 #include "..\..\..\AmazeUI\AmazeUI-D12\UI\UIElement.h"
 #include "..\..\..\AmazeUI\AmazeUI-D12\UI\UIWidget.h"
+#include "..\..\..\AmazeUI\AmazeUI-D12\UI\UIModel.h"
 
 
 #include "..\..\..\AmazeUI\AmazeUI-D12\ThirdParty\json.hpp"

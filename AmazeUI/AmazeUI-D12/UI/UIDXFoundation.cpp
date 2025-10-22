@@ -26,7 +26,7 @@ namespace {
     }
     
     // Input layout for skeletal animation vertices
-    // This matches the Vertex structure in StaticMesh with bone weights
+    // This matches the Vertex structure in UIModel with bone weights
     const D3D12_INPUT_ELEMENT_DESC SkinnedVertexInputElements[] = {
         { "SV_Position",  0, DXGI_FORMAT_R32G32B32_FLOAT,    0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
         { "NORMAL",       0, DXGI_FORMAT_R32G32B32_FLOAT,    0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
@@ -691,8 +691,9 @@ void UIDeviceResources::UpdateColorSpace() {
 
 
 void UIEffectManager::Create() {
-    auto device = UIDXFoundation::GetSingletonInstance()->GetD3DDevice();
-    auto p_deviceResources = UIDXFoundation::GetSingletonInstance()->p_deviceResources.get();
+    auto foundation = UIDXFoundation::GetSingletonInstance();
+    auto device = foundation->GetD3DDevice();
+    auto p_deviceResources = foundation->p_deviceResources.get();
 
     RenderTargetState rtState(p_deviceResources->GetBackBufferFormat(), p_deviceResources->GetDepthBufferFormat());
 
@@ -1223,8 +1224,11 @@ bool UITextureManager::GetWICTextureIndexFromFile(const wstring& filePath, const
 
     auto it = _textureResourceMap.find(resourceKey);
     if (it == _textureResourceMap.end()) {
-        auto device = UIDXFoundation::GetSingletonInstance()->p_deviceResources->GetD3DDevice();
-        auto p_deviceResources = UIDXFoundation::GetSingletonInstance()->p_deviceResources.get();
+        auto foundation = UIDXFoundation::GetSingletonInstance();
+        auto device = foundation->p_deviceResources->GetD3DDevice();
+        auto p_deviceResources = foundation->p_deviceResources.get();
+        
+        // Load texture with ResourceUploadBatch
         ResourceUploadBatch resourceUpload(device);
         resourceUpload.Begin();
         
@@ -1255,14 +1259,14 @@ bool UITextureManager::GetWICTextureIndexFromFile(const wstring& filePath, const
         }
 
         // get next available descriptor index
-        size_t descriptorIndex = _textureResourceMap.size()+UIDXFoundation::Descriptors::UITexturesStart;
+        size_t descriptorIndex = _textureResourceMap.size() + UIDXFoundation::Descriptors::UITexturesStart;
         
         // create shader resource view
-        CreateShaderResourceView(device, resource._texture.Get(), UIDXFoundation::GetSingletonInstance()->p_resourceDescriptors->GetCpuHandle(descriptorIndex));
+        CreateShaderResourceView(device, resource._texture.Get(), foundation->p_resourceDescriptors->GetCpuHandle(descriptorIndex));
         
         // save GPU descriptor handle
-        resource._gpuDescriptor = UIDXFoundation::GetSingletonInstance()->p_resourceDescriptors->GetGpuHandle(descriptorIndex);
-        
+        resource._gpuDescriptor = foundation->p_resourceDescriptors->GetGpuHandle(descriptorIndex);
+
         // wait for resource upload finished
         auto uploadResourcesFinished = resourceUpload.End(p_deviceResources->GetCommandQueue());
         uploadResourcesFinished.wait();
@@ -1301,8 +1305,10 @@ bool UITextureManager::GetWICTextureIndexFromDLL(const wstring& dllPath, UINT id
         HGLOBAL hGlobal = LoadResource(hDLL, hRes);
         const void* data = LockResource(hGlobal);
         DWORD size = SizeofResource(hDLL, hRes);
-        auto device = UIDXFoundation::GetSingletonInstance()->p_deviceResources->GetD3DDevice();
-        auto p_deviceResources = UIDXFoundation::GetSingletonInstance()->p_deviceResources.get();
+
+        auto foundation = UIDXFoundation::GetSingletonInstance();
+        auto device = foundation->p_deviceResources->GetD3DDevice();
+        auto p_deviceResources = foundation->p_deviceResources.get();
         ResourceUploadBatch resourceUpload(device);
         resourceUpload.Begin();
 
@@ -1336,10 +1342,10 @@ bool UITextureManager::GetWICTextureIndexFromDLL(const wstring& dllPath, UINT id
         size_t descriptorIndex = _textureResourceMap.size() + UIDXFoundation::Descriptors::UITexturesStart;
             
         // create shader resource view
-        CreateShaderResourceView(device, resource._texture.Get(), UIDXFoundation::GetSingletonInstance()->p_resourceDescriptors->GetCpuHandle(descriptorIndex));
+        CreateShaderResourceView(device, resource._texture.Get(), foundation->p_resourceDescriptors->GetCpuHandle(descriptorIndex));
 
         // save GPU descriptor handle
-        resource._gpuDescriptor = UIDXFoundation::GetSingletonInstance()->p_resourceDescriptors->GetGpuHandle(descriptorIndex);
+        resource._gpuDescriptor = foundation->p_resourceDescriptors->GetGpuHandle(descriptorIndex);
 
         // wait for resource upload finished
         auto uploadResourcesFinished = resourceUpload.End(p_deviceResources->GetCommandQueue());
@@ -1364,8 +1370,9 @@ bool UITextureManager::GetDDSTextureIndexFromFile(const wstring& filePath, const
 
     auto it = _textureResourceMap.find(resourceKey);
     if (it == _textureResourceMap.end()) {
-        auto device = UIDXFoundation::GetSingletonInstance()->p_deviceResources->GetD3DDevice();
-        auto p_deviceResources = UIDXFoundation::GetSingletonInstance()->p_deviceResources.get();
+        auto foundation = UIDXFoundation::GetSingletonInstance();
+        auto device = foundation->p_deviceResources->GetD3DDevice();
+        auto p_deviceResources = foundation->p_deviceResources.get();
         ResourceUploadBatch resourceUpload(device);
         resourceUpload.Begin();
         
@@ -1399,10 +1406,10 @@ bool UITextureManager::GetDDSTextureIndexFromFile(const wstring& filePath, const
         size_t descriptorIndex = _textureResourceMap.size() + UIDXFoundation::Descriptors::UITexturesStart;
 
         // create shader resource view
-        CreateShaderResourceView(device, resource._texture.Get(), UIDXFoundation::GetSingletonInstance()->p_resourceDescriptors->GetCpuHandle(descriptorIndex));
+        CreateShaderResourceView(device, resource._texture.Get(), foundation->p_resourceDescriptors->GetCpuHandle(descriptorIndex));
         
         // save GPU descriptor handle
-        resource._gpuDescriptor = UIDXFoundation::GetSingletonInstance()->p_resourceDescriptors->GetGpuHandle(descriptorIndex);
+        resource._gpuDescriptor = foundation->p_resourceDescriptors->GetGpuHandle(descriptorIndex);
         
         // wait for resource upload finished
         auto uploadResourcesFinished = resourceUpload.End(p_deviceResources->GetCommandQueue());
