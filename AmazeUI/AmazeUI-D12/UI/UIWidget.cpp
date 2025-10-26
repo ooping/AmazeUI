@@ -5216,7 +5216,7 @@ void UICanvas::Draw() {
 	if (_alpha != 0 && _color != UIColor::Invalid) {
 		RECT rc = _clientRC;
 		OffsetRect(&rc, _abusolutePoint.x, _abusolutePoint.y);
-		UIRect(rc, _z, renderLevel + 2)(_color, _alpha, transformMatrix);
+		UIRect(rc, _z, renderLevel)(_color, _alpha, transformMatrix);
 	}
 
 	if (p_UIContainer != NULL) {
@@ -5299,7 +5299,7 @@ void UICanvas3D::Draw() {
 	XMMATRIX transformMatrix = GetInheritedTransformMatrix();
 
 	// Background offset = 1
-	UIRect(rc, _z + gDeltaZ, renderLevel)(UIColor::Gray95, 255, transformMatrix);
+	UIRect(rc, _z + gDeltaZ, renderLevel + 2)(UIColor::Gray95, 255, transformMatrix);
 	//UIFont(_z - gDeltaZ * 10, 40).operator()(L"UICanvas3D", rc, UIColor::Black, UIFontPos::MiddleCenter, transformMatrix);
 
 	if (p_UIContainer != NULL) {

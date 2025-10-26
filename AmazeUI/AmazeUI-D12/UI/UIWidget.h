@@ -95,8 +95,7 @@ public:
 	}
 
 	bool CreateControl(UINT id, UIWindowBase* pParent, const RECT& relativeRect = UIShape2D::NULL_RECT, int layoutFlag = UILayoutCalc::NO_ZOOM, bool isShow = true, bool isOnHeap = false) {
-		_id = id;
-		return CreateWindowBase(pParent, relativeRect, layoutFlag, isShow, isOnHeap);
+		return CreateControl(id, pParent->GetUIContainer(), relativeRect, layoutFlag, isShow, isOnHeap);
 	}
 
 	bool CreateControlOnHeap(UINT id, UIContainer* pUIContainer, const RECT& relativeRect = UIShape2D::NULL_RECT, int layoutFlag = UILayoutCalc::NO_ZOOM, bool isShow = true) {
@@ -105,8 +104,7 @@ public:
 	}
 
 	bool CreateControlOnHeap(UINT id, UIWindowBase* pParent, const RECT& relativeRect = UIShape2D::NULL_RECT, int layoutFlag = UILayoutCalc::NO_ZOOM, bool isShow = true) {
-		_id = id;
-		return CreateWindowBase(pParent, relativeRect, layoutFlag, isShow, true);
+		return CreateControlOnHeap(id, pParent->GetUIContainer(), relativeRect, layoutFlag, isShow);
 	}
 
 	UINT _id;
@@ -1000,8 +998,10 @@ private:
 };
 
 /*------------------------------------------------------- UICanvas -------------------------------------------------------*/
-// canvas drawing board   message will be transmitted directly
-class UICanvas : public UIWindowBase, public UIContainerHelp<UICanvas> {
+// Canvas drawing board - message will be transmitted directly
+class UICanvas : public UIControlBase<UICanvas>, public UIContainerHelp<UICanvas> {
+	friend UIControlBase;
+
 public:
 	UICanvas();
 
@@ -1009,12 +1009,14 @@ public:
 	void SetColor(UIColor color);
 	void SetAlpha(UCHAR alpha);
 
-protected:
+private:
 	UIColor _color;				// canvas color
 	UCHAR _alpha;
 };
 
-class UIColorPanel : public UIWindowBase {
+class UIColorPanel : public UIControlBase<UIColorPanel> {
+	friend UIControlBase;
+
 public:
 	void Draw();
 };
@@ -1156,4 +1158,130 @@ private:
 
 	DirectX::XMMATRIX _inheritedTransformMatrix;
 };
+
+
+/*------------------------------------------------------- UIWidgetManage -------------------------------------------------------*/
+// UI Widget Factory Manager - provides factory methods to create widgets with automatic ID binding and storage
+class UIWidgetManage : public SingletonPattern<UIWidgetManage> {
+	friend class SingletonPattern<UIWidgetManage>;
+
+public:
+	// ========== Factory Creation Methods ==========
+	// Create any type of UI widget with automatic ID binding (for UIContainer parent)
+	template<typename T>
+	static T* CreateWidget(
+		int id,
+		UIContainer* pContainer,
+		const RECT& rect = UIShape2D::NULL_RECT,
+		int layoutFlag = UILayoutCalc::NO_ZOOM,
+		bool isShow = true
+	) {
+		T* pWidget = new T();
+		pWidget->CreateControlOnHeap(id, pContainer, rect, layoutFlag, isShow);
+		
+		// Auto-register to widget map if ID != 0
+		if (id != 0) {
+			GetSingletonInstance()->Register(id, pWidget);
+		}
+		
+		return pWidget;
+	}
+	
+	// Create any type of UI widget with automatic ID binding (for UIWindowBase parent)
+	template<typename T>
+	static T* CreateWidget(
+		int id,
+		UIWindowBase* pParent,
+		const RECT& rect = UIShape2D::NULL_RECT,
+		int layoutFlag = UILayoutCalc::NO_ZOOM,
+		bool isShow = true
+	) {
+		return CreateWidget<T>(id, pParent->GetUIContainer(), rect, layoutFlag, isShow);
+	}
+
+	// ========== Widget Management Methods ==========
+	// Register a widget with an ID
+	template<typename T>
+	void Register(int id, T* pWidget) {
+		std::lock_guard<std::mutex> lock(_mutex);
+		_widgets[id] = (void*)pWidget;
+	}
+	
+	// Get a widget by ID
+	template<typename T>
+	T* Get(int id) const {
+		std::lock_guard<std::mutex> lock(_mutex);
+		auto it = _widgets.find(id);
+		if (it != _widgets.end()) {
+			return static_cast<T*>(it->second);
+		}
+		return nullptr;
+	}
+	
+	// Unregister a widget
+	void Unregister(int id) {
+		std::lock_guard<std::mutex> lock(_mutex);
+		_widgets.erase(id);
+	}
+	
+	// Clear all registered widgets
+	void Clear() {
+		std::lock_guard<std::mutex> lock(_mutex);
+		_widgets.clear();
+	}
+	
+	// Check if an ID is registered
+	bool Has(int id) const {
+		std::lock_guard<std::mutex> lock(_mutex);
+		return _widgets.find(id) != _widgets.end();
+	}
+
+private:
+	UIWidgetManage() = default;
+	~UIWidgetManage() = default;
+	
+	mutable std::mutex _mutex;
+	std::unordered_map<int, void*> _widgets;  // ID -> Widget pointer mapping
+};
+
+
+
+// Global convenience function for creating widgets
+template<typename T>
+inline T* UICreateWidget(
+	int id,
+	UIContainer* pContainer,
+	const RECT& rect = UIShape2D::NULL_RECT,
+	int layoutFlag = UILayoutCalc::NO_ZOOM,
+	bool isShow = true
+) {
+	return UIWidgetManage::CreateWidget<T>(id, pContainer, rect, layoutFlag, isShow);
+}
+
+// Global convenience function for creating widgets (UIWindowBase parent overload)
+template<typename T>
+inline T* UICreateWidget(
+	int id,
+	UIWindowBase* pParent,
+	const RECT& rect = UIShape2D::NULL_RECT,
+	int layoutFlag = UILayoutCalc::NO_ZOOM,
+	bool isShow = true
+) {
+	return UIWidgetManage::CreateWidget<T>(id, pParent, rect, layoutFlag, isShow);
+}
+
+// Global convenience function for getting widgets by ID
+template<typename T>
+inline T* UIGetWidgetByID(int id) {
+	return UIWidgetManage::GetSingletonInstance()->Get<T>(id);
+}
+
+
+
+
+
+
+
+
+
 

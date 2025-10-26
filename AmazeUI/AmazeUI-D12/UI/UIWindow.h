@@ -2,6 +2,7 @@
 #pragma once
 
 #include "UIUtility.h"
+#include <unordered_map>
 
 /*-------------------------------------------------------UIWindowBase-------------------------------------------------------*/
 /*
@@ -247,6 +248,37 @@ bool UIMessageFilter1(UINT message);		// Enter UI message loop filter
 bool UIMessageFilter2(UINT message);		// Reverse message transmission filter
 
 
+/*************************************************** UIUpdateQueue ***************************************************/
+// UI update function type - lambda/closure for thread-safe UI updates
+using UIUpdateFunc = std::function<void()>;
+
+// UI Update Queue - allows background threads to safely update UI by posting closures
+class UIUpdateQueue : public SingletonPattern<UIUpdateQueue> {
+	friend class SingletonPattern<UIUpdateQueue>;
+
+public:
+	// Post a UI update function to the queue (thread-safe)
+	void Post(UIUpdateFunc func);
+	
+	// Process all pending UI updates (called in message loop thread)
+	// Returns true if any updates were processed
+	bool ProcessAll();
+
+private:
+	UIUpdateQueue() = default;
+	~UIUpdateQueue() = default;
+
+	std::deque<UIUpdateFunc> _updateQueue;		// UI update function queue
+	mutable std::mutex _queueMutex;				// Thread synchronization
+};
+
+// Global convenience function for posting UI updates
+inline void UIPostUpdate(UIUpdateFunc func) {
+	UIUpdateQueue::GetSingletonInstance()->Post(func);
+}
+
+
+/*************************************************** UIFrame ***************************************************/
 // UIFrame manage the top level UI container and hook window
 class UIFrame : public SingletonPattern<UIFrame> {
 	friend class SingletonPattern<UIFrame>;

@@ -738,15 +738,20 @@ bool UIMessageLoop::PopMessage(UIMessage& msg) {
 }
 
 void UIMessageLoop::RunMessageLoopThread() {
-    TimerHelper timer(16);
+    TimerHelper timer(33);
 
     bool shouldExit = false;
     while (!shouldExit) {
         timer.BeginWait();
 
-        bool needsRepaint = false;  // repaint flag
+		bool needsRepaint = false;  // repaint flag
 
-		// process all messages in the message queue until the queue is empty or the time limit is reached
+		// Step 1: Process all UI update closures first
+		if (UIUpdateQueue::GetSingletonInstance()->ProcessAll()) {
+			needsRepaint = true;
+		}		
+		
+		// Step 2: Process all messages in the message queue until the queue is empty or the time limit is reached
         UIMessage msg;
 		while (PopMessage(msg)) {
 			if (msg.p_win == nullptr && msg._msg == WM_DESTROY) {
@@ -766,7 +771,7 @@ void UIMessageLoop::RunMessageLoopThread() {
             }
 		}
 
-		//animation switch
+		// Step 3: Process animation switch
         bool isUpdateAnimation = UIAnimationManage::GetSingletonInstance()->UpdateAnimations();
 
 		// if the repaint flag is true, then refresh
@@ -802,6 +807,29 @@ bool UIMessageLoop::HandleMessage(UIWindowBase* winPoint, UINT message, WPARAM w
 	}
 
 	return rt;
+}
+
+void UIUpdateQueue::Post(UIUpdateFunc func) {
+	std::lock_guard<std::mutex> lock(_queueMutex);
+	_updateQueue.push_back(func);
+}
+
+bool UIUpdateQueue::ProcessAll() {
+	std::lock_guard<std::mutex> lock(_queueMutex);
+	
+	if (_updateQueue.empty()) {
+		return false;
+	}
+	
+	while (!_updateQueue.empty()) {
+		auto func = _updateQueue.front();
+		_updateQueue.pop_front();
+		
+		// Execute the UI update function in the message loop thread
+		func();
+	}
+	
+	return true;
 }
 
 
@@ -882,3 +910,4 @@ bool UIFrame::HandleMessageFromHookWindow(UINT message, WPARAM wParam, LPARAM lP
 
 	return false;
 }
+
