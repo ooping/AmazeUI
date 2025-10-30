@@ -15,9 +15,6 @@ using namespace std;
 using namespace UIShape2D;
 
 
-UIWinTop gWinTop;
-
-
 void UI2DDemo::Draw()
 {
      UIPoint(5, 5, 0.3)(UIColor::Red);
@@ -58,8 +55,8 @@ void UI2DDemo::Draw()
     DX::FindMediaFile(strFilePath, MAX_PATH, L"cat.png");
     UIImage(strFilePath, UIColor::Invalid, 0.5)(NULL_RECT, RECT{ 100, 100, 0, 0 }, 255);
  
-    //UIFont(0.3, 24)(L"DirectXTK Simple UIDXFoundation", POINT{100, 10}, UIColor::Black);
-    //UIFont(0.1, 18)(L"VAI12345678901234567890", RECT{700, 10, 800, 200}, UIColor::Red);
+    UIFont(0.3, 24)(L"DirectXTK Simple UIDXFoundation", POINT{100, 10}, UIColor::Black);
+    UIFont(0.1, 18)(L"VAI12345678901234567890", RECT{700, 10, 800, 200}, UIColor::Red);
 
     {
         UIScreenClipRectGuard clipRect(RECT{ 350, 10, 450, 200 });
@@ -76,7 +73,7 @@ void UI2DDemo::Draw()
         UIRect(RECT{ 1000, 300, 1400, 400 }, 0.1)(UIColor::Yellow, 100);
         pDXF->Draw3DRectSolid({ 1000, 300 }, { 1400, 400 }, 0.1f, UIColor::Pink, 255);
 
-        pDXF->Draw3DTextFT(L"Hello AmazeUI", { 1000, 300, 1400, 400 }, 0x01 | 0x04, 0.1f, UIColor::Black, 24);
+        //pDXF->Draw3DTextFT(L"Hello AmazeUI", { 1000, 300, 1400, 400 }, 0x01 | 0x04, 0.1f, UIColor::Black, 24);
     }
 
 }
@@ -86,13 +83,10 @@ void UIWinTop::OnCreate()
 	const RECT clientRC = GetClientRect();
 	string str;
 
-    _2D.CreateWindowBase(&gWinTop, clientRC, UILayoutCalc::SIZE_X | UILayoutCalc::SIZE_Y);
+    _2D.CreateWindowBase(this, clientRC, UILayoutCalc::SIZE_X | UILayoutCalc::SIZE_Y);
 }
 
 void UIWinTop::OnDestroy() {
-}
-
-void UIWinTop::OnNotify(int id, LPARAM param) {
 }
 
 
@@ -129,7 +123,7 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
         RECT rc;
         ::GetClientRect(UIFrame::GetSingletonInstance()->GetWindowHandle(), &rc);
 
-        gWinTop.CreateWindowBase(UIFrame::GetSingletonInstance()->GetTopUIContainer(), rc, UILayoutCalc::SIZE_X | UILayoutCalc::SIZE_Y);
+        UIWinTop::GetSingletonInstance()->CreateWindowBase(UIFrame::GetSingletonInstance()->GetTopUIContainer(), rc, UILayoutCalc::SIZE_X | UILayoutCalc::SIZE_Y);
     }, 0);
 
     // initialize UI

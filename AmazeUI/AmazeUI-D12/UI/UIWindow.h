@@ -33,10 +33,8 @@ public:
 	virtual ~UIWindowBase();
 
 	// create window
-	bool CreateWindowBase(UIContainer* pUIContainer, const RECT& relativeRect=UIShape2D::NULL_RECT, int layoutFlag=UILayoutCalc::NO_ZOOM, bool isShow=true, bool isOnHeap=false);
-	bool CreateWindowBase(UIWindowBase* pParent, const RECT& relativeRect=UIShape2D::NULL_RECT, int layoutFlag=UILayoutCalc::NO_ZOOM, bool isShow=true, bool isOnHeap=false);
-	bool CreateWindowBaseOnHeap(UIContainer* pUIContainer, const RECT& relativeRect=UIShape2D::NULL_RECT, int layoutFlag=UILayoutCalc::NO_ZOOM, bool isShow=true);
-	bool CreateWindowBaseOnHeap(UIWindowBase* pParent, const RECT& relativeRect=UIShape2D::NULL_RECT, int layoutFlag=UILayoutCalc::NO_ZOOM, bool isShow=true);
+	bool CreateWindowBase(UIContainer* pUIContainer, const RECT& relativeRect = UIShape2D::NULL_RECT, int layoutFlag = UILayoutCalc::NO_ZOOM, bool isShow = true);
+	bool CreateWindowBase(UIWindowBase* pParent, const RECT& relativeRect = UIShape2D::NULL_RECT, int layoutFlag = UILayoutCalc::NO_ZOOM, bool isShow = true);
 	// destroy window
 	bool DestroyWindowBase();
 
@@ -124,10 +122,9 @@ class UIContainer {
 	struct UIElement {
 		UIWindowBase* p_win;					// pointer to sub-window
 		UILayoutCalc _layoutInfo;				// layout mode
-		bool _isOnHeap;							// whether the window memory is on the heap
 
-		UIElement(UIWindowBase* p, bool isOnHeap) { p_win=p; _isOnHeap=isOnHeap; }
-		bool operator==(UIWindowBase* p) { return p_win==p; }
+		UIElement(UIWindowBase* p) { p_win = p; }
+		bool operator==(UIWindowBase* p) { return p_win == p; }
 	};
 	typedef std::vector<UIElement> UIElementListType;
 
@@ -140,7 +137,7 @@ public:
 	void BindWindow();
 
 	// add sub-window   delete sub-window   data protection not performed in operation
-	void AddChild(UIWindowBase* pWin, bool isOnHeap);
+	void AddChild(UIWindowBase* pWin);
 	void DelChild(UIWindowBase* pWin);
 
 	// message pre-processing includes all messages except WM_PAINT

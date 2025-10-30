@@ -76,36 +76,36 @@ void UILayoutCalc::InitLayout(const RECT& parentRect, const RECT& rect) {
 RECT UILayoutCalc::CalcLayout(LONG cx, LONG cy) {
 	RECT newRect = _rect;
 
-	if (_zoomModeflag==0) {
+	if (_zoomModeflag == 0) {
 		return newRect;
 	}
 
-	if (_zoomModeflag&1) {
-		newRect.left = cx-(_parentRect.right-_rect.left);
-		newRect.right = newRect.left+GetRectWidth()(_rect);
-	}
-	
-	if (_zoomModeflag&2) {
-		newRect.top = cy-(_parentRect.bottom-_rect.top);
-		newRect.bottom = newRect.top+GetRectHeight()(_rect);
+	if (_zoomModeflag & 1) {
+		newRect.left = cx - (_parentRect.right - _rect.left);
+		newRect.right = newRect.left + GetRectWidth()(_rect);
 	}
 
-	if (_zoomModeflag&4) {
-		newRect.right = cx-(_parentRect.right-_rect.right);
+	if (_zoomModeflag & 2) {
+		newRect.top = cy - (_parentRect.bottom - _rect.top);
+		newRect.bottom = newRect.top + GetRectHeight()(_rect);
 	}
 
-	if (_zoomModeflag&8) {
-		newRect.bottom = cy-(_parentRect.bottom-_rect.bottom);
+	if (_zoomModeflag & 4) {
+		newRect.right = cx - (_parentRect.right - _rect.right);
 	}
 
-	if (_zoomModeflag&16) {
-		newRect.left = (LONG)(((float)_rect.left/GetRectWidth()(_parentRect))*cx);
-		newRect.right = newRect.left + (LONG)(((float)GetRectWidth()(_rect)/GetRectWidth()(_parentRect))*cx);
+	if (_zoomModeflag & 8) {
+		newRect.bottom = cy - (_parentRect.bottom - _rect.bottom);
 	}
 
-	if (_zoomModeflag&32) {
-		newRect.top = (LONG)(((float)_rect.top/GetRectHeight()(_parentRect))*cy);
-		newRect.bottom = newRect.top + (LONG)(((float)GetRectHeight()(_rect)/GetRectHeight()(_parentRect))*cy);
+	if (_zoomModeflag & 16) {
+		newRect.left = (LONG)(((float)_rect.left / GetRectWidth()(_parentRect)) * cx);
+		newRect.right = newRect.left + (LONG)(((float)GetRectWidth()(_rect) / GetRectWidth()(_parentRect)) * cx);
+	}
+
+	if (_zoomModeflag & 32) {
+		newRect.top = (LONG)(((float)_rect.top / GetRectHeight()(_parentRect)) * cy);
+		newRect.bottom = newRect.top + (LONG)(((float)GetRectHeight()(_rect) / GetRectHeight()(_parentRect)) * cy);
 	}
 
 	// Prevent negative values caused by minimization

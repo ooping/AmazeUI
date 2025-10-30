@@ -33,7 +33,7 @@ UIWindowBase::UIWindowBase() {
 UIWindowBase::~UIWindowBase() {
 }
 
-bool UIWindowBase::CreateWindowBase(UIContainer* pUIContainer, const RECT& relativeRect, int layoutFlag, bool isShow, bool isOnHeap) {
+bool UIWindowBase::CreateWindowBase(UIContainer* pUIContainer, const RECT& relativeRect, int layoutFlag, bool isShow) {
 	// check if the parent container exists
 	if (pUIContainer == nullptr) {
 		return false;
@@ -63,19 +63,11 @@ bool UIWindowBase::CreateWindowBase(UIContainer* pUIContainer, const RECT& relat
 	_layoutLevel = p_parentUIContainer->GetBindWindowLayoutLevel() + 1;
 	_z = (!_isPopup ? 1.0f : gPopupZ) - (_layoutLevel - 1) * gLevelZ;
 
-	return HandleMessage(WM_CREATE, isOnHeap?1:0, 0);
+	return HandleMessage(WM_CREATE, 0, 0);
 }
 
-bool UIWindowBase::CreateWindowBase(UIWindowBase* pParent, const RECT& relativeRect, int layoutFlag, bool isShow, bool isOnHeap) {
-	return CreateWindowBase(pParent->GetUIContainer(), relativeRect, layoutFlag, isShow, isOnHeap);
-}
-
-bool UIWindowBase::CreateWindowBaseOnHeap(UIContainer* pUIContainer, const RECT& relativeRect, int layoutFlag, bool isShow) {
-	return CreateWindowBase(pUIContainer, relativeRect, layoutFlag, isShow, true);
-}
-
-bool UIWindowBase::CreateWindowBaseOnHeap(UIWindowBase* pParent, const RECT& relativeRect, int layoutFlag, bool isShow) {
-	return CreateWindowBase(pParent, relativeRect, layoutFlag, isShow, true);
+bool UIWindowBase::CreateWindowBase(UIWindowBase* pParent, const RECT& relativeRect, int layoutFlag, bool isShow) {
+	return CreateWindowBase(pParent->GetUIContainer(), relativeRect, layoutFlag, isShow);
 }
 
 bool UIWindowBase::DestroyWindowBase() {
@@ -93,21 +85,19 @@ bool UIWindowBase::DefHandleMessage(UINT message, WPARAM wParam, LPARAM lParam) 
 		return true;
 	}
 
-	if (message==WM_CREATE) {	
-		// add the newly created window to the parent container
-		p_parentUIContainer->AddChild(this, wParam==1?true:false);
-		//p_parentUIContainer->SetFocusOnChild(this);
-	}
-	else if (message==WM_DESTROY) {
-		// delete the window from the parent container
-		p_parentUIContainer->DelChild(this);
-	}
-
 	// message pre-processing
 	bool rt = false;
 	if (p_UIContainer != nullptr) {	
 		// sub-window processing the corresponding message
 		rt = p_UIContainer->HandleMessagePre(message, wParam, lParam);
+	}
+
+	if (message == WM_CREATE) {	
+		// add the newly created window to the parent container
+		p_parentUIContainer->AddChild(this);
+	} else if (message == WM_DESTROY) {
+		// delete the window from the parent container
+		p_parentUIContainer->DelChild(this);
 	}
 
 	return rt;
@@ -232,11 +222,6 @@ UIContainer::UIContainer() {
 }
 
 UIContainer::~UIContainer() {
-	for_each(_winList.begin(), _winList.end(), [](UIElement& elem) {
-		if (elem._isOnHeap && elem.p_win != nullptr) {
-			delete elem.p_win;
-		}
-	});
 }
 
 void UIContainer::BindWindow(UIWindowBase *pBindWindow) {
@@ -248,9 +233,9 @@ void UIContainer::BindWindow() {
 	_isBindDUI = false;
 }
 
-void UIContainer::AddChild(UIWindowBase* pWin, bool isOnHeap) {
+void UIContainer::AddChild(UIWindowBase* pWin) {
 	// add to sub-window list
-	_winList.push_back(UIElement(pWin, isOnHeap));
+	_winList.push_back(UIElement(pWin));
 
 	// initialize the layout information of the sub-window
 	RECT parentRect;
@@ -273,9 +258,7 @@ void UIContainer::DelChild(UIWindowBase* pWin)
 		return;
 	}
 
-	if (it->_isOnHeap) {
-		delete pWin;
-	}
+	// All heap objects are managed by UIWidgetManage, no manual deletion
 	_winList.erase(it);
 }
 

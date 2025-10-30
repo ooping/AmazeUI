@@ -3,6 +3,17 @@
 #include "pch.h"
 #include <memory>
 
+// ========== UI Widget IDs ==========
+namespace UIWidgetIDs {
+	// #define WidgetAuto(Type, IDNum, IDName, FuncName) \
+	// constexpr int IDNum = IDNum; \
+	// inline auto FuncName() { return UIGetWidgetByID<Type>(IDNum); }
+
+	// ===== Main (0xx) =====
+	WidgetAuto(UILabel, 10, label_MSG, Label_MSG)
+}
+using namespace UIWidgetIDs;
+
 
 class PhoenixModel : public UIModelAnimation {
 public:
@@ -68,15 +79,12 @@ private:
 
 
 
-class UIWinTop : public UIWindow<UIWinTop>, public SingleThreadHelper<UIWinTop> {
+class UIWinTop : public UIWindow<UIWinTop>,
+                 public SingletonPattern<UIWinTop>,
+                 public SingleThreadHelper<UIWinTop> {
+	friend class SingletonPattern<UIWinTop>;
     
 public:
 	void OnCreate();
 	void OnDestroy();
-	void OnNotify(int id, LPARAM param);
-
-private:
-	void ShowMsg(const std::string& msg);
-
-	UIGame3D _game3D;
 };

@@ -5,6 +5,47 @@
 #include "UIAnimation.h"
 #include <vector>
 #include <list>
+#include <memory>
+#include <mutex>
+#include <any>
+#include <functional>
+
+/*------------------------------------------------------- UIWindow -------------------------------------------------------*/
+template<class T>
+class UIWindow : public UIWindowBase, public UIContainerHelp<UIWindow<T>> {
+protected:
+	// message processing
+	virtual bool HandleMessage(UINT message, WPARAM wParam, LPARAM lParam) {
+		T* pT = static_cast<T*>(this);
+
+		bool isMsgHandled = DefHandleMessage(message, wParam, lParam);
+		if (isMsgHandled) {
+			return true;
+		}
+
+		switch (message) {
+			case WM_CREATE: {
+				pT->OnCreate();
+			} break;
+			case WM_DESTROY: {
+				pT->OnDestroy();
+			} break;
+			case WM_NOTIFY: {
+				pT->OnNotify((int)wParam, (LPARAM)lParam);
+			} break;
+			case WM_SIZE: {
+				pT->OnSize(UIShape2D::CreatePoint()(LOWORD(lParam), HIWORD(lParam)));
+			} break;
+		};
+
+		return isMsgHandled;
+	}
+	void OnCreate() {}
+	void OnDestroy() {}
+	void OnNotify(int, LPARAM) {}
+	void OnSize(POINT) {}
+};
+
 
 /*------------------------------------------------------- UIControlBase -------------------------------------------------------*/
 class UIScrollBar;
@@ -89,22 +130,13 @@ public:
 		return isMsgHandled;
 	}
 
-	bool CreateControl(UINT id, UIContainer* pUIContainer, const RECT& relativeRect = UIShape2D::NULL_RECT, int layoutFlag = UILayoutCalc::NO_ZOOM, bool isShow = true, bool isOnHeap = false) {
+	bool CreateControl(UINT id, UIContainer* pUIContainer, const RECT& relativeRect = UIShape2D::NULL_RECT, int layoutFlag = UILayoutCalc::NO_ZOOM, bool isShow = true) {
 		_id = id;
-		return CreateWindowBase(pUIContainer, relativeRect, layoutFlag, isShow, isOnHeap);
+		return CreateWindowBase(pUIContainer, relativeRect, layoutFlag, isShow);
 	}
 
-	bool CreateControl(UINT id, UIWindowBase* pParent, const RECT& relativeRect = UIShape2D::NULL_RECT, int layoutFlag = UILayoutCalc::NO_ZOOM, bool isShow = true, bool isOnHeap = false) {
-		return CreateControl(id, pParent->GetUIContainer(), relativeRect, layoutFlag, isShow, isOnHeap);
-	}
-
-	bool CreateControlOnHeap(UINT id, UIContainer* pUIContainer, const RECT& relativeRect = UIShape2D::NULL_RECT, int layoutFlag = UILayoutCalc::NO_ZOOM, bool isShow = true) {
-		_id = id;
-		return CreateWindowBase(pUIContainer, relativeRect, layoutFlag, isShow, true);
-	}
-
-	bool CreateControlOnHeap(UINT id, UIWindowBase* pParent, const RECT& relativeRect = UIShape2D::NULL_RECT, int layoutFlag = UILayoutCalc::NO_ZOOM, bool isShow = true) {
-		return CreateControlOnHeap(id, pParent->GetUIContainer(), relativeRect, layoutFlag, isShow);
+	bool CreateControl(UINT id, UIWindowBase* pParent, const RECT& relativeRect = UIShape2D::NULL_RECT, int layoutFlag = UILayoutCalc::NO_ZOOM, bool isShow = true) {
+		return CreateControl(id, pParent->GetUIContainer(), relativeRect, layoutFlag, isShow);
 	}
 
 	UINT _id;
@@ -141,95 +173,62 @@ protected:
 };
 
 
-/*------------------------------------------------------- UIWindow -------------------------------------------------------*/
-template<class T>
-class UIWindow : public UIWindowBase, public UIContainerHelp<UIWindow<T>> {
-protected:
-	// message processing
-	virtual bool HandleMessage(UINT message, WPARAM wParam, LPARAM lParam) {
-		T* pT = static_cast<T*>(this);
-
-		bool isMsgHandled = DefHandleMessage(message, wParam, lParam);
-		if (isMsgHandled) {
-			return true;
-		}
-
-		switch (message) {
-			case WM_CREATE: {
-				pT->OnCreate();
-			} break;
-			case WM_DESTROY: {
-				pT->OnDestroy();
-			} break;
-			case WM_NOTIFY: {
-				pT->OnNotify((int)wParam, (LPARAM)lParam);
-			} break;
-			case WM_SIZE: {
-				pT->OnSize(UIShape2D::CreatePoint()(LOWORD(lParam), HIWORD(lParam)));
-			} break;
-		};
-
-		return isMsgHandled;
-	}
-	void OnCreate() {}
-	void OnDestroy() {}
-	void OnNotify(int, LPARAM) {}
-	void OnSize(POINT) {}
-};
-
-
 /*------------------------------------------------------- EventHelper -------------------------------------------------------*/
 class UIEventHelp {
+	// ========== Generic version with arbitrary parameters ==========
 public:
-    void SetClickEvent(std::function<void()> callback) {
-        RegisterEvent("click", callback);
-    }
-
-	bool OnClickEvent() {
-		auto it = _eventMap.find("click");
-		if (it != _eventMap.end()) {
-			it->second();
-			return true;
-		}
-		return false;
+	// Click event - accepts any callable (lambda, function pointer, functor)
+	template<typename Func>
+	void SetClickEvent(Func&& callback) {
+		_eventMap["Click"] = std::function(std::forward<Func>(callback));
 	}
 
-	void SetNotifyEvent(std::function<void()> callback) {
-		RegisterEvent("Notify", callback);
+	template<typename... Args>
+	bool OnClickEvent(Args... args) {
+		return ExecuteEvent("Click", args...);
 	}
 
-	bool OnNotifyEvent() {
-		auto it = _eventMap.find("Notify");
-		if (it != _eventMap.end()) {
-			it->second();
-			return true;
-		}
-		return false;
+	// Notify event - accepts any callable (lambda, function pointer, functor)
+	template<typename Func>
+	void SetNotifyEvent(Func&& callback) {
+		_eventMap["Notify"] = std::function(std::forward<Func>(callback));
 	}
 
-	void SetMouseHoverEvent(std::function<void()> callback) {
-        RegisterEvent("MouseHover", callback);
-    }
+	template<typename... Args>
+	bool OnNotifyEvent(Args... args) {
+		return ExecuteEvent("Notify", args...);
+	}
 
-	bool OnMouseHoverEvent() {
-		auto it = _eventMap.find("MouseHover");
-		if (it != _eventMap.end()) {
-			it->second();
-			return true;
-		}
-		return false;
+	// MouseHover event - accepts any callable (lambda, function pointer, functor)
+	template<typename Func>
+	void SetMouseHoverEvent(Func&& callback) {
+		_eventMap["MouseHover"] = std::function(std::forward<Func>(callback));
+	}
+
+	template<typename... Args>
+	bool OnMouseHoverEvent(Args... args) {
+		return ExecuteEvent("MouseHover", args...);
 	}
 
 protected:
-	std::map<std::string, std::function<void()>> _eventMap; // event map
+	// Generic callback storage (for events with any parameters)
+	std::map<std::string, std::any> _eventMap;
 
-	// register event
-	void RegisterEvent(const std::string& eventName, std::function<void()> callback) {
-		_eventMap[eventName] = callback;
-	}
+	// Execute callback for any event type with any parameters
+	template<typename... Args>
+	bool ExecuteEvent(const std::string& eventName, Args... args) {
+		auto it = _eventMap.find(eventName);
+		if (it == _eventMap.end()) {
+			return false;
+		}
 
-	void UnregisterEvent(const std::string& eventName) {
-		_eventMap.erase(eventName);
+		// Try to cast to std::function type with these args
+		auto pCallback = std::any_cast<std::function<void(Args...)>>(&it->second);
+		if (pCallback) {
+			(*pCallback)(args...);
+			return true;
+		}
+		return false;
 	}
 };
 
@@ -569,7 +568,7 @@ struct NM_GRID {
 	int _column;
 };
 
-class UIGrid : public UIControlBase<UIGrid>, public UIContainerHelp<UIGrid> {
+class UIGrid : public UIControlBase<UIGrid>, public UIContainerHelp<UIGrid>, public UIEventHelp {
 	friend UIControlBase;
 
 	// Grid_Cell information
@@ -651,6 +650,8 @@ public:
 	bool GetSelectCells(UINT& beginRow, UINT& beginColumn, UINT& endRow, UINT& endColumn);
 	bool GetSelectRows(std::vector<UINT>& selectList);
 	bool GetSelectColumns(std::vector<UINT>& selectList);
+	//
+	NM_GRID GetNotifyData() const;
 
 	UIScrollBar _xScroll;									// scroll bar
 	UIScrollBar _yScroll;
@@ -787,11 +788,11 @@ public:
 	// add curve relative to the left axis
 	void AddCurve1(UIString textName);
 	void AddCurve1(UIString textName, float xValue, float yValue);
-	void AddCurve1(UIString textName, std::vector<float>& xList, std::vector<float>& yList, bool isXCoordInOrder=true);
+	void AddCurve1(UIString textName, const std::vector<float>& xList, const std::vector<float>& yList, bool isXCoordInOrder = true);
 	// add curve relative to the right axis
 	void AddCurve2(UIString textName);
 	void AddCurve2(UIString textName, float xValue, float yValue);
-	void AddCurve2(UIString textName, std::vector<float>& xList, std::vector<float>& yList, bool isXCoordInOrder=true);
+	void AddCurve2(UIString textName, const std::vector<float>& xList, const std::vector<float>& yList, bool isXCoordInOrder = true);
 	// clear all curves
 	void Clear();
 
@@ -829,7 +830,7 @@ private:
 	//
 	void AddCurve(int yFlag, std::wstring textName);
 	void AddCurve(int yFlag, std::wstring textName, float xValue, float yValue);
-	void AddCurve(int yFlag, std::wstring textName, std::vector<float>& xList, std::vector<float>& yList, bool isXCoordInOrder=true);
+	void AddCurve(int yFlag, std::wstring textName, const std::vector<float>& xList, const std::vector<float>& yList, bool isXCoordInOrder=true);
 	void SetCurveColor(int yFlag, std::wstring textName, UIColor& color);
 	void SetCurveSelect(int yFlag, std::wstring textName);
 
@@ -1161,13 +1162,16 @@ private:
 
 
 /*------------------------------------------------------- UIWidgetManage -------------------------------------------------------*/
-// UI Widget Factory Manager - provides factory methods to create widgets with automatic ID binding and storage
+// UI Widget Factory Manager - provides factory methods to create and manage UI widgets
+// Automatically allocates IDs (5000+) when id=0, uses unique_ptr for automatic memory management
+// Widget state: pair<unique_ptr, bool> where bool indicates initialization status
 class UIWidgetManage : public SingletonPattern<UIWidgetManage> {
 	friend class SingletonPattern<UIWidgetManage>;
 
 public:
 	// ========== Factory Creation Methods ==========
 	// Create any type of UI widget with automatic ID binding (for UIContainer parent)
+	// If id=0, automatically allocates an ID starting from 5000
 	template<typename T>
 	static T* CreateWidget(
 		int id,
@@ -1176,15 +1180,29 @@ public:
 		int layoutFlag = UILayoutCalc::NO_ZOOM,
 		bool isShow = true
 	) {
-		T* pWidget = new T();
-		pWidget->CreateControlOnHeap(id, pContainer, rect, layoutFlag, isShow);
+		if (id >= 5000) {	
+			// Warning: IDs >= 5000 are reserved for automatic allocation
+			return nullptr;
+		}
+
+		auto pInstance = GetSingletonInstance();
+		std::lock_guard<std::mutex> lock(pInstance->_mutex);
+
+		// Allocate ID if id=0, otherwise use specified ID
+		int assignedID = (id == 0) ? ++(pInstance->_maxAllocatedID) : id;
+
+		// Get or create widget object (Get will create if not exists)
+		T* pRaw = pInstance->Get_Unsafe<T>(assignedID);
 		
-		// Auto-register to widget map if ID != 0
-		if (id != 0) {
-			GetSingletonInstance()->Register(id, pWidget);
+		// Check if already initialized to prevent duplicate initialization
+		if (pInstance->_widgets[assignedID].second) {
+			return pRaw;
 		}
 		
-		return pWidget;
+		// Initialize widget for the first time
+		pRaw->CreateControl(assignedID, pContainer, rect, layoutFlag, isShow);
+		pInstance->_widgets[assignedID].second = true;  // Mark as initialized
+		return pRaw;
 	}
 	
 	// Create any type of UI widget with automatic ID binding (for UIWindowBase parent)
@@ -1199,58 +1217,47 @@ public:
 		return CreateWidget<T>(id, pParent->GetUIContainer(), rect, layoutFlag, isShow);
 	}
 
-	// ========== Widget Management Methods ==========
-	// Register a widget with an ID
+	// ========== Widget Access Methods ==========
+	// Get a widget by ID - if not found, create a new uninitialized object
+	// Returns pointer, never nullptr
 	template<typename T>
-	void Register(int id, T* pWidget) {
+	T* Get(int id) {
 		std::lock_guard<std::mutex> lock(_mutex);
-		_widgets[id] = (void*)pWidget;
-	}
-	
-	// Get a widget by ID
-	template<typename T>
-	T* Get(int id) const {
-		std::lock_guard<std::mutex> lock(_mutex);
-		auto it = _widgets.find(id);
-		if (it != _widgets.end()) {
-			return static_cast<T*>(it->second);
-		}
-		return nullptr;
-	}
-	
-	// Unregister a widget
-	void Unregister(int id) {
-		std::lock_guard<std::mutex> lock(_mutex);
-		_widgets.erase(id);
-	}
-	
-	// Clear all registered widgets
-	void Clear() {
-		std::lock_guard<std::mutex> lock(_mutex);
-		_widgets.clear();
-	}
-	
-	// Check if an ID is registered
-	bool Has(int id) const {
-		std::lock_guard<std::mutex> lock(_mutex);
-		return _widgets.find(id) != _widgets.end();
+		return Get_Unsafe<T>(id);
 	}
 
 private:
-	UIWidgetManage() = default;
+	UIWidgetManage() : _maxAllocatedID(4999) {}
 	~UIWidgetManage() = default;
+
+	template<typename T>
+	T* Get_Unsafe(int id) {
+		auto it = _widgets.find(id);
+		
+		// If found, return it
+		if (it != _widgets.end()) {
+			// if the type does not match, dynamic_cast will return nullptr
+			return dynamic_cast<T*>(it->second.first.get());
+		}
+		
+		// If not found, create a new uninitialized object
+		_widgets[id].first = std::make_unique<T>();
+		_widgets[id].second = false;  // Mark as NOT initialized
+		
+		return dynamic_cast<T*>(_widgets[id].first.get());
+	}
 	
 	mutable std::mutex _mutex;
-	std::unordered_map<int, void*> _widgets;  // ID -> Widget pointer mapping
+	std::unordered_map<int, std::pair<std::unique_ptr<UIWindowBase>, bool>> _widgets;
+	int _maxAllocatedID;  // For auto ID allocation
 };
-
 
 
 // Global convenience function for creating widgets
 template<typename T>
 inline T* UICreateWidget(
-	int id,
 	UIContainer* pContainer,
+	int id = 0,
 	const RECT& rect = UIShape2D::NULL_RECT,
 	int layoutFlag = UILayoutCalc::NO_ZOOM,
 	bool isShow = true
@@ -1261,13 +1268,13 @@ inline T* UICreateWidget(
 // Global convenience function for creating widgets (UIWindowBase parent overload)
 template<typename T>
 inline T* UICreateWidget(
-	int id,
 	UIWindowBase* pParent,
+	int id = 0,
 	const RECT& rect = UIShape2D::NULL_RECT,
 	int layoutFlag = UILayoutCalc::NO_ZOOM,
 	bool isShow = true
 ) {
-	return UIWidgetManage::CreateWidget<T>(id, pParent, rect, layoutFlag, isShow);
+	return UIWidgetManage::GetSingletonInstance()->CreateWidget<T>(id, pParent, rect, layoutFlag, isShow);
 }
 
 // Global convenience function for getting widgets by ID
@@ -1276,12 +1283,8 @@ inline T* UIGetWidgetByID(int id) {
 	return UIWidgetManage::GetSingletonInstance()->Get<T>(id);
 }
 
-
-
-
-
-
-
-
-
-
+namespace UIWidgetIDs {
+	#define WidgetAuto(Type, IDNum, IDName, FuncName) \
+    constexpr int IDName = IDNum; \
+    inline auto FuncName() { return UIGetWidgetByID<Type>(IDName); }
+};

@@ -10,12 +10,14 @@ public:
 
 
 
-class UIWinTop : public UIWindow<UIWinTop>, public SingleThreadHelper<UIWinTop> {
+class UIWinTop : public UIWindow<UIWinTop>, 
+                 public SingletonPattern<UIWinTop>,
+                 public SingleThreadHelper<UIWinTop> {
+	friend class SingletonPattern<UIWinTop>;
     
 public:
 	void OnCreate();
 	void OnDestroy();
-	void OnNotify(int id, LPARAM param);
 
 private:
 	void ShowMsg(const std::string& msg);

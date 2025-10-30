@@ -15,9 +15,6 @@ using namespace std;
 using namespace UIShape2D;
 
 
-UIWinTop gWinTop;
-
-
 UIGame3D::UIGame3D() {
 }
 
@@ -154,15 +151,11 @@ void UIWinTop::OnCreate() {
 	const RECT clientRC = GetClientRect();
 	string str;
 
-    _game3D.CreateWindowBase(&gWinTop, clientRC, UILayoutCalc::SIZE_X | UILayoutCalc::SIZE_Y);
-	// Model will be loaded on first draw to ensure DirectX resources are ready
-	_game3D.LoadModel();
+	auto game3D = UICreateWidget<UIGame3D>(this, 0, clientRC, UILayoutCalc::SIZE_X | UILayoutCalc::SIZE_Y);
+	game3D->LoadModel();
 }
 
 void UIWinTop::OnDestroy() {
-}
-
-void UIWinTop::OnNotify(int id, LPARAM param) {
 }
 
 
@@ -199,7 +192,7 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
         RECT rc;
         ::GetClientRect(UIFrame::GetSingletonInstance()->GetWindowHandle(), &rc);
 
-        gWinTop.CreateWindowBase(UIFrame::GetSingletonInstance()->GetTopUIContainer(), rc, UILayoutCalc::SIZE_X | UILayoutCalc::SIZE_Y);
+        UIWinTop::GetSingletonInstance()->CreateWindowBase(UIFrame::GetSingletonInstance()->GetTopUIContainer(), rc, UILayoutCalc::SIZE_X | UILayoutCalc::SIZE_Y);
     }, 0);
 
     // initialize UI

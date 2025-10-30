@@ -87,8 +87,7 @@ void UIDeviceResources::CreateDeviceDependentResources() {
         ComPtr<ID3D12Debug> debugController;
         if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(debugController.GetAddressOf())))) {
             debugController->EnableDebugLayer();
-        }
-        else {
+        } else {
             OutputDebugStringA("WARNING: Direct3D Debug Device is not available\n");
         }
 
@@ -294,8 +293,7 @@ void UIDeviceResources::CreateWindowSizeDependentResources() {
             // Everything is set up now. Do not continue execution of this method. HandleDeviceLost will reenter this method
             // and correctly set up the new device.
             return;
-        }
-        else {
+        } else {
             ThrowIfFailed(hr);
         }
     }
@@ -585,11 +583,11 @@ void UIDeviceResources::GetAdapter(IDXGIAdapter1** ppAdapter) {
 
             // Check to see if the adapter supports Direct3D 12, but don't create the actual device yet.
             if (SUCCEEDED(D3D12CreateDevice(adapter.Get(), _d3dMinFeatureLevel, _uuidof(ID3D12Device), nullptr))) {
-#ifdef _DEBUG
+            #ifdef _DEBUG
                 wchar_t buff[256] = {};
                 swprintf_s(buff, L"Direct3D Adapter (%u): VID:%04X, PID:%04X - %ls\n", adapterIndex, desc.VendorId, desc.DeviceId, desc.Description);
                 OutputDebugStringW(buff);
-#endif
+            #endif
                 break;
             }
         }
@@ -611,11 +609,11 @@ void UIDeviceResources::GetAdapter(IDXGIAdapter1** ppAdapter) {
 
             // Check to see if the adapter supports Direct3D 12, but don't create the actual device yet.
             if (SUCCEEDED(D3D12CreateDevice(adapter.Get(), _d3dMinFeatureLevel, _uuidof(ID3D12Device), nullptr))) {
-#ifdef _DEBUG
+            #ifdef _DEBUG
                 wchar_t buff[256] = {};
                 swprintf_s(buff, L"Direct3D Adapter (%u): VID:%04X, PID:%04X - %ls\n", adapterIndex, desc.VendorId, desc.DeviceId, desc.Description);
                 OutputDebugStringW(buff);
-#endif
+            #endif
                 break;
             }
         }
@@ -1244,8 +1242,7 @@ bool UITextureManager::GetWICTextureIndexFromFile(const wstring& filePath, const
                 !CreateTextureFromImageData(device, resourceUpload, resource._texture, imageData, width, height)) {
                 return false;
             }
-        }
-        else {
+        } else {
             // if color key is not specified, create texture directly
             HRESULT hr = CreateWICTextureFromFile(
                 device,
@@ -1323,8 +1320,7 @@ bool UITextureManager::GetWICTextureIndexFromDLL(const wstring& dllPath, UINT id
                 !CreateTextureFromImageData(device, resourceUpload, resource._texture, imageData, width, height)) {
                 return false;
             }
-        }
-        else {
+        } else {
             // create texture resource
             HRESULT hr = CreateWICTextureFromMemory(
                 device,
@@ -1388,8 +1384,7 @@ bool UITextureManager::GetDDSTextureIndexFromFile(const wstring& filePath, const
                 !CreateTextureFromImageData(device, resourceUpload, resource._texture, imageData, width, height)) {
                 return false;
             }
-        }
-        else {
+        } else {
             // if color key is not specified, create texture directly
             HRESULT hr = CreateDDSTextureFromFile(
                 device,
