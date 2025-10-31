@@ -1402,7 +1402,7 @@ UIGrid::GridCellInfo::GridCellInfo(wstring str) {
 	//_wordPos = UIFontPos::MiddleLeft;
 
 	// Default is edit control
-	_pCtrl = NULL;
+	_pCtrl = nullptr;
 	_controlType = CTRL_EDIT;
 	_isHold = false;
 
@@ -1410,83 +1410,75 @@ UIGrid::GridCellInfo::GridCellInfo(wstring str) {
 }
 
 void UIGrid::GridCellInfo::CreateCellControl(UIContainer* pUIContainer, int firstRowPos, int firstColumnPos, int id) {
-	if (_pCtrl != NULL) {
+	if (_pCtrl) {
 		return;
 	}
 
 	if (_controlType == CTRL_EDIT) {
-		UIEdit* pControl = new UIEdit;
-		_pCtrl = pControl;
-
+		auto pControl = std::make_unique<UIEdit>();
 		pControl->CreateControl(8000, pUIContainer, CreateRect()(_pos.left + firstColumnPos, _pos.top + firstRowPos, _pos.right + 1 + firstColumnPos, _pos.bottom + 1 + firstRowPos), 0, true);
 		pControl->SetWindowFocus();
 		pControl->SetText(_text);
 		pControl->SelectAllText();
+		_pCtrl = std::move(pControl);
 	} else if (_controlType == CTRL_CHECKBUTTON) {
-		UICheckButton* pControl = new UICheckButton;
-		_pCtrl = pControl;
-
+		auto pControl = std::make_unique<UICheckButton>();
 		pControl->CreateControl(id, pUIContainer, CreateRect()(_pos.left + firstColumnPos, _pos.top + firstRowPos, _pos.right + 1 + firstColumnPos, _pos.bottom + 1 + firstRowPos), 0, true);
 		pControl->SetText(_text);
+		_pCtrl = std::move(pControl);
 		_isHold = true;
 	} else if (_controlType == CTRL_COMBOBOX) {
-		UIComboBox* pControl = new UIComboBox;
-		_pCtrl = pControl;
-
+		auto pControl = std::make_unique<UIComboBox>();
 		pControl->CreateControl(id, pUIContainer, CreateRect()(_pos.left + firstColumnPos, _pos.top + firstRowPos, _pos.right + 1 + firstColumnPos, _pos.bottom + 1 + firstRowPos), 0, true);
 		pControl->IsDrawBoader(false);
+		_pCtrl = std::move(pControl);
 		_isHold = true;
 	} else if (_controlType == CTRL_BUTTON) {
-		UIButton* pControl = new UIButton;
-		_pCtrl = pControl;
-
+		auto pControl = std::make_unique<UIButton>();
 		pControl->CreateControl(id, pUIContainer, CreateRect()(_pos.left + firstColumnPos, _pos.top + firstRowPos, _pos.right + 1 + firstColumnPos, _pos.bottom + 1 + firstRowPos), 0, true);
 		pControl->SetText(_text);
+		_pCtrl = std::move(pControl);
 		_isHold = true;
 	}
 }
 
 bool UIGrid::GridCellInfo::DeleteCellControl() {
 	// Check if the control exists
-	if (_pCtrl == NULL) {
+	if (!_pCtrl) {
 		return true;
 	}
-	if (_isHold == true) {
+	if (_isHold) {
 		return true;
 	}
 
 	if (_controlType == CTRL_EDIT) {
-		// Get the control pointer
-		UIEdit* pControl = (UIEdit*)_pCtrl;
-
 		// Get the control string value and set it to the cell
-		wstring str = pControl->GetText();
-		_text = str;
+		UIEdit* pControl = static_cast<UIEdit*>(_pCtrl.get());
+		_text = pControl->GetText();
 
 		// Destroy the edit control
 		pControl->DestroyWindowBase();
 
 	} else if (_controlType == CTRL_CHECKBUTTON) {
 		// Get the control pointer
-		UICheckButton* pControl = (UICheckButton*)_pCtrl;
+		UICheckButton* pControl = static_cast<UICheckButton*>(_pCtrl.get());
 		pControl->DestroyWindowBase();
 	} else if (_controlType == CTRL_COMBOBOX) {
 		// Get the control pointer
-		UIComboBox* pControl = (UIComboBox*)_pCtrl;
+		UIComboBox* pControl = static_cast<UIComboBox*>(_pCtrl.get());
 		pControl->DestroyWindowBase();
 	} else if (_controlType == CTRL_BUTTON) {
 		// Get the control pointer
-		UIButton* pControl = (UIButton*)_pCtrl;
+		UIButton* pControl = static_cast<UIButton*>(_pCtrl.get());
 		pControl->DestroyWindowBase();
 	}
 
-	delete _pCtrl; // delete the control pointer
-	_pCtrl = NULL;
+	_pCtrl.reset();
 	return true;
 }
 
 void UIGrid::GridCellInfo::MoveCellControl(const RECT& rc) {
-	if (_pCtrl == NULL) {
+	if (!_pCtrl) {
 		return;
 	}
 
@@ -1494,7 +1486,7 @@ void UIGrid::GridCellInfo::MoveCellControl(const RECT& rc) {
 }
 
 void UIGrid::GridCellInfo::DrawCellControl() {
-	if (_pCtrl == NULL) {
+	if (!_pCtrl) {
 		return;
 	}
 
@@ -1640,10 +1632,10 @@ void UIGrid::DrawSelectedCELL() {
 	{	// Draw the unfix area (offset = 1 for selection highlight)
 		rc = _unfixGridArea;
 		OffsetRect(&rc, x_, y_);
-		//UIScreenClipRectGuard uiClip(rc);
+		UIScreenClipRectGuard uiClip(rc);
 
 		// Draw the selected cell
-		if (pSelCell->_pCtrl == NULL) {
+		if (!pSelCell->_pCtrl) {
 			rc = CreateRect()(pos.left + _firstColumnPos, pos.top + _firstRowPos, pos.right + _firstColumnPos, pos.bottom + _firstRowPos);
 			OffsetRect(&rc, x_, y_);
 			UIRect(rc, _z - gDeltaZ, renderLevel + 2)(UIColor::PrimaryPurple, _inheritedTransformMatrix); // z-0.01f should > 0.0f
@@ -1655,7 +1647,7 @@ void UIGrid::DrawSelectedCELL() {
 	if (_isFirstColumnFix) {
 		rc = CreateRect()(_gridArea.left, _unfixGridArea.top, _gridArea.right, _gridArea.bottom);
 		OffsetRect(&rc, x_, y_);
-		//UIScreenClipRectGuard uiClip(rc);
+		UIScreenClipRectGuard uiClip(rc);
 
 		rc = CreateRect()(_cellArray[0][0]._pos.left, pos.top + _firstRowPos, _cellArray[0][0]._pos.right, pos.bottom + _firstRowPos);
 		OffsetRect(&rc, x_, y_);
@@ -1665,7 +1657,7 @@ void UIGrid::DrawSelectedCELL() {
 	if (_isFirstRowFix) {
 		rc = CreateRect()(_unfixGridArea.left, _gridArea.top, _gridArea.right, _gridArea.bottom);
 		OffsetRect(&rc, x_, y_);
-		//UIScreenClipRectGuard uiClip(rc);
+		UIScreenClipRectGuard uiClip(rc);
 
 		rc = CreateRect()(pos.left + _firstColumnPos, _cellArray[0][0]._pos.top, pos.right + _firstColumnPos, _cellArray[0][0]._pos.bottom);
 		OffsetRect(&rc, x_, y_);
@@ -1691,7 +1683,7 @@ void UIGrid::DrawSelectedCELLS(UIColor& selectColor) {
 	{	// Draw the unfix area (offset = 0 for selection background)
 		rc = _unfixGridArea;
 		OffsetRect(&rc, x_, y_);
-		//UIScreenClipRectGuard uiClip(rc);
+		UIScreenClipRectGuard uiClip(rc);
 
 		// Draw the selected cell
 		rc = CreateRect()(posBegin.left + _firstColumnPos + 1, posBegin.top + _firstRowPos + 1, posEnd.right + _firstColumnPos, posEnd.bottom + _firstRowPos);
@@ -1704,7 +1696,7 @@ void UIGrid::DrawSelectedCELLS(UIColor& selectColor) {
 	if (_isFirstColumnFix) {
 		rc = CreateRect()(_gridArea.left, _unfixGridArea.top, _gridArea.right, _gridArea.bottom);
 		OffsetRect(&rc, x_, y_);
-		//UIScreenClipRectGuard uiClip(rc);
+		UIScreenClipRectGuard uiClip(rc);
 
 		rc = CreateRect()(_cellArray[0][0]._pos.left, posBegin.top + _firstRowPos, _cellArray[0][0]._pos.right, posEnd.bottom + _firstRowPos);
 		OffsetRect(&rc, x_, y_);
@@ -1714,7 +1706,7 @@ void UIGrid::DrawSelectedCELLS(UIColor& selectColor) {
 	if (_isFirstRowFix) {
 		rc = CreateRect()(_unfixGridArea.left, _gridArea.top, _gridArea.right, _gridArea.bottom);
 		OffsetRect(&rc, x_, y_);
-		//UIScreenClipRectGuard uiClip(rc);
+		UIScreenClipRectGuard uiClip(rc);
 
 		rc = CreateRect()(posBegin.left + _firstColumnPos, _cellArray[0][0]._pos.top, posEnd.right + _firstColumnPos, _cellArray[0][0]._pos.bottom);
 		OffsetRect(&rc, x_, y_);
@@ -1731,7 +1723,7 @@ void UIGrid::DrawSelectedROW(UIColor& selectColor) {
 	{	// Draw the unfix area (offset = 0 for selection background)
 		rc = _unfixGridArea;
 		OffsetRect(&rc, x_, y_);
-		//UIScreenClipRectGuard uiClip(rc);
+		UIScreenClipRectGuard uiClip(rc);
 
 		for (auto i = _selectedRowList.begin(); i != _selectedRowList.end(); ++i) {
 			RECT& pos = _cellArray[*i][0]._pos;
@@ -1744,7 +1736,7 @@ void UIGrid::DrawSelectedROW(UIColor& selectColor) {
 	{	// Draw the fix area (offset = 1)
 		rc = CreateRect()(_gridArea.left, _unfixGridArea.top + 1, _gridArea.right, _gridArea.bottom);
 		OffsetRect(&rc, x_, y_);
-		//UIScreenClipRectGuard uiClip(rc);
+		UIScreenClipRectGuard uiClip(rc);
 
 		for (auto i = _selectedRowList.begin(); i != _selectedRowList.end(); ++i) {
 			RECT& pos = _cellArray[*i][0]._pos;
@@ -1764,7 +1756,7 @@ void UIGrid::DrawSelectedCOLUMN(UIColor& selectColor) {
 	{	// Draw the unfix area (offset = 0 for selection background)
 		rc = _unfixGridArea;
 		OffsetRect(&rc, x_, y_);
-		//UIScreenClipRectGuard uiClip(rc);
+		UIScreenClipRectGuard uiClip(rc);
 
 		for (auto i = _selectedColumnList.begin(); i != _selectedColumnList.end(); ++i) {
 			RECT& pos = _cellArray[0][*i]._pos;
@@ -1777,7 +1769,7 @@ void UIGrid::DrawSelectedCOLUMN(UIColor& selectColor) {
 	{	// Draw the fix area (offset = 1)
 		rc = CreateRect()(_unfixGridArea.left + 1, _gridArea.top, _gridArea.right, _gridArea.bottom);
 		OffsetRect(&rc, x_, y_);
-		//UIScreenClipRectGuard uiClip(rc);
+		UIScreenClipRectGuard uiClip(rc);
 
 		for (auto i = _selectedColumnList.begin(); i != _selectedColumnList.end(); ++i) {
 			RECT& pos = _cellArray[0][*i]._pos;
@@ -1871,12 +1863,12 @@ void UIGrid::DrawCells() {
 			OffsetRect(&rc, x_, y_);
 			UIScreenClipRectGuard uiClip(rc);
 			//
-			if (cell._pCtrl == NULL) {
+			if (!cell._pCtrl) {
 				rc = CreateRect()(cell._pos.left + _firstColumnPos + 5, cell._pos.top + _firstRowPos, cell._pos.right + _firstColumnPos - 5, cell._pos.bottom + _firstRowPos);
 				OffsetRect(&rc, x_, y_);
 				rc.left += 2;
 				fontHelp(cell._text, rc, cell._color, UIFontPos::MiddleLeft, _inheritedTransformMatrix);
-			} else if (cell._pCtrl != NULL) {
+			} else if (cell._pCtrl) {
 				rc = CreateRect()(cell._pos.left + _firstColumnPos, cell._pos.top + _firstRowPos, cell._pos.right + _firstColumnPos, cell._pos.bottom + _firstRowPos);
 				cell.MoveCellControl(rc);
 				cell.DrawCellControl();
@@ -1892,11 +1884,11 @@ void UIGrid::DrawCells() {
 
 		for (UINT column = _beginDrawColumn; column < endColumn; ++column) {
 			GridCellInfo& cell = _cellArray[0][column];
-			if (cell._pCtrl == NULL) {
+			if (!cell._pCtrl) {
 				rc = CreateRect()(cell._pos.left + _firstColumnPos, _gridArea.top, cell._pos.right + _firstColumnPos, _gridArea.top + _rowHeightList[0]);
 				OffsetRect(&rc, x_, y_);
 				fontHelp(cell._text, rc, cell._color, UIFontPos::MiddleCenter, _inheritedTransformMatrix);
-			} else if (cell._pCtrl != NULL) {
+			} else if (cell._pCtrl) {
 				rc = CreateRect()(cell._pos.left + _firstColumnPos, _gridArea.top, cell._pos.right + _firstColumnPos, _gridArea.top + _rowHeightList[0]);
 				cell.MoveCellControl(rc);
 				cell.DrawCellControl();
@@ -1912,11 +1904,11 @@ void UIGrid::DrawCells() {
 
 		for (UINT row = _beginDrawRow; row < endRow; ++row) {
 			GridCellInfo& cell = _cellArray[row][0];
-			if (cell._pCtrl == NULL) {
+			if (!cell._pCtrl) {
 				rc = CreateRect()(_gridArea.left, cell._pos.top + _firstRowPos, _gridArea.left + _columnWidthList[0], cell._pos.bottom + _firstRowPos);
 				OffsetRect(&rc, x_, y_);
 				fontHelp(cell._text, rc, cell._color, UIFontPos::MiddleCenter, _inheritedTransformMatrix);
-			} else if (cell._pCtrl != NULL) {
+			} else if (cell._pCtrl) {
 				rc = CreateRect()(_gridArea.left, cell._pos.top + _firstRowPos, _gridArea.left + _columnWidthList[0], cell._pos.bottom + _firstRowPos);
 				cell.MoveCellControl(rc);
 				cell.DrawCellControl();
@@ -1932,11 +1924,11 @@ void UIGrid::DrawCells() {
 		// 
 		if (_isFirstRowFix && _isFirstColumnFix) {
 			GridCellInfo& cell = _cellArray[0][0];
-			if (cell._pCtrl == NULL) {
+			if (!cell._pCtrl) {
 				rc = CreateRect()(_gridArea.left, _gridArea.top, _gridArea.left + _columnWidthList[0], _gridArea.top + _rowHeightList[0]);
 				OffsetRect(&rc, x_, y_);
 				fontHelp(cell._text, rc, cell._color, UIFontPos::MiddleCenter, _inheritedTransformMatrix);
-			} else if (cell._pCtrl != NULL) {
+			} else if (cell._pCtrl) {
 				rc = CreateRect()(cell._pos.left, cell._pos.top, cell._pos.right, cell._pos.bottom);
 				cell.MoveCellControl(rc);
 				cell.DrawCellControl();
@@ -2096,7 +2088,7 @@ void UIGrid::CalcDrawBeginRowColumn(UINT& beginRow, UINT& beginColumn) {
 	for (UINT r = 0; r < _rowNum; ++r) {
 		for (UINT c = 0; c < _columnNum; ++c) {
 			GridCellInfo& cell = _cellArray[r][c];
-			if (cell._pCtrl != NULL) {
+			if (cell._pCtrl) {
 				cell._pCtrl->ShowWindow(false);
 			}
 		}
@@ -2303,14 +2295,14 @@ void UIGrid::SetCellText(UINT row, UINT column, UIString text, bool isAutoWidth)
 		return;
 	}
 
-	if (_cellArray[row][column]._pCtrl == NULL) {
+	if (!_cellArray[row][column]._pCtrl) {
 		_cellArray[row][column]._text = text;
 	} else {
 		if (_cellArray[row][column]._controlType == GridCellInfo::CTRL_EDIT) {
-			UIEdit& edit = *(UIEdit*)(_cellArray[row][column]._pCtrl);
+			UIEdit& edit = *(UIEdit*)(_cellArray[row][column]._pCtrl.get());
 			edit.SetText(text);
 		} else if (_cellArray[row][column]._controlType == GridCellInfo::CTRL_CHECKBUTTON) {
-			UICheckButton& but = *(UICheckButton*)(_cellArray[row][column]._pCtrl);
+			UICheckButton& but = *(UICheckButton*)(_cellArray[row][column]._pCtrl.get());
 			but.SetText(text);
 		}
 	}
@@ -2330,17 +2322,17 @@ optional<UIString> UIGrid::GetCellText(UINT row, UINT column) {
 		return nullopt;
 	}
 
-	if (_cellArray[row][column]._pCtrl == NULL) {
+	if (!_cellArray[row][column]._pCtrl) {
 		return _cellArray[row][column]._text;
 	} else {
 		if (_cellArray[row][column]._controlType == GridCellInfo::CTRL_EDIT) {
-			UIEdit& edit = *(UIEdit*)(_cellArray[row][column]._pCtrl);
+			UIEdit& edit = *(UIEdit*)(_cellArray[row][column]._pCtrl.get());
 			return edit.GetText();
 		} else if (_cellArray[row][column]._controlType == GridCellInfo::CTRL_CHECKBUTTON) {
-			UICheckButton& but = *(UICheckButton*)(_cellArray[row][column]._pCtrl);
+			UICheckButton& but = *(UICheckButton*)(_cellArray[row][column]._pCtrl.get());
 			return but.GetText();
 		} else if (_cellArray[row][column]._controlType == GridCellInfo::CTRL_COMBOBOX) {
-			UIComboBox& comboBox = *(UIComboBox*)(_cellArray[row][column]._pCtrl);
+			UIComboBox& comboBox = *(UIComboBox*)(_cellArray[row][column]._pCtrl.get());
 			return comboBox.GetText();
 		}
 	}
@@ -2476,15 +2468,15 @@ void UIGrid::SetAreaCells(UINT row, UINT column, vector<vector<UIString>>& rowLi
 		vector<UIString>& rowCache = rowList[i];
 
 		for (UINT j = 0; j < rowCache.size(); ++j) {
-			if (_cellArray[row + i][column + j]._pCtrl == NULL) {
+			if (!_cellArray[row + i][column + j]._pCtrl) {
 				_cellArray[row + i][column + j]._text = rowCache[j];
 			} else { //	if the cell control exists, set the control string
 				if (_cellArray[row][column]._controlType == GridCellInfo::CTRL_EDIT) {
-					UIEdit& edit = *(UIEdit*)(_cellArray[row + i][column + j]._pCtrl);
+					UIEdit& edit = *(UIEdit*)(_cellArray[row + i][column + j]._pCtrl.get());
 					edit.SetText(rowCache[j]);
 				}
 				else if (_cellArray[row][column]._controlType == GridCellInfo::CTRL_CHECKBUTTON) {
-					UICheckButton& but = *(UICheckButton*)(_cellArray[row + i][column + j]._pCtrl);
+					UICheckButton& but = *(UICheckButton*)(_cellArray[row + i][column + j]._pCtrl.get());
 					but.SetText(rowCache[j]);
 				}
 			}
@@ -2498,7 +2490,7 @@ void UIGrid::SetCellCheckButton(int id, UINT row, UINT column, UIString str) {
 	}
 
 	GridCellInfo& cell = _cellArray[row][column];
-	if (cell._pCtrl != NULL) {
+	if (cell._pCtrl) {
 		cell.DeleteCellControl();
 	}
 
@@ -2514,11 +2506,11 @@ bool UIGrid::GetCellCheckState(UINT row, UINT column, bool& checkState) {
 
 	GridCellInfo& cell = _cellArray[row][column];
 
-	if (cell._pCtrl == NULL || cell._controlType != GridCellInfo::CTRL_CHECKBUTTON) {
+	if (!cell._pCtrl || cell._controlType != GridCellInfo::CTRL_CHECKBUTTON) {
 		return false;
 	}
 
-	checkState = static_cast<UICheckButton*>(cell._pCtrl)->GetCheck();
+	checkState = static_cast<UICheckButton*>(cell._pCtrl.get())->GetCheck();
 	return true;
 }
 
@@ -2529,8 +2521,8 @@ void UIGrid::SetCellCheckState(UINT row, UINT column, bool checkState) {
 
 	GridCellInfo& cell = _cellArray[row][column];
 
-	if (cell._pCtrl != NULL && cell._controlType == GridCellInfo::CTRL_CHECKBUTTON) {
-		static_cast<UICheckButton*>(cell._pCtrl)->SetCheck(checkState);
+	if (cell._pCtrl && cell._controlType == GridCellInfo::CTRL_CHECKBUTTON) {
+		static_cast<UICheckButton*>(cell._pCtrl.get())->SetCheck(checkState);
 	}
 }
 
@@ -2540,7 +2532,7 @@ void UIGrid::SetCellComboBox(int id, UINT row, UINT column) {
 	}
 
 	GridCellInfo& cell = _cellArray[row][column];
-	if (cell._pCtrl != NULL) {
+	if (cell._pCtrl) {
 		cell._isHold = false;
 		cell.DeleteCellControl();
 	}
@@ -2555,8 +2547,8 @@ void UIGrid::AddCellComboBoxText(UINT row, UINT column, UIString text) {
 	}
 
 	GridCellInfo& cell = _cellArray[row][column];
-	if (cell._pCtrl != NULL && cell._controlType == GridCellInfo::CTRL_COMBOBOX) {
-		UIComboBox* pControl = (UIComboBox*)cell._pCtrl;
+	if (cell._pCtrl && cell._controlType == GridCellInfo::CTRL_COMBOBOX) {
+		UIComboBox* pControl = (UIComboBox*)cell._pCtrl.get();
 		pControl->AddText(text);
 	}
 }
@@ -2568,7 +2560,7 @@ void UIGrid::AddCellComboBoxText(UINT row, UINT column, UIString text) {
 //
 //	GridCellInfo& cell = _cellArray[row][column];
 //
-//	if (cell._pCtrl == NULL || cell._controlType!=GridCellInfo::CTRL_COMBOBOX)
+//	if (!cell._pCtrl || cell._controlType!=GridCellInfo::CTRL_COMBOBOX)
 //		return 0;
 //
 //	return static_cast<UIComboBox*>(cell._pCtrl);
@@ -2581,7 +2573,7 @@ void UIGrid::SetCellButton(int id, UINT row, UINT column, UIString str) {
 
 	GridCellInfo& cell = _cellArray[row][column];
 	cell._text = str;
-	if (cell._pCtrl != NULL) {
+	if (cell._pCtrl) {
 		cell._isHold = false;
 		cell.DeleteCellControl();
 	}
@@ -3177,7 +3169,7 @@ void UIGrid::OnChar(TCHAR nChar) {
 	if (pSelCell->_controlType == GridCellInfo::CTRL_EDIT) {
 		// create edit control
 		pSelCell->CreateCellControl(&_uiContainer, _firstRowPos, _firstColumnPos);
-		UIEdit* pEdit = (UIEdit*)(pSelCell->_pCtrl);
+		UIEdit* pEdit = (UIEdit*)(pSelCell->_pCtrl.get());
 
 		// send the trigger character to the edit control
 		UIPostMessage(pEdit, WM_CHAR, nChar, 0);

@@ -581,10 +581,10 @@ class UIGrid : public UIControlBase<UIGrid>, public UIContainerHelp<UIGrid>, pub
 		void MoveCellControl(const RECT& rc);
 		void DrawCellControl();
 
-		RECT _pos;							// cell position	
+		RECT _pos;								// cell position	
 
-		std::wstring _text;					// wstring content
-		//int _wordPos;						// wstring position left, center, right
+		std::wstring _text;						// wstring content
+		//int _wordPos;							// wstring position left, center, right
 		UIColor _color;
 
 		// cell control information
@@ -594,9 +594,9 @@ class UIGrid : public UIControlBase<UIGrid>, public UIContainerHelp<UIGrid>, pub
 			CTRL_COMBOBOX,
 			CTRL_BUTTON
 		};
-		int _controlType;					// control type
-		UIWindowBase* _pCtrl;				// UI control
-		bool _isHold;						// whether to maintain
+		int _controlType;						// control type
+		std::unique_ptr<UIWindowBase> _pCtrl;
+		bool _isHold;							// whether to maintain
 	};
 
 public:
