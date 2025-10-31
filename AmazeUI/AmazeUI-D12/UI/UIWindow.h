@@ -264,7 +264,6 @@ public:
 private:
 	UIUpdateQueue() = default;
 	~UIUpdateQueue() = default;
-
 	std::deque<UIUpdateFunc> _updateQueue;		// UI update function queue
 	mutable std::mutex _queueMutex;				// Thread synchronization
 };

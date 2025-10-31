@@ -199,41 +199,23 @@ private:
 template<class T>
 class SingletonPattern {
 public:
-	// Get the singleton instance
-	static T* GetSingletonInstance() {
-		if (_pInstance == nullptr) {
-			_pInstance = new T;
-		}
+    // Get the singleton instance (thread-safe, C++11 guarantees)
+    static T* GetSingletonInstance() {
+        // C++11 magic statics: Thread-safe initialization guaranteed by standard
+        static T instance;
+        return &instance;
+    }
 
-		return _pInstance;
-	}
-
-	// Destroy the singleton instance
-	static void DestroySingletonInstance() {
-		if (_pInstance != nullptr) {
-			delete _pInstance;
-		}
-
-		_pInstance = NULL;
-	}
-
-	// Delete copy constructor and assignment operator
+    // Delete copy and move operations
     SingletonPattern(const SingletonPattern&) = delete;
     SingletonPattern& operator=(const SingletonPattern&) = delete;
+    SingletonPattern(SingletonPattern&&) = delete;
+    SingletonPattern& operator=(SingletonPattern&&) = delete;
 
 protected:
-    // Protected constructor to prevent direct instantiation
     SingletonPattern() = default;
     virtual ~SingletonPattern() = default;
-
-private:
-    static T* _pInstance;    // The singleton instance
 };
-
-// Initialize the singleton instance
-template<class T>
-T* SingletonPattern<T>::_pInstance = nullptr;
-
 
 /*-------------------------------------------------- Thread Manager --------------------------------------------------*/
 template<class T>

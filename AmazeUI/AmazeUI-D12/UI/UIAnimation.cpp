@@ -7,7 +7,6 @@ using namespace std;
 using namespace UIShape2D;
 
 UIAnimationManage::~UIAnimationManage() {
-	UICaret::GetSingletonInstance()->DestroySingletonInstance();
 }
 
 void UIAnimationManage::AddAnimation(UIAnimationBase* pAnimateObj) {
