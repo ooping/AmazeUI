@@ -27,8 +27,8 @@
 #include <DirectXColors.h>
 
 
-#include "..\\Kits\\ATGTK\\d3dx12.h"
-#include "..\\Kits\\ATGTK\\FindMedia.h"
+//#include "..\\Kits\\ATGTK\\d3dx12.h"
+//#include "..\\Kits\\ATGTK\\FindMedia.h"
 
 
 

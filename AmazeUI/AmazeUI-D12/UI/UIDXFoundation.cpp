@@ -348,9 +348,8 @@ void UIDeviceResources::CreateWindowSizeDependentResources() {
         rtvDesc.Format = _backBufferFormat;
         rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
 
-        CD3DX12_CPU_DESCRIPTOR_HANDLE rtvDescriptor(
-            _rtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart(),
-            static_cast<INT>(n), _rtvDescriptorSize);
+        D3D12_CPU_DESCRIPTOR_HANDLE rtvDescriptor = _rtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+        rtvDescriptor.ptr += static_cast<INT>(n) * _rtvDescriptorSize;
         _d3dDevice->CreateRenderTargetView(_renderTargets[n].Get(), &rtvDesc, rtvDescriptor);
     }
 
@@ -360,15 +359,24 @@ void UIDeviceResources::CreateWindowSizeDependentResources() {
     if (_depthBufferFormat != DXGI_FORMAT_UNKNOWN) {
         // Allocate a 2-D surface as the depth/stencil buffer and create a depth/stencil view
         // on this surface.
-        CD3DX12_HEAP_PROPERTIES depthHeapProperties(D3D12_HEAP_TYPE_DEFAULT);
+        D3D12_HEAP_PROPERTIES depthHeapProperties = {};
+        depthHeapProperties.Type = D3D12_HEAP_TYPE_DEFAULT;
+        depthHeapProperties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+        depthHeapProperties.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+        depthHeapProperties.CreationNodeMask = 0;
+        depthHeapProperties.VisibleNodeMask = 0;
 
-        D3D12_RESOURCE_DESC depthStencilDesc = CD3DX12_RESOURCE_DESC::Tex2D(
-            _depthBufferFormat,
-            backBufferWidth,
-            backBufferHeight,
-            1, // This depth stencil view has only one texture.
-            1  // Use a single mipmap level.
-            );
+        D3D12_RESOURCE_DESC depthStencilDesc = {};
+        depthStencilDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+        depthStencilDesc.Alignment = 0;
+        depthStencilDesc.Width = backBufferWidth;
+        depthStencilDesc.Height = backBufferHeight;
+        depthStencilDesc.DepthOrArraySize = 1;
+        depthStencilDesc.MipLevels = 1;
+        depthStencilDesc.Format = _depthBufferFormat;
+        depthStencilDesc.SampleDesc.Count = 1;
+        depthStencilDesc.SampleDesc.Quality = 0;
+        depthStencilDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
         depthStencilDesc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
 
         D3D12_CLEAR_VALUE depthOptimizedClearValue = {};
@@ -467,7 +475,13 @@ void UIDeviceResources::Prepare(D3D12_RESOURCE_STATES beforeState) {
 
     if (beforeState != D3D12_RESOURCE_STATE_RENDER_TARGET) {
         // Transition the render target into the correct state to allow for drawing into it.
-        D3D12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(_renderTargets[_backBufferIndex].Get(), beforeState, D3D12_RESOURCE_STATE_RENDER_TARGET);
+        D3D12_RESOURCE_BARRIER barrier = {};
+        barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+        barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+        barrier.Transition.pResource = _renderTargets[_backBufferIndex].Get();
+        barrier.Transition.StateBefore = beforeState;
+        barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+        barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
         _commandList->ResourceBarrier(1, &barrier);
     }
 }
@@ -476,13 +490,20 @@ void UIDeviceResources::Prepare(D3D12_RESOURCE_STATES beforeState) {
 void UIDeviceResources::Present(D3D12_RESOURCE_STATES beforeState) {
     if (beforeState != D3D12_RESOURCE_STATE_PRESENT) {
         // Transition the render target to the state that allows it to be presented to the display.
-        D3D12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(_renderTargets[_backBufferIndex].Get(), beforeState, D3D12_RESOURCE_STATE_PRESENT);
+        D3D12_RESOURCE_BARRIER barrier = {};
+        barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+        barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+        barrier.Transition.pResource = _renderTargets[_backBufferIndex].Get();
+        barrier.Transition.StateBefore = beforeState;
+        barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
+        barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
         _commandList->ResourceBarrier(1, &barrier);
     }
 
     // Send the command list off to the GPU for processing.
     ThrowIfFailed(_commandList->Close());
-    _commandQueue->ExecuteCommandLists(1, CommandListCast(_commandList.GetAddressOf()));
+    ID3D12CommandList* pCommandLists[] = { _commandList.Get() };
+    _commandQueue->ExecuteCommandLists(1, pCommandLists);
 
     HRESULT hr;
     if (_options & c_AllowTearing) {
@@ -1178,7 +1199,13 @@ bool UITextureManager::CreateTextureFromImageData(ID3D12Device* device, DirectX:
     textureDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
     
     // Create texture resource
-    CD3DX12_HEAP_PROPERTIES defaultHeapProperties(D3D12_HEAP_TYPE_DEFAULT);
+    D3D12_HEAP_PROPERTIES defaultHeapProperties = {};
+    defaultHeapProperties.Type = D3D12_HEAP_TYPE_DEFAULT;
+    defaultHeapProperties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+    defaultHeapProperties.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+    defaultHeapProperties.CreationNodeMask = 0;
+    defaultHeapProperties.VisibleNodeMask = 0;
+    
     HRESULT hr = device->CreateCommittedResource(
         &defaultHeapProperties,
         D3D12_HEAP_FLAG_NONE,
@@ -2479,13 +2506,13 @@ bool UIDXFoundation::GetFTSizeFont(float fontSize, FTSizeFont& ftSizeFont) {
 
         // load font
         wchar_t strFilePath[MAX_PATH] = {};
-        DX::FindMediaFile(strFilePath, MAX_PATH, L"times.ttf");
+        FindMediaFile(strFilePath, MAX_PATH, L"times.ttf");
         if (FT_New_Face(_ftLibrary, WSTR_TO_STR(strFilePath).c_str(), 0, &ftSizeFontCache._ftFace)) {
             return false;
         }
 
         memset(strFilePath, 0, MAX_PATH);
-        DX::FindMediaFile(strFilePath, MAX_PATH, L"simsun.ttc");
+        FindMediaFile(strFilePath, MAX_PATH, L"simsun.ttc");
         if (FT_New_Face(_ftLibrary, WSTR_TO_STR(strFilePath).c_str(), 0, &ftSizeFontCache._ftFaceBackup)) {
             return false;
         }

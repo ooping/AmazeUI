@@ -57,13 +57,13 @@ public:
 	DXGI_COLOR_SPACE_TYPE       GetColorSpace() const           { return _colorSpace; }
 	unsigned int                GetDeviceOptions() const        { return _options; }
 
-	CD3DX12_CPU_DESCRIPTOR_HANDLE GetRenderTargetView() const {
-		return CD3DX12_CPU_DESCRIPTOR_HANDLE(
-			_rtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart(),
-			static_cast<INT>(_backBufferIndex), _rtvDescriptorSize);
+	D3D12_CPU_DESCRIPTOR_HANDLE GetRenderTargetView() const {
+		D3D12_CPU_DESCRIPTOR_HANDLE handle = _rtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+		handle.ptr += static_cast<INT>(_backBufferIndex) * _rtvDescriptorSize;
+		return handle;
 	}
-	CD3DX12_CPU_DESCRIPTOR_HANDLE GetDepthStencilView() const {
-		return CD3DX12_CPU_DESCRIPTOR_HANDLE(_dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
+	D3D12_CPU_DESCRIPTOR_HANDLE GetDepthStencilView() const {
+		return _dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
 	}
 
 private:
