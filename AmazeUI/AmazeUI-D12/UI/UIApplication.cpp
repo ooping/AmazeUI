@@ -1,7 +1,9 @@
 #include "UIApplication.h"
 #include "UIWindow.h"
+#include "UIDXFoundation.h"
 
 using namespace std;
+using namespace UIShape2D;
 
 UIWin32APP::UIWin32APP() {
 	_hWnd = NULL;
@@ -87,10 +89,17 @@ LRESULT CALLBACK UIWin32APP::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
 	// handle win32 message
 	static bool s_in_sizemove = false;
 
+	// WM_SIZERESET
+	auto handleSizeReset = []() {
+		RECT rc;
+		::GetClientRect(UIFrame::GetSingletonInstance()->GetWindowHandle(), &rc);
+		UIDXFoundation::GetSingletonInstance()->HandleWindowSizeChanged(GetRectWidth()(rc), GetRectHeight()(rc));
+	};
+
 	switch (message) {
 		case WM_SIZE: {
 			if (wParam != SIZE_MINIMIZED && !s_in_sizemove) {
-				UIPostMessage(NULL, WM_SIZERESET, wParam, lParam);
+				UIPostEvent(handleSizeReset);
 			}
 		} break;
 		// case WM_ENTERSIZEMOVE:
@@ -98,7 +107,7 @@ LRESULT CALLBACK UIWin32APP::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
 		// 	break;
 		case WM_EXITSIZEMOVE: {
      		s_in_sizemove = false;
-			UIPostMessage(NULL, WM_SIZERESET, wParam, lParam);
+			UIPostEvent(handleSizeReset);
 		} break;
 		case WM_DESTROY: {
 			PostQuitMessage(0);

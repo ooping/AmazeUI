@@ -1617,7 +1617,7 @@ void UIGrid::DrawSelectedALL(UIColor& selectColor) {
 	// Draw the unfix area (offset = 0 for selection backgrounds)
 	RECT rc = CreateRect()(_unfixGridArea.left, _unfixGridArea.top, _unfixGridArea.right, _unfixGridArea.bottom);
 	OffsetRect(&rc, x_, y_);
-	UIRect(rc, _z, renderLevel + 2)(selectColor, 180, _inheritedTransformMatrix);
+	UIRect(rc, _z, renderLevel + 4)(selectColor, 180, _inheritedTransformMatrix);
 }
 
 void UIGrid::DrawSelectedCELL() {
@@ -1638,7 +1638,7 @@ void UIGrid::DrawSelectedCELL() {
 		if (!pSelCell->_pCtrl) {
 			rc = CreateRect()(pos.left + _firstColumnPos, pos.top + _firstRowPos, pos.right + _firstColumnPos, pos.bottom + _firstRowPos);
 			OffsetRect(&rc, x_, y_);
-			UIRect(rc, _z - gDeltaZ, renderLevel + 2)(UIColor::PrimaryPurple, _inheritedTransformMatrix); // z-0.01f should > 0.0f
+			UIRect(rc, _z - gDeltaZ, renderLevel + 4)(UIColor::PrimaryPurple, _inheritedTransformMatrix); // z-0.01f should > 0.0f
 		}
 	}
 
@@ -1651,7 +1651,7 @@ void UIGrid::DrawSelectedCELL() {
 
 		rc = CreateRect()(_cellArray[0][0]._pos.left, pos.top + _firstRowPos, _cellArray[0][0]._pos.right, pos.bottom + _firstRowPos);
 		OffsetRect(&rc, x_, y_);
-		UIRect(rc, _z, renderLevel + 2)(UIColor::PrimaryPurple, 250, _inheritedTransformMatrix);
+		UIRect(rc, _z, renderLevel + 4)(UIColor::PrimaryPurple, 250, _inheritedTransformMatrix);
 	}
 	// Draw the selected column information
 	if (_isFirstRowFix) {
@@ -1661,7 +1661,7 @@ void UIGrid::DrawSelectedCELL() {
 
 		rc = CreateRect()(pos.left + _firstColumnPos, _cellArray[0][0]._pos.top, pos.right + _firstColumnPos, _cellArray[0][0]._pos.bottom);
 		OffsetRect(&rc, x_, y_);
-		UIRect(rc, _z, renderLevel + 2)(UIColor::PrimaryPurple, 250, _inheritedTransformMatrix);
+		UIRect(rc, _z, renderLevel + 4)(UIColor::PrimaryPurple, 250, _inheritedTransformMatrix);
 	}
 }
 
@@ -1688,7 +1688,7 @@ void UIGrid::DrawSelectedCELLS(UIColor& selectColor) {
 		// Draw the selected cell
 		rc = CreateRect()(posBegin.left + _firstColumnPos + 1, posBegin.top + _firstRowPos + 1, posEnd.right + _firstColumnPos, posEnd.bottom + _firstRowPos);
 		OffsetRect(&rc, x_, y_);
-		UIRect(rc, _z, renderLevel + 2)(selectColor, 180, _inheritedTransformMatrix);
+		UIRect(rc, _z, renderLevel + 4)(selectColor, 180, _inheritedTransformMatrix);
 	}
 
 	// Draw the fix area cell row and column information (offset = 1)
@@ -1700,7 +1700,7 @@ void UIGrid::DrawSelectedCELLS(UIColor& selectColor) {
 
 		rc = CreateRect()(_cellArray[0][0]._pos.left, posBegin.top + _firstRowPos, _cellArray[0][0]._pos.right, posEnd.bottom + _firstRowPos);
 		OffsetRect(&rc, x_, y_);
-		UIRect(rc, _z, renderLevel + 2)(UIColor::PrimaryPurple, 250, _inheritedTransformMatrix);
+		UIRect(rc, _z, renderLevel + 4)(UIColor::PrimaryPurple, 250, _inheritedTransformMatrix);
 	}
 	// Draw the selected column information
 	if (_isFirstRowFix) {
@@ -1710,7 +1710,7 @@ void UIGrid::DrawSelectedCELLS(UIColor& selectColor) {
 
 		rc = CreateRect()(posBegin.left + _firstColumnPos, _cellArray[0][0]._pos.top, posEnd.right + _firstColumnPos, _cellArray[0][0]._pos.bottom);
 		OffsetRect(&rc, x_, y_);
-		UIRect(rc, _z, renderLevel + 2)(UIColor::PrimaryPurple, 250, _inheritedTransformMatrix);
+		UIRect(rc, _z, renderLevel + 4)(UIColor::PrimaryPurple, 250, _inheritedTransformMatrix);
 	}
 }
 
@@ -1729,7 +1729,7 @@ void UIGrid::DrawSelectedROW(UIColor& selectColor) {
 			RECT& pos = _cellArray[*i][0]._pos;
 			rc = CreateRect()(pos.right, pos.top + _firstRowPos, _gridArea.right, pos.bottom + _firstRowPos);
 			OffsetRect(&rc, x_, y_);
-			UIRect(rc, _z, renderLevel + 2)(selectColor, 180, _inheritedTransformMatrix);
+			UIRect(rc, _z, renderLevel + 4)(selectColor, 180, _inheritedTransformMatrix);
 		}
 	}
 
@@ -1742,7 +1742,7 @@ void UIGrid::DrawSelectedROW(UIColor& selectColor) {
 			RECT& pos = _cellArray[*i][0]._pos;
 			rc = CreateRect()(pos.left, pos.top + _firstRowPos, pos.right, pos.bottom + _firstRowPos);
 			OffsetRect(&rc, x_, y_);
-			UIRect(rc, _z, renderLevel + 2)(UIColor::PrimaryPurple, 250, _inheritedTransformMatrix);
+			UIRect(rc, _z, renderLevel + 4)(UIColor::PrimaryPurple, 250, _inheritedTransformMatrix);
 		}
 	}
 }
@@ -1762,7 +1762,7 @@ void UIGrid::DrawSelectedCOLUMN(UIColor& selectColor) {
 			RECT& pos = _cellArray[0][*i]._pos;
 			rc = CreateRect()(pos.left + _firstColumnPos, pos.bottom, pos.right + _firstColumnPos, _gridArea.bottom);
 			OffsetRect(&rc, x_, y_);
-			UIRect(rc, _z, renderLevel + 2)(selectColor, 180, _inheritedTransformMatrix);
+			UIRect(rc, _z, renderLevel + 4)(selectColor, 180, _inheritedTransformMatrix);
 		}
 	}
 
@@ -1775,7 +1775,7 @@ void UIGrid::DrawSelectedCOLUMN(UIColor& selectColor) {
 			RECT& pos = _cellArray[0][*i]._pos;
 			rc = CreateRect()(pos.left + _firstColumnPos, pos.top, pos.right + _firstColumnPos, pos.bottom);
 			OffsetRect(&rc, x_, y_);
-			UIRect(rc, _z, renderLevel + 2)(UIColor::PrimaryPurple, 250, _inheritedTransformMatrix);
+			UIRect(rc, _z, renderLevel + 4)(UIColor::PrimaryPurple, 250, _inheritedTransformMatrix);
 		}
 	}
 }

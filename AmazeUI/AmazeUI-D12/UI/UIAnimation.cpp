@@ -7,6 +7,7 @@ using namespace std;
 using namespace UIShape2D;
 
 UIAnimationManage::~UIAnimationManage() {
+	_animationList.clear();
 }
 
 void UIAnimationManage::AddAnimation(UIAnimationBase* pAnimateObj) {
@@ -52,10 +53,16 @@ void UIAnimationManage::DrawAnimations() {
 }
 
 void UIRegisterAnimate(UIAnimationBase* pAnimateObj) {
-	UIPostMessage(NULL, WM_REGANIMATE, (WPARAM)pAnimateObj, 0);
+	UIPostEvent([pAnimateObj]() {
+		UIAnimationManage::GetSingletonInstance()->AddAnimation(pAnimateObj);
+	});
 }
 
-
+void UIUnRegisterAnimate(UIAnimationBase* pAnimateObj) {
+	UIPostEvent([pAnimateObj]() {
+		UIAnimationManage::GetSingletonInstance()->DelAnimation(pAnimateObj);
+	});
+}
 
 UICaret::UICaret() {
 	_x = 0;
@@ -69,13 +76,17 @@ UICaret::UICaret() {
 	_isCaretOn = false;
 }
 
+UICaret::~UICaret() {
+	HideCaret();		// ?? no mutex lock here
+}
+
 bool UICaret::IsAnimationRun() {
 	return true;
 }
 
 bool UICaret::UpdateAnimation() {
 	DWORD nowTick = ::GetTickCount();
-	DWORD dxTick = nowTick - _oldTick;						// ?????
+	DWORD dxTick = nowTick - _oldTick;
 	
 	if (dxTick > 600) {
 		_oldTick = nowTick;

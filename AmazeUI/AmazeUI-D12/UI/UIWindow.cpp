@@ -85,19 +85,19 @@ bool UIWindowBase::DefHandleMessage(UINT message, WPARAM wParam, LPARAM lParam) 
 		return true;
 	}
 
-	// message pre-processing
-	bool rt = false;
-	if (p_UIContainer != nullptr) {	
-		// sub-window processing the corresponding message
-		rt = p_UIContainer->HandleMessagePre(message, wParam, lParam);
-	}
-
 	if (message == WM_CREATE) {	
 		// add the newly created window to the parent container
 		p_parentUIContainer->AddChild(this);
 	} else if (message == WM_DESTROY) {
 		// delete the window from the parent container
 		p_parentUIContainer->DelChild(this);
+	}
+
+	// message pre-processing
+	bool rt = false;
+	if (p_UIContainer != nullptr) {	
+		// sub-window processing the corresponding message
+		rt = p_UIContainer->HandleMessagePre(message, wParam, lParam);
 	}
 
 	return rt;
@@ -376,28 +376,8 @@ bool UIContainer::HandleMessagePre(UINT message, WPARAM wParam, LPARAM lParam) {
 	bool isMsgHandled = false;
 
 	switch (message) {
-		case WM_MQ:	{
-			// top container create
-			((pMQFuncType)wParam)(lParam);
-			isMsgHandled = true;
-		} break;
-		case WM_SIZERESET: {
-			RECT rc;
-			if (::GetClientRect(UIFrame::GetSingletonInstance()->GetWindowHandle(), &rc) == TRUE) {
-				ULONG width = rc.right-rc.left;
-				ULONG height = rc.bottom-rc.top;
-
-				UIDXFoundation::GetSingletonInstance()->HandleWindowSizeChanged(width, height);
-			}
-			isMsgHandled = true;
-		} break;
-		case WM_REGANIMATE: {
-			//UIAnimationBase* pAnimate = (UIAnimationBase*)wParam;
-			UIAnimationManage::GetSingletonInstance()->AddAnimation((UIAnimationBase*)wParam);
-			isMsgHandled = true;
-		} break;
 		case WM_DESTROY: {
-			for (UINT i = 0; i<_winList.size(); ++i) {
+			for (int i = (int)_winList.size() - 1; i >= 0; --i) {
 				_winList[i].p_win->HandleMessage(WM_DESTROY, 0, 0);
 			}
 		} break;
@@ -646,10 +626,7 @@ bool UIMessageFilter1(UINT message) {
         case WM_NOTIFY:
         case WM_HSCROLL:
         case WM_VSCROLL:
-        case WM_SIZERESET:
-        case WM_REGANIMATE:
-        case WM_MQ:
-            rt = true;
+			rt = true;
             break;
 	}
 	return rt;
@@ -730,7 +707,7 @@ void UIMessageLoop::RunMessageLoopThread() {
 		bool needsRepaint = false;  // repaint flag
 
 		// Step 1: Process all UI update closures first
-		if (UIUpdateQueue::GetSingletonInstance()->ProcessAll()) {
+		if (UIEventQueue::GetSingletonInstance()->ProcessAll()) {
 			needsRepaint = true;
 		}		
 		
@@ -792,23 +769,34 @@ bool UIMessageLoop::HandleMessage(UIWindowBase* winPoint, UINT message, WPARAM w
 	return rt;
 }
 
-void UIUpdateQueue::Post(UIUpdateFunc func) {
+void UIEventQueue::Post(UIEventFunc func) {
 	std::lock_guard<std::mutex> lock(_queueMutex);
-	_updateQueue.push_back(func);
+	_eventQueue.push_back(func);
 }
 
-bool UIUpdateQueue::ProcessAll() {
-	std::lock_guard<std::mutex> lock(_queueMutex);
+bool UIEventQueue::ProcessAll() {
+	std::deque<UIEventFunc> localQueue;
 	
-	if (_updateQueue.empty()) {
-		return false;
-	}
-	
-	while (!_updateQueue.empty()) {
-		auto func = _updateQueue.front();
-		_updateQueue.pop_front();
+	// Step 1: Swap the global queue with local queue under lock, then immediately release the lock
+	{
+		std::lock_guard<std::mutex> lock(_queueMutex);
 		
-		// Execute the UI update function in the message loop thread
+		if (_eventQueue.empty()) {
+			return false;
+		}
+		
+		// Swap is O(1) operation: only pointers are exchanged
+		// After swap: _eventQueue becomes empty, localQueue contains all events
+		localQueue.swap(_eventQueue);
+	}
+	// Lock is released here
+	
+	// Step 2: Execute all events without holding any lock
+	// This allows nested UIPostEvent() calls to work safely
+	while (!localQueue.empty()) {
+		auto func = localQueue.front();
+		localQueue.pop_front();
+		
 		func();
 	}
 	

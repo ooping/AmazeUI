@@ -98,11 +98,6 @@
 
 
 #define WM_SIZERESET					(WM_USER+1003)
-#define WM_REGANIMATE					(WM_USER+1005)
-#define WM_MQ							(WM_USER+1006)
-
-typedef void (*pMQFuncType)(LPARAM lParam);
-
 
 /*-------------------------------------------------- UI utility functions--------------------------------------------------*/
 namespace UIShape2D {

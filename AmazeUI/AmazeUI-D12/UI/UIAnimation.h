@@ -42,6 +42,7 @@ protected:
 	std::list<UIAnimationBase*> _animationList;				// Animation list, animations will be deleted automatically when finished
 };
 void UIRegisterAnimate(UIAnimationBase* pAnimateObj);
+void UIUnRegisterAnimate(UIAnimationBase* pAnimateObj);
 
 
 
@@ -56,6 +57,7 @@ public:
 
 private:
 	UICaret();
+	~UICaret();
 
 	bool IsAnimationRun();
 	bool UpdateAnimation();

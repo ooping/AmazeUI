@@ -42,7 +42,7 @@ namespace UIWidgetIDs {
 using namespace UIWidgetIDs;
 
 void UIWinTop::ShowMsg(const string& msg) {
-	UIPostUpdate([msg = move(msg)]() {
+	UIPostEvent([msg = move(msg)]() {
 		Label_MSG()->SetText(msg);
 	});
 }
@@ -255,12 +255,12 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
         return 1;
     }
 
-    UIPostMessage(NULL, WM_MQ, (WPARAM)(pMQFuncType)[](LPARAM) {
-        RECT rc;
-        ::GetClientRect(UIFrame::GetSingletonInstance()->GetWindowHandle(), &rc);
+	UIPostEvent([]() {
+		RECT rc;
+		::GetClientRect(UIFrame::GetSingletonInstance()->GetWindowHandle(), &rc);
 
-        UIWinTop::GetSingletonInstance()->CreateWindowBase(UIFrame::GetSingletonInstance()->GetTopUIContainer(), rc, UILayoutCalc::SIZE_X | UILayoutCalc::SIZE_Y);
-    }, 0);
+		UIWinTop::GetSingletonInstance()->CreateWindowBase(UIFrame::GetSingletonInstance()->GetTopUIContainer(), rc, UILayoutCalc::SIZE_X | UILayoutCalc::SIZE_Y);
+	});
 
     // initialize UI
     UIWin32APP::GetSingletonInstance()->Instance(hInstance, L"AmazeUI Controls", 1800, 1000);
