@@ -226,134 +226,84 @@ protected:
         StopThread();
     }
     
-	// Start thread with parameters
-    bool StartThread(void (T::*threadFunc)(void*), void* param = nullptr) {
+    // Start thread with arbitrary parameters (C++20)
+    template<typename Func, typename... Args>
+    bool StartThread(Func&& func, Args&&... args) {
         std::lock_guard<std::mutex> lock(_threadMutex);
         
-		// Check if the thread is already running
-        if (_threadData) {
-            if (_threadData->_isFinished) {
-                if (_threadData->_thread.joinable()) {
-                    _threadData->_thread.join();
-                }
-                _threadData.reset();
-            } else {
-                return false;
-            }
-        }
-
-		// Create a new thread data
-        _threadData = std::make_unique<ThreadData>();
-        _threadData->_shouldStop = false;
-        _threadData->_isFinished = false;
-        _threadData->_thread = std::thread([this, threadFunc, param]() {
-            (static_cast<T*>(this)->*threadFunc)(param);
-
-			// Set the thread as finished
-            std::lock_guard<std::mutex> lock(_threadMutex);
-            _threadData->_isFinished = true;
-        });
-        
-        return true;
-    }
-
-	// Start thread without parameters
-    bool StartThread(void (T::*threadFunc)()) {
-        std::lock_guard<std::mutex> lock(_threadMutex);
-        
-        // Check if the thread is already running
-        if (_threadData) {
-            if (_threadData->_isFinished) {
-                if (_threadData->_thread.joinable()) {
-                    _threadData->_thread.join();
-                }
-                _threadData.reset();
-            } else {
-                return false;
-            }
-        }
-
-        _threadData = std::make_unique<ThreadData>();
-        _threadData->_shouldStop = false;
-        _threadData->_isFinished = false;
-        _threadData->_thread = std::thread([this, threadFunc]() {
-            (static_cast<T*>(this)->*threadFunc)();
-            
-            std::lock_guard<std::mutex> lock(_threadMutex);
-            _threadData->_isFinished = true;
-        });
-        
-        return true;
-    }
-
-    bool WaitThreadDone() {
-    std::lock_guard<std::mutex> lock(_threadMutex);
-
-    if (!_threadData) {
-        return false;
-    }
-
-    if (_threadData->_thread.joinable()) {
-        _threadData->_thread.join();
-        return true;
-    }
-
-    return false;
-}
-
-	// Stop thread
-    bool StopThread(std::chrono::milliseconds timeout = std::chrono::seconds(5)) {
-        std::lock_guard<std::mutex> lock(_threadMutex);
-        
-        if (!_threadData) {
+        if (_threadData && _threadData->_thread.joinable()) {
             return false;
         }
 
-        if (_threadData->_thread.joinable()) {
-            _threadData->_shouldStop = true;
-            std::future<void> future = std::async(std::launch::async, [this]() {
-                _threadData->_thread.join();
-            });
-            
-            if (future.wait_for(timeout) == std::future_status::timeout) {
-                // If the timeout occurs, force the thread to terminate
-            #ifdef _WIN32
-                if (_threadData->_thread.native_handle()) {
-                    TerminateThread(_threadData->_thread.native_handle(), 0);
-                }
-            #endif
-            }
-        }
+        _threadData = std::make_unique<ThreadData>();
         
-        // Clean up the thread data
-        _threadData->_isFinished = true;
-        _threadData.reset();
+        _threadData->_thread = std::jthread([this,
+                                             func = std::forward<Func>(func), 
+                                             ...args = std::forward<Args>(args)]() mutable {
+            if constexpr (std::is_member_function_pointer_v<std::decay_t<Func>>) {
+                (static_cast<T*>(this)->*func)(std::forward<Args>(args)...);
+            } else {
+                func(std::forward<Args>(args)...);
+            }
+        });
+        
         return true;
     }
 
-	// Check if the thread should stop
-    bool isThreadShouldStop() const {
-        //std::lock_guard<std::mutex> lock(_threadMutex);
-        return !_threadData || _threadData->_shouldStop;
+    // Stop thread with timeout
+    bool StopThread(std::chrono::milliseconds timeout = std::chrono::seconds(5)) {
+        std::unique_lock<std::mutex> lock(_threadMutex);
+        
+        if (!_threadData || !_threadData->_thread.joinable()) {
+            _threadData.reset();
+            return false;
+        }
+
+        _threadData->_thread.request_stop();
+
+        std::jthread tempThread = std::move(_threadData->_thread);
+        lock.unlock();
+
+        std::future<void> future = std::async(std::launch::async, 
+            [&tempThread]() { tempThread.join(); });
+        
+        bool success = (future.wait_for(timeout) == std::future_status::ready);
+        
+        if (!success && tempThread.joinable()) {
+            tempThread.detach();
+        }
+        
+        lock.lock();
+        _threadData.reset();
+        return success;
     }
 
-	// Check if the thread is running
+    // Check if thread should stop
+    bool isThreadShouldStop() const {
+        std::lock_guard<std::mutex> lock(_threadMutex);
+        
+        if (!_threadData || !_threadData->_thread.joinable()) {
+            return true;
+        }
+        
+        return _threadData->_thread.get_stop_token().stop_requested();
+    }
+
+    // Check if thread is running
     bool IsThreadRunning() const {
-        //std::lock_guard<std::mutex> lock(_threadMutex);
+        std::lock_guard<std::mutex> lock(_threadMutex);
         return _threadData && _threadData->_thread.joinable();
     }
 
 private:
     struct ThreadData {
-        std::thread _thread;
-        std::atomic<bool> _shouldStop{false};
-        std::atomic<bool> _isFinished{false};
+        std::jthread _thread;
     };
 
     mutable std::mutex _threadMutex;
     std::unique_ptr<ThreadData> _threadData;
 
-	// Disable copy and assignment
+    // Disable copy and assignment
     SingleThreadHelper(const SingleThreadHelper&) = delete;
     SingleThreadHelper& operator=(const SingleThreadHelper&) = delete;
 };
@@ -366,150 +316,122 @@ protected:
         StopAllThreads();
     }
     
-    // Start thread with parameters
-    bool StartThread(const std::string& threadName, void (T::*threadFunc)(void*), void* param = nullptr) {
+    // Start thread with arbitrary parameters (C++20)
+    template<typename Func, typename... Args>
+    bool StartThread(const std::string& threadName, Func&& func, Args&&... args) {
         std::lock_guard<std::mutex> lock(_threadMutex);
         
-        auto it = _threads.find(threadName);
-        if (it != _threads.end()) {
-            if (it->second->_isFinished) {
-                if (it->second->_thread.joinable()) {
-                    it->second->_thread.join();
-                }
-                _threads.erase(it);
-            } else {
-                return false;
-            }
+        if (_threads.contains(threadName) && 
+            _threads[threadName]->_thread.joinable()) {
+            return false;
         }
 
         _threads[threadName] = std::make_unique<ThreadData>();
-        _threads[threadName]->_shouldStop = false;
-        _threads[threadName]->_isFinished = false;
-        _threads[threadName]->_thread = std::thread([this, threadName, threadFunc, param]() {
-            (static_cast<T*>(this)->*threadFunc)(param);
-            
-            // Automatically clean up when the thread ends
-            std::lock_guard<std::mutex> lock(_threadMutex);
-            _threads[threadName]->_isFinished = true;
+        auto& threadData = _threads[threadName];
+        
+        threadData->_thread = std::jthread([this, threadName,
+                                           func = std::forward<Func>(func), 
+                                           ...args = std::forward<Args>(args)]() mutable {
+            if constexpr (std::is_member_function_pointer_v<std::decay_t<Func>>) {
+                (static_cast<T*>(this)->*func)(std::forward<Args>(args)...);
+            } else {
+                func(std::forward<Args>(args)...);
+            }
         });
         
         return true;
     }
 
-    // Start thread without parameters
-    bool StartThread(const std::string& threadName, void (T::*threadFunc)()) {
-        std::lock_guard<std::mutex> lock(_threadMutex);
+    // Stop thread with timeout
+    bool StopThread(const std::string& threadName, 
+                     std::chrono::milliseconds timeout = std::chrono::seconds(5)) {
+        std::unique_lock<std::mutex> lock(_threadMutex);
         
-        auto it = _threads.find(threadName);
-        if (it != _threads.end()) {
-            if (it->second->_isFinished) {
-                if (it->second->_thread.joinable()) {
-                    it->second->_thread.join();
-                }
-                _threads.erase(it);
-            } else {
-                return false;
-            }
-        }
-
-        _threads[threadName] = std::make_unique<ThreadData>();
-        _threads[threadName]->_shouldStop = false;
-        _threads[threadName]->_isFinished = false;
-        _threads[threadName]->_thread = std::thread([this, threadName, threadFunc]() {
-            (static_cast<T*>(this)->*threadFunc)();
-            
-            std::lock_guard<std::mutex> lock(_threadMutex);
-            _threads[threadName]->_isFinished = true;
-        });
-        
-        return true;
-    }
-
-    bool WaitThreadDone(const std::string& threadName) {
-        std::lock_guard<std::mutex> lock(_threadMutex);
-
-        auto it = _threads.find(threadName);
-        if (it == _threads.end()) {
+        if (!_threads.contains(threadName) || 
+            !_threads[threadName]->_thread.joinable()) {
+            _threads.erase(threadName);
             return false;
         }
 
-        if (it->second->_thread.joinable()) {
-            it->second->_thread.join();
-            return true;
-        }
+        auto& threadData = _threads[threadName];
+        threadData->_thread.request_stop();
 
-        return false;
-    }
+        std::jthread tempThread = std::move(threadData->_thread);
+        lock.unlock();
 
-    // Stop specified thread
-    bool StopThread(const std::string& threadName, std::chrono::milliseconds timeout = std::chrono::seconds(5)) {
-        std::lock_guard<std::mutex> lock(_threadMutex);
+        std::future<void> future = std::async(std::launch::async, 
+            [&tempThread]() { tempThread.join(); });
         
-        auto it = _threads.find(threadName);
-        if (it == _threads.end()) {
-            return false;
-        }
-
-        if (it->second->_thread.joinable()) {
-            it->second->_shouldStop = true;
-            std::future<void> future = std::async(std::launch::async, [&thread = it->second->_thread]() {
-                thread.join();
-            });
-            
-            if (future.wait_for(timeout) == std::future_status::timeout) {
-                // If the timeout occurs, force the thread to terminate
-            #ifdef _WIN32
-                if (it->second->_thread.native_handle()) {
-                    TerminateThread(it->second->_thread.native_handle(), 0);
-                }
-            #endif
-            }
+        bool success = (future.wait_for(timeout) == std::future_status::ready);
+        
+        if (!success && tempThread.joinable()) {
+            tempThread.detach();
         }
         
-        _threads.erase(it);
-        return true;
+        lock.lock();
+        _threads.erase(threadName);
+        return success;
     }
 
-    // Check if the thread should stop
+    // Check if thread should stop
     bool isThreadShouldStop(const std::string& threadName) const {
         std::lock_guard<std::mutex> lock(_threadMutex);
-        auto it = _threads.find(threadName);
-        return it == _threads.end() || it->second->_shouldStop;
+        
+        if (!_threads.contains(threadName) || 
+            !_threads.at(threadName)->_thread.joinable()) {
+            return true;
+        }
+        
+        return _threads.at(threadName)->_thread.get_stop_token().stop_requested();
     }
 
-    // Check if the thread is running
+    // Check if thread is running
     bool IsThreadRunning(const std::string& threadName) const {
         std::lock_guard<std::mutex> lock(_threadMutex);
-        return _threads.find(threadName) != _threads.end();
+        return _threads.contains(threadName) && 
+               _threads.at(threadName)->_thread.joinable();
     }
 
-    // Get the number of currently running threads
+    // Get running thread count (C++20)
     size_t GetRunningThreadCount() const {
         std::lock_guard<std::mutex> lock(_threadMutex);
-        return _threads.size();
+        return std::count_if(_threads.begin(), _threads.end(),
+            [](const auto& pair) { return pair.second->_thread.joinable(); });
     }
 
 public:
-    // Stop all threads
+    // Stop all threads with timeout
     void StopAllThreads(std::chrono::milliseconds timeout = std::chrono::seconds(5)) {
-        std::vector<std::string> threadNames;
+        std::vector<std::pair<std::string, std::jthread>> threadsToJoin;
+        
         {
             std::lock_guard<std::mutex> lock(_threadMutex);
-            for (const auto& pair : _threads) {
-                threadNames.push_back(pair.first);
+            
+            for (auto& pair : _threads) {
+                if (pair.second->_thread.joinable()) {
+                    pair.second->_thread.request_stop();
+                    threadsToJoin.emplace_back(pair.first, std::move(pair.second->_thread));
+                }
             }
+            
+            _threads.clear();
         }
-
-        for (const auto& name : threadNames) {
-            StopThread(name, timeout);
+        
+        for (auto& [name, thread] : threadsToJoin) {
+            std::future<void> future = std::async(std::launch::async, 
+                [&thread]() { thread.join(); });
+            
+            if (future.wait_for(timeout) == std::future_status::timeout) {
+                if (thread.joinable()) {
+                    thread.detach();
+                }
+            }
         }
     }
 
 private:
     struct ThreadData {
-        std::thread _thread;
-        std::atomic<bool> _shouldStop{false};
-        std::atomic<bool> _isFinished{false};
+        std::jthread _thread;
     };
 
     mutable std::mutex _threadMutex;

@@ -71,11 +71,9 @@ bool UIWin32APP::Instance(HINSTANCE hInstance, std::wstring titleStr, int width,
             Sleep(1); // 可选：避免CPU占用过高
         }
     }
-	// while (GetMessage(&msg, NULL, 0, 0))
-	// {
-	// 	TranslateMessage(&msg);
-	// 	DispatchMessage(&msg);
-	// }
+	
+	//
+	
 
 	return true;
 }
