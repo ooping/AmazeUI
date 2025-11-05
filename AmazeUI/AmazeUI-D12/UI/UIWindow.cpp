@@ -700,8 +700,7 @@ bool UIMessageLoop::PopMessage(UIMessage& msg) {
 void UIMessageLoop::RunMessageLoopThread() {
     TimerHelper timer(33);
 
-    bool shouldExit = false;
-    while (!shouldExit) {
+    while (1) {
         timer.BeginWait();
 
 		bool needsRepaint = false;  // repaint flag
@@ -715,7 +714,7 @@ void UIMessageLoop::RunMessageLoopThread() {
         UIMessage msg;
 		while (PopMessage(msg)) {
 			if (msg.p_win == nullptr && msg._msg == WM_DESTROY) {
-				shouldExit = true;
+				return;
 			}
 
 			if (msg._msg == WM_PAINT) {

@@ -7,7 +7,7 @@ using namespace std;
 using namespace UIShape2D;
 
 UIAnimationManage::~UIAnimationManage() {
-	_animationList.clear();
+	//_animationList.clear();
 }
 
 void UIAnimationManage::AddAnimation(UIAnimationBase* pAnimateObj) {
@@ -77,7 +77,7 @@ UICaret::UICaret() {
 }
 
 UICaret::~UICaret() {
-	HideCaret();		// ?? no mutex lock here
+	//HideCaret();		// ?? no mutex lock here
 }
 
 bool UICaret::IsAnimationRun() {
