@@ -698,7 +698,7 @@ bool UIMessageLoop::PopMessage(UIMessage& msg) {
 }
 
 void UIMessageLoop::RunMessageLoopThread() {
-    TimerHelper timer(33);
+    TimerHelper timer(17);
 
     while (1) {
         timer.BeginWait();
