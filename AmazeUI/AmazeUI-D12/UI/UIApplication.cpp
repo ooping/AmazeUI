@@ -73,9 +73,7 @@ bool UIWin32APP::Instance(HINSTANCE hInstance, std::wstring titleStr, int width,
     }
 	
 	//
-	
-
-
+	//std::exit(0);
 	return true;
 }
 

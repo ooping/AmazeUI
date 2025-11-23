@@ -287,7 +287,8 @@ protected:
         bool success = (future.wait_for(timeout) == std::future_status::ready);
         
         if (!success && tempThread.joinable()) {
-            tempThread.detach();
+            //tempThread.detach();
+            TerminateThread(tempThread.native_handle(), 0);
         }
         
         // Clean up after thread finishes
@@ -512,7 +513,8 @@ public:
             
             if (future.wait_for(timeout) == std::future_status::timeout) {
                 if (thread.joinable()) {
-                    thread.detach();
+                    //thread.detach();
+                    TerminateThread(thread.native_handle(), 0);
                 }
             }
         }
