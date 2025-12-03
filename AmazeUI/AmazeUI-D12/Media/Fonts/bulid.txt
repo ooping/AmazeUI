@@ -1,0 +1,9 @@
+MakeSpriteFont "Microsoft YaHei" MSYH_18.spritefont /FontSize:18 /CharacterRegion:0x0009-0x007F /CharacterRegion:0x4E00-0x9FFF /FastPack /TextureFormat:Rgba32
+
+
+
+
+
+MakeSpriteFont "Microsoft YaHei" MSYH_24.spritefont /FontSize:24 /CharacterRegion:0x0009-0x007F /CharacterRegion:0x4E00-0x9FFF /FastPack /TextureFormat:Rgba32
+
+MakeSpriteFont "Microsoft YaHei" MSYH_23.spritefont /FontSize:24 /CharacterRegion:0x0009-0x007F /CharacterRegion:0x4E00-0x9FFF /FastPack
