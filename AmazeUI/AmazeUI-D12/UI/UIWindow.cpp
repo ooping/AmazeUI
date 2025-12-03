@@ -1,7 +1,7 @@
 #include "UIWindow.h"
 #include "UIDXFoundation.h"
 #include "UIAnimation.h"
-#include "UIApplication.h"
+#include "UIWIN32APP.h"
 #include "UIElement.h"
 
 using namespace std;
@@ -735,7 +735,7 @@ void UIMessageLoop::RunMessageLoopThread() {
 
 		// if the repaint flag is true, then refresh
 		if (needsRepaint || isUpdateAnimation) {
-            UIDXFoundation::GetSingletonInstance()->Render();
+            UIGraphicsSystem::GetSingletonInstance()->Render();
 		}
 
         timer.EndWait();
@@ -813,7 +813,11 @@ void UIFrame::Initialize(HWND windowHWnd, int width, int height) {
 	_windowHWnd = windowHWnd;
 	_topUIContainer.BindWindow();
 
-	UIDXFoundation::GetSingletonInstance()->Initialize(width, height);
+	UIGraphicsDeviceHAL::Desc desc;
+	desc.windowHandle = windowHWnd;
+	desc.width = width;
+	desc.height = height;
+	UIGraphicsSystem::GetSingletonInstance()->Initialize(desc);
 }
 
 HWND UIFrame::GetWindowHandle() const {

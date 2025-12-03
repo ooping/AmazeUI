@@ -66,14 +66,14 @@ void UI2DDemo::Draw()
     {
         XMMATRIX localTransform = UIZPlaneTransform::GetTransformMatrix(false, 0, 0, 0, false, 0, 0,
                                                                         true, 1200.f, -0.05f * XM_PI, 0.f);
-        UIDXFoundation* pDXF = UIDXFoundation::GetSingletonInstance();
+        auto graphicsSystem = UIGraphicsSystem::GetSingletonInstance();
         
-        //pDXF->Draw3DImage(strFilePath, UIColor::Invalid, {0, 0, 400, 100}, XMFLOAT2(1000.f, 300.f), XMFLOAT2(1400.f, 400.f), 0.1f, 255, localTransform);
+        //graphicsSystem->Draw3DImage(strFilePath, UIColor::Invalid, {0, 0, 400, 100}, XMFLOAT2(1000.f, 300.f), XMFLOAT2(1400.f, 400.f), 0.1f, 255, localTransform);
 
         UIRect(RECT{ 1000, 300, 1400, 400 }, 0.1)(UIColor::Yellow, 100);
-        pDXF->Draw3DRectSolid({ 1000, 300 }, { 1400, 400 }, 0.1f, UIColor::Pink, 255);
+        graphicsSystem->Draw3DRectSolid({ 1000, 300 }, { 1400, 400 }, 0.1f, UIColor::Pink, 255);
 
-        //pDXF->Draw3DTextFT(L"Hello AmazeUI", { 1000, 300, 1400, 400 }, 0x01 | 0x04, 0.1f, UIColor::Black, 24);
+        //graphicsSystem->Draw3DTextFT(L"Hello AmazeUI", { 1000, 300, 1400, 400 }, 0x01 | 0x04, 0.1f, UIColor::Black, 24);
     }
 
 }

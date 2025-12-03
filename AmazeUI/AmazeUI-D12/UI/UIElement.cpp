@@ -8,11 +8,11 @@ using namespace UIShape2D;
 
 UIScreenClipRectGuard::UIScreenClipRectGuard(const RECT& clipRC, bool execute) {
 	_execute = execute;
-	UIDXFoundation::GetSingletonInstance()->BeginScreenClipRect(clipRC, _execute);
+	UIGraphicsSystem::GetSingletonInstance()->BeginScreenClipRect(clipRC, _execute);
 }
 
 UIScreenClipRectGuard::~UIScreenClipRectGuard() {
-	UIDXFoundation::GetSingletonInstance()->EndScreenClipRect(_execute);
+	UIGraphicsSystem::GetSingletonInstance()->EndScreenClipRect(_execute);
 }
 
 UIPoint::UIPoint(LONG x, LONG y, float z, int renderLevel) {
@@ -23,9 +23,9 @@ UIPoint::UIPoint(LONG x, LONG y, float z, int renderLevel) {
 
 void UIPoint::operator()(const UIColor& color, const DirectX::XMMATRIX& transformMatrix) {
 	if (!XMMatrixIsIdentity(transformMatrix)) {
-		UIDXFoundation::GetSingletonInstance()->Draw3DPoint(_point, _z, color, 4, _renderLevel, transformMatrix);
+		UIGraphicsSystem::GetSingletonInstance()->Draw3DPoint(_point, _z, color, 4, _renderLevel, transformMatrix);
 	} else {
-		UIDXFoundation::GetSingletonInstance()->Draw2DPoint(_point, _z, color, 4, _renderLevel);
+		UIGraphicsSystem::GetSingletonInstance()->Draw2DPoint(_point, _z, color, 4, _renderLevel);
 	}
 }
 
@@ -40,9 +40,9 @@ UIPoints::UIPoints(const vector<POINT>& points, float z, int renderLevel) {
 
 void UIPoints::operator()(const UIColor& color, const DirectX::XMMATRIX& transformMatrix) {
 	if (!XMMatrixIsIdentity(transformMatrix)) {	
-		UIDXFoundation::GetSingletonInstance()->Draw3DPoints(_points, _z, color, 4.f, _renderLevel, transformMatrix);
+		UIGraphicsSystem::GetSingletonInstance()->Draw3DPoints(_points, _z, color, 4.f, _renderLevel, transformMatrix);
 	} else {
-		UIDXFoundation::GetSingletonInstance()->Draw2DPoints(_points, _z, color, 4.f, _renderLevel);
+		UIGraphicsSystem::GetSingletonInstance()->Draw2DPoints(_points, _z, color, 4.f, _renderLevel);
 	}
 }
 
@@ -56,9 +56,9 @@ UILine::UILine(LONG beginX, LONG beginY, LONG endX, LONG endY, float z, float wi
 
 void UILine::operator()(const UIColor& color, const DirectX::XMMATRIX& transformMatrix) {
 	if (!XMMatrixIsIdentity(transformMatrix)) {
-		UIDXFoundation::GetSingletonInstance()->Draw3DLine(_start, _end, _z, color, _width, _renderLevel, transformMatrix);
+		UIGraphicsSystem::GetSingletonInstance()->Draw3DLine(_start, _end, _z, color, _width, _renderLevel, transformMatrix);
 	} else {
-		UIDXFoundation::GetSingletonInstance()->Draw2DLine(_start, _end, _z, color, _width, _renderLevel);
+		UIGraphicsSystem::GetSingletonInstance()->Draw2DLine(_start, _end, _z, color, _width, _renderLevel);
 	}
 }
 
@@ -78,25 +78,25 @@ UIRect::UIRect(const RECT& rect, float z, int renderLevel) {
 
 void UIRect::operator()(const UIColor& color, const DirectX::XMMATRIX& transformMatrix) {
 	if (!XMMatrixIsIdentity(transformMatrix)) {
-		UIDXFoundation::GetSingletonInstance()->Draw3DRectOutline(_start, _end, _z, color, 1.f, _renderLevel, transformMatrix);
+		UIGraphicsSystem::GetSingletonInstance()->Draw3DRectOutline(_start, _end, _z, color, 1.f, _renderLevel, transformMatrix);
 	} else {
-		UIDXFoundation::GetSingletonInstance()->Draw2DRectOutline(_start, _end, _z, color, 1.f, _renderLevel);
+		UIGraphicsSystem::GetSingletonInstance()->Draw2DRectOutline(_start, _end, _z, color, 1.f, _renderLevel);
 	}
 }
 
 void UIRect::operator()(const UIColor& color, UCHAR alpha, const DirectX::XMMATRIX& transformMatrix) {
 	if (!XMMatrixIsIdentity(transformMatrix)) {
-		UIDXFoundation::GetSingletonInstance()->Draw3DRectSolid(_start, _end, _z, color, alpha, _renderLevel, transformMatrix);
+		UIGraphicsSystem::GetSingletonInstance()->Draw3DRectSolid(_start, _end, _z, color, alpha, _renderLevel, transformMatrix);
 	} else {
-		UIDXFoundation::GetSingletonInstance()->Draw2DRectSolid(_start, _end, _z, color, alpha, _renderLevel);
+		UIGraphicsSystem::GetSingletonInstance()->Draw2DRectSolid(_start, _end, _z, color, alpha, _renderLevel);
 	}
 }
 
 void UIRect::operator()(const UIColor& colorLT, const UIColor& colorRT, const UIColor& colorLB, const UIColor& colorRB, UCHAR alpha, const DirectX::XMMATRIX& transformMatrix) {
 	if (!XMMatrixIsIdentity(transformMatrix)) {
-		UIDXFoundation::GetSingletonInstance()->Draw3DRectSolid(_start, _end, _z, colorLT, colorRT, colorLB, colorRB, alpha, _renderLevel, transformMatrix);
+		UIGraphicsSystem::GetSingletonInstance()->Draw3DRectSolid(_start, _end, _z, colorLT, colorRT, colorLB, colorRB, alpha, _renderLevel, transformMatrix);
 	} else {
-		UIDXFoundation::GetSingletonInstance()->Draw2DRectSolid(_start, _end, _z, colorLT, colorRT, colorLB, colorRB, alpha, _renderLevel);
+		UIGraphicsSystem::GetSingletonInstance()->Draw2DRectSolid(_start, _end, _z, colorLT, colorRT, colorLB, colorRB, alpha, _renderLevel);
 	}
 }
 
@@ -124,24 +124,24 @@ UIImage::UIImage(std::wstring resDLLPath, UINT id, const UIColor& colorKey, floa
 void UIImage::operator()(const RECT& srcRect, const RECT& dstRect, UCHAR alphy, const DirectX::XMMATRIX& transformMatrix) {
 	if (!XMMatrixIsIdentity(transformMatrix)) {
 		if (_sourceFlag == 1)	{
-			UIDXFoundation::GetSingletonInstance()->Draw3DImage(_path, _colorKey, srcRect,
+			UIGraphicsSystem::GetSingletonInstance()->Draw3DImage(_path, _colorKey, srcRect,
 																XMFLOAT2{static_cast<float>(dstRect.left), static_cast<float>(dstRect.top)}, 
 																XMFLOAT2{static_cast<float>(dstRect.right), static_cast<float>(dstRect.bottom)}, 
 																_z, alphy, _renderLevel, transformMatrix);
 		} else if (_sourceFlag == 2) {
-			UIDXFoundation::GetSingletonInstance()->Draw3DImage(_path, _id, _colorKey, srcRect,
+			UIGraphicsSystem::GetSingletonInstance()->Draw3DImage(_path, _id, _colorKey, srcRect,
 																XMFLOAT2{static_cast<float>(dstRect.left), static_cast<float>(dstRect.top)}, 
 																XMFLOAT2{static_cast<float>(dstRect.right), static_cast<float>(dstRect.bottom)}, 
 																_z, alphy, _renderLevel, transformMatrix);
 		}
 	} else {
 		if (_sourceFlag == 1)	{
-			UIDXFoundation::GetSingletonInstance()->Draw2DImage(_path, _colorKey, srcRect,
+			UIGraphicsSystem::GetSingletonInstance()->Draw2DImage(_path, _colorKey, srcRect,
 																XMFLOAT2{static_cast<float>(dstRect.left), static_cast<float>(dstRect.top)}, 
 																XMFLOAT2{static_cast<float>(dstRect.right), static_cast<float>(dstRect.bottom)}, 
 																_z, alphy, _renderLevel);
 		} else if (_sourceFlag == 2) {
-			UIDXFoundation::GetSingletonInstance()->Draw2DImage(_path, _id, _colorKey, srcRect,
+			UIGraphicsSystem::GetSingletonInstance()->Draw2DImage(_path, _id, _colorKey, srcRect,
 																XMFLOAT2{static_cast<float>(dstRect.left), static_cast<float>(dstRect.top)}, 
 																XMFLOAT2{static_cast<float>(dstRect.right), static_cast<float>(dstRect.bottom)}, 
 																_z, alphy, _renderLevel);
@@ -172,12 +172,12 @@ void UIImage::operator()(LONG dstCenterX, LONG dstCenterY, float scale, UCHAR al
 
 
 bool UIImage::GetSize(RECT& textureRect) {
-	auto textureManager = UIDXFoundation::GetSingletonInstance()->GetTextureManager();
+	auto pGraphicsSystem = UIGraphicsSystem::GetSingletonInstance();
 	
 	if (_sourceFlag == 1) {
-		return textureManager->Get2DImageSize(_path, _colorKey, textureRect);
+		return pGraphicsSystem->GetTextureSize(_path, _colorKey, textureRect);
 	} else if (_sourceFlag == 2) {
-		return textureManager->Get2DImageSize(_path, _id, _colorKey, textureRect);
+		return pGraphicsSystem->GetTextureSize(_path, _id, _colorKey, textureRect);
 	}
 	return false;
 }
@@ -259,42 +259,42 @@ UIFont::UIFont(float z, float fontSize, int renderLevel) {
 
 void UIFont::operator()(std::wstring text, const POINT& position, const UIColor& color, const DirectX::XMMATRIX& transformMatrix) {
 	if (!XMMatrixIsIdentity(transformMatrix)) {
-		UIDXFoundation::GetSingletonInstance()->Draw3DTextFT(text, XMFLOAT2{ (float)position.x, (float)position.y }, _z - 0.005f, color, _fontSize, _renderLevel, transformMatrix);
+		UIGraphicsSystem::GetSingletonInstance()->Draw3DTextFT(text, XMFLOAT2{ (float)position.x, (float)position.y }, _z - 0.005f, color, _fontSize, _renderLevel, transformMatrix);
 	}
 	else {
-		UIDXFoundation::GetSingletonInstance()->Draw2DTextFT(text, XMFLOAT2{ (float)position.x, (float)position.y }, _z, color, _fontSize, _renderLevel);
+		UIGraphicsSystem::GetSingletonInstance()->Draw2DTextFT(text, XMFLOAT2{ (float)position.x, (float)position.y }, _z, color, _fontSize, _renderLevel);
 	}
 }
 
 void UIFont::operator()(std::wstring text, const RECT& rc, const UIColor& color, UIFontPos posFlag, const DirectX::XMMATRIX& transformMatrix) {
 	if (!XMMatrixIsIdentity(transformMatrix)) {
-		UIDXFoundation::GetSingletonInstance()->Draw3DTextFT(text, rc, posFlag, _z - 0.005f, color, _fontSize, _renderLevel, transformMatrix);
+		UIGraphicsSystem::GetSingletonInstance()->Draw3DTextFT(text, rc, posFlag, _z - 0.005f, color, _fontSize, _renderLevel, transformMatrix);
 	}
 	else {
-		UIDXFoundation::GetSingletonInstance()->Draw2DTextFT(text, rc, posFlag, _z, color, _fontSize, _renderLevel);
+		UIGraphicsSystem::GetSingletonInstance()->Draw2DTextFT(text, rc, posFlag, _z, color, _fontSize, _renderLevel);
 	}
 }
 
 void UIFont::operator()(std::wstring text, const POINT& position, const UIColor& color, float lineSpacing, const DirectX::XMMATRIX& transformMatrix) {
 	if (!XMMatrixIsIdentity(transformMatrix)) {
-		UIDXFoundation::GetSingletonInstance()->Draw3DTextMultiLineFT(text, XMFLOAT2{ (float)position.x, (float)position.y }, _z - 0.005f, color, _fontSize, lineSpacing, _renderLevel, transformMatrix);
+		UIGraphicsSystem::GetSingletonInstance()->Draw3DTextMultiLineFT(text, XMFLOAT2{ (float)position.x, (float)position.y }, _z - 0.005f, color, _fontSize, lineSpacing, _renderLevel, transformMatrix);
 	}
 	else {
-		UIDXFoundation::GetSingletonInstance()->Draw2DTextMultiLineFT(text, XMFLOAT2{ (float)position.x, (float)position.y }, _z, color, _fontSize, lineSpacing, _renderLevel);
+		UIGraphicsSystem::GetSingletonInstance()->Draw2DTextMultiLineFT(text, XMFLOAT2{ (float)position.x, (float)position.y }, _z, color, _fontSize, lineSpacing, _renderLevel);
 	}
 }
 
 void UIFont::operator()(std::wstring text, const RECT& rc, const UIColor& color, UIFontPos posFlag, float lineSpacing, const DirectX::XMMATRIX& transformMatrix) {
 	if (!XMMatrixIsIdentity(transformMatrix)) {
-		UIDXFoundation::GetSingletonInstance()->Draw3DTextMultiLineFT(text, rc, posFlag, _z - 0.005f, color, _fontSize, lineSpacing, _renderLevel, transformMatrix);
+		UIGraphicsSystem::GetSingletonInstance()->Draw3DTextMultiLineFT(text, rc, posFlag, _z - 0.005f, color, _fontSize, lineSpacing, _renderLevel, transformMatrix);
 	}
 	else {
-		UIDXFoundation::GetSingletonInstance()->Draw2DTextMultiLineFT(text, rc, posFlag, _z, color, _fontSize, lineSpacing, _renderLevel);
+		UIGraphicsSystem::GetSingletonInstance()->Draw2DTextMultiLineFT(text, rc, posFlag, _z, color, _fontSize, lineSpacing, _renderLevel);
 	}
 }
 
 SIZE UIFont::GetDrawAreaSize(std::wstring text) {
-	return UIDXFoundation::GetSingletonInstance()->GetTextSizeFT(text, _fontSize);
+	return UIGraphicsSystem::GetSingletonInstance()->GetTextSizeFT(text, _fontSize);
 }
 
 
@@ -303,7 +303,7 @@ SIZE UIFont::GetDrawAreaSize(std::wstring text) {
 UIPoint3D::UIPoint3D(float x, float y, float z, int renderLevel) : _point(x, y, z), _renderLevel(renderLevel) {}
 
 void UIPoint3D::operator()(const UIColor& color, UICameraBase3D* pCamera) {
-	UIDXFoundation::GetSingletonInstance()->Draw3DWorldPoint(_point, color, _renderLevel, pCamera);
+	UIGraphicsSystem::GetSingletonInstance()->Draw3DWorldPoint(_point, color, _renderLevel, pCamera);
 }
 
 // UIPoints3D implementation
@@ -316,7 +316,7 @@ UIPoints3D::UIPoints3D(const std::vector<UIPointFloat3>& points, int renderLevel
 
 void UIPoints3D::operator()(const UIColor& color, UICameraBase3D* pCamera) {
 	for (const auto& point : _points) {
-		UIDXFoundation::GetSingletonInstance()->Draw3DWorldPoint(point, color, _renderLevel, pCamera);
+		UIGraphicsSystem::GetSingletonInstance()->Draw3DWorldPoint(point, color, _renderLevel, pCamera);
 	}
 }
 
@@ -325,11 +325,11 @@ UILine3D::UILine3D(UIPointFloat3 start, UIPointFloat3 end, float width, int rend
 	: _start(start._x, start._y, start._z), _end(end._x, end._y, end._z), _width(width), _renderLevel(renderLevel) {}
 
 void UILine3D::operator()(const UIColor& colorS, const UIColor& colorE, UICameraBase3D* pCamera) {
-	UIDXFoundation::GetSingletonInstance()->Draw3DWorldLine(_start, _end, colorS, colorE, _width, _renderLevel, pCamera);
+	UIGraphicsSystem::GetSingletonInstance()->Draw3DWorldLine(_start, _end, colorS, colorE, _width, _renderLevel, pCamera);
 }
 
 void UILine3D::operator()(const UIColor& color, UICameraBase3D* pCamera) {
-	UIDXFoundation::GetSingletonInstance()->Draw3DWorldLine(_start, _end, color, _width, _renderLevel, pCamera);
+	UIGraphicsSystem::GetSingletonInstance()->Draw3DWorldLine(_start, _end, color, _width, _renderLevel, pCamera);
 }
 
 // UICircle3D implementation
@@ -337,7 +337,7 @@ UICircle3D::UICircle3D(UIPointFloat3 center, float radius, int renderLevel)
 	: _center(center._x, center._y, center._z), _radius(radius), _renderLevel(renderLevel) {}
 
 void UICircle3D::operator()(const UIColor& color, UICameraBase3D* pCamera) {
-	UIDXFoundation::GetSingletonInstance()->Draw3DWorldCircle(_center, _radius, color, 255, _renderLevel, pCamera);
+	UIGraphicsSystem::GetSingletonInstance()->Draw3DWorldCircle(_center, _radius, color, 255, _renderLevel, pCamera);
 }
 
 // UITriangle3D implementation
@@ -345,17 +345,17 @@ UITriangle3D::UITriangle3D(UIPointFloat3 p1, UIPointFloat3 p2, UIPointFloat3 p3,
 	: _p1(p1._x, p1._y, p1._z), _p2(p2._x, p2._y, p2._z), _p3(p3._x, p3._y, p3._z), _renderLevel(renderLevel) {}
 
 void UITriangle3D::operator()(const UIColor& color1, const UIColor& color2, const UIColor& color3, UCHAR alpha, UICameraBase3D* pCamera) {
-	UIDXFoundation::GetSingletonInstance()->Draw3DWorldTriangle(_p1, _p2, _p3, color1, color2, color3, alpha, _renderLevel, pCamera);
+	UIGraphicsSystem::GetSingletonInstance()->Draw3DWorldTriangle(_p1, _p2, _p3, color1, color2, color3, alpha, _renderLevel, pCamera);
 }
 
 void UITriangle3D::operator()(const UIColor& color, UCHAR alpha, UICameraBase3D* pCamera) {
-	UIDXFoundation::GetSingletonInstance()->Draw3DWorldTriangle(_p1, _p2, _p3, color, alpha, _renderLevel, pCamera);
+	UIGraphicsSystem::GetSingletonInstance()->Draw3DWorldTriangle(_p1, _p2, _p3, color, alpha, _renderLevel, pCamera);
 }
 
 // UIFont3D implementation
 UIFont3D::UIFont3D(float fontSize, int renderLevel) : _fontSize(fontSize), _renderLevel(renderLevel) {}
 
 void UIFont3D::operator()(std::wstring text, const UIPointFloat3& position, const UIColor& color, UICameraBase3D* pCamera) {
-	// Use UIDXFoundation's 3D world text rendering directly
-	UIDXFoundation::GetSingletonInstance()->Draw3DWorldTextFT(text, {position._x, position._y, position._z}, color, _fontSize, _renderLevel, pCamera);
+	// Use UIGraphicsSystem's 3D world text rendering directly
+	UIGraphicsSystem::GetSingletonInstance()->Draw3DWorldTextFT(text, {position._x, position._y, position._z}, color, _fontSize, _renderLevel, pCamera);
 }

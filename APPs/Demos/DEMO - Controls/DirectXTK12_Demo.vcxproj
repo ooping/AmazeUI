@@ -101,7 +101,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\..\AmazeUI\AmazeUI-D12\Core\Common.h" />
     <ClInclude Include="..\..\..\AmazeUI\AmazeUI-D12\UI\UIAnimation.h" />
-    <ClInclude Include="..\..\..\AmazeUI\AmazeUI-D12\UI\UIApplication.h" />
+    <ClInclude Include="..\..\..\AmazeUI\AmazeUI-D12\UI\UIWIN32APP.h" />
     <ClInclude Include="..\..\..\AmazeUI\AmazeUI-D12\UI\UICamera.h" />
     <ClInclude Include="..\..\..\AmazeUI\AmazeUI-D12\UI\UIDXFoundation.h" />
     <ClInclude Include="..\..\..\AmazeUI\AmazeUI-D12\UI\UIElement.h" />
@@ -114,7 +114,7 @@
   <ItemGroup>
     <ClCompile Include="..\..\..\AmazeUI\AmazeUI-D12\Core\Common.cpp" />
     <ClCompile Include="..\..\..\AmazeUI\AmazeUI-D12\UI\UIAnimation.cpp" />
-    <ClCompile Include="..\..\..\AmazeUI\AmazeUI-D12\UI\UIApplication.cpp" />
+    <ClCompile Include="..\..\..\AmazeUI\AmazeUI-D12\UI\UIWIN32APP.cpp" />
     <ClCompile Include="..\..\..\AmazeUI\AmazeUI-D12\UI\UICamera.cpp" />
     <ClCompile Include="..\..\..\AmazeUI\AmazeUI-D12\UI\UIDXFoundation.cpp" />
     <ClCompile Include="..\..\..\AmazeUI\AmazeUI-D12\UI\UIElement.cpp" />

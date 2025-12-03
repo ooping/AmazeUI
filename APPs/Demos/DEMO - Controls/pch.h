@@ -22,7 +22,7 @@
 
 
 
-#include "..\..\..\AmazeUI\AmazeUI-D12\UI\UIApplication.h"
+#include "..\..\..\AmazeUI\AmazeUI-D12\UI\UIWIN32APP.h"
 #include "..\..\..\AmazeUI\AmazeUI-D12\UI\UIDXFoundation.h"
 #include "..\..\..\AmazeUI\AmazeUI-D12\UI\UIWindow.h"
 #include "..\..\..\AmazeUI\AmazeUI-D12\UI\UIElement.h"

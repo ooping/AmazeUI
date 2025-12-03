@@ -6,64 +6,71 @@
 
 #define NOMINMAX
 
-/*-------------------------------------------------- Header files / Standard --------------------------------------------------*/
-// C Lib
-#include <ctime>				// 
-#include <cmath>
-#include <assert.h>
-#include <stdio.h>
-#include <tchar.h>				// only win??
+/*-------------------------------------------------- Header files / Windows --------------------------------------------------*/
+#ifdef _WIN32
 
-// STL
-#include <string>
-#include <vector>
+#include <winsock2.h>
+#pragma comment(lib, "ws2_32.lib")
+#include <WS2tcpip.h>
+#include <windows.h>
+#include <wincodec.h>
+#pragma comment(lib, "windowscodecs.lib")
+
+#include <wrl/client.h>
+#include <wrl/event.h>
+
+#define WIN32_LEAN_AND_MEAN
+#define NODRAWTEXT
+#define NOBITMAP
+#define NOMCX
+#define NOSERVICE
+#define NOHELP
+
+#endif
+
+/*-------------------------------------------------- Header files / Standard --------------------------------------------------*/
+// C Standard Library
+#include <cassert>
+#include <cmath>
+#include <cstdint>
+#include <cstdio>
+#include <ctime>
+#include <tchar.h>              // Windows only
+
+// STL Containers
 #include <deque>
 #include <list>
-#include <stack>
-#include <variant>
-#include <algorithm>
-#include <numeric>
-#include <functional>		
-#include <iostream>
-#include <fstream>
-#include <sstream>
-//#include <format>
 #include <map>
+#include <stack>
+#include <string>
 #include <unordered_map>
-#include <format>
+#include <variant>
+#include <vector>
 
+// STL Streams
+#include <fstream>
+#include <iostream>
+#include <sstream>
+
+// STL Algorithms & Utilities
+#include <algorithm>
+#include <format>
+#include <functional>
+#include <limits>
+#include <numeric>
+
+// STL Memory & Exceptions
 #include <exception>
 #include <memory>
 #include <stdexcept>
 
-//
-#include <thread>             	// std::thread
-#include <mutex>              	// std::mutex, std::unique_lock
-#include <condition_variable> 	// std::condition_variable
-
+// STL Multithreading
 #include <atomic>
 #include <chrono>
+#include <condition_variable>
 #include <future>
-
-// DirectX apps don't need GDI
-#define NODRAWTEXT
-//#define NOGDI
-#define NOBITMAP
-
-// Include <mcx.h> if you need this
-#define NOMCX
-
-// Include <winsvc.h> if you need this
-#define NOSERVICE
-
-// WinHelp is deprecated
-#define NOHELP
-
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-
-#include <wrl/client.h>
-#include <wrl/event.h>
+#include <mutex>
+#include <thread>
 
 
 /*-------------------------------------------------- String Helper --------------------------------------------------*/

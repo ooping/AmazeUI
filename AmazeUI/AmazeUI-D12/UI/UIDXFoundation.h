@@ -1,173 +1,223 @@
 #pragma once
 
+
+
+#include "../Core/Common.h"
 #include "UIUtility.h"
 #include "UIElement.h"
 #include "UIWindow.h"
 
 
-using Microsoft::WRL::ComPtr;
-
-
-
-// Controls all the DirectX device resources.
-class UIDXFoundation;
-class UIDeviceResources {
-	friend class UIDXFoundation;
-
+class UIGraphicsDeviceHAL {
 public:
-	static const unsigned int c_AllowTearing    = 0x1;
-	static const unsigned int c_EnableHDR       = 0x2;
+    // Graphics Device Configuration
+    struct Desc {
+        void* windowHandle = nullptr;
+        int width = 1280;
+        int height = 720;
+        int backBufferCount = 2;
+        bool enableVSync = true;
+        bool enableHDR = false;
+        bool allowTearing = false;
+    };
 
-	UIDeviceResources(DXGI_FORMAT backBufferFormat = DXGI_FORMAT_B8G8R8A8_UNORM,
-					  DXGI_FORMAT depthBufferFormat = DXGI_FORMAT_D32_FLOAT,
-					  UINT backBufferCount = 2,
-					  D3D_FEATURE_LEVEL minFeatureLevel = D3D_FEATURE_LEVEL_11_0,
-					  unsigned int flags = 0) noexcept(false);
-	~UIDeviceResources();
+    virtual ~UIGraphicsDeviceHAL() = default;
 
-	void CreateDeviceDependentResources();
-	void CreateWindowSizeDependentResources();
+    // Lifecycle
+    virtual bool Initialize(const Desc& desc) = 0;
+    virtual void Shutdown() = 0;
 
-	void SetWindowHWnd(int width, int height);
-	bool HandleWindowSizeChanged(int width, int height);
+    // Frame
+    virtual void BeginFrame() = 0;
+    virtual void EndFrame() = 0;
+    virtual void Present() = 0;
 
-	void HandleDeviceLost();
+    // Window & Device
+    virtual bool HandleWindowResize(int width, int height) = 0;
+	virtual void WaitForIdle() = 0;
+    virtual void HandleDeviceLost() = 0;
 
-	//void RegisterDeviceNotify(IDeviceNotify* deviceNotify) { _deviceNotify = deviceNotify; }
-	void Prepare(D3D12_RESOURCE_STATES beforeState = D3D12_RESOURCE_STATE_PRESENT);
-	void Present(D3D12_RESOURCE_STATES beforeState = D3D12_RESOURCE_STATE_RENDER_TARGET);
-	void WaitForGpu() noexcept;
+    // Query
+    virtual const char* GetBackendName() const = 0;
+    virtual RECT GetOutputSize() const = 0;
+    virtual uint32_t GetCurrentFrameIndex() const = 0;
+    virtual uint32_t GetBackBufferCount() const = 0;
+};
 
-	// Direct3D Accessors.
+class UIGraphicsDeviceDX12 : public UIGraphicsDeviceHAL {
+	friend class UIGraphicsSystem;
+	friend class UITextureManager;
+	friend class UIModel;
+	
+/*************************************************** UIGraphicsDeviceHAL Interface ***************************************************/
+public:
+    // Lifecycle
+    bool Initialize(const Desc& desc) override;
+    void Shutdown() override;
+
+    // Frame
+    void BeginFrame() override;
+    void EndFrame() override;
+    void Present() override;
+
+    // Window & Device
+    bool HandleWindowResize(int width, int height) override;
+    void WaitForIdle() override;
+    void HandleDeviceLost() override;
+
+    // Query
+    const char* GetBackendName() const override { return "DirectX 12"; }
+    RECT GetOutputSize() const override { return _outputSize; }
+    uint32_t GetCurrentFrameIndex() const override { return _backBufferIndex; }
+	uint32_t GetBackBufferCount() const override { return _backBufferCount; }
+
+/*************************************************** Others ***************************************************/
+protected:
+    void SetWindow(int width, int height);
+
+    RECT _outputSize = {0, 0, 1, 1};
+    HWND _window = nullptr;
+
+/*************************************************** DX12 ***************************************************/
+public:
 	ID3D12Device*               GetD3DDevice() const            { return _d3dDevice.Get(); }
 	IDXGISwapChain3*            GetSwapChain() const            { return _swapChain.Get(); }
 	IDXGIFactory4*              GetDXGIFactory() const          { return _dxgiFactory.Get(); }
-	D3D_FEATURE_LEVEL           GetDeviceFeatureLevel() const   { return _d3dFeatureLevel; }
+	ID3D12CommandQueue*         GetCommandQueue() const         { return _commandQueue.Get(); }
+	ID3D12GraphicsCommandList*  GetCommandList() const          { return _commandList.Get(); }
+	ID3D12CommandAllocator*     GetCommandAllocator() const     { return _commandAllocators[_backBufferIndex].Get(); }	
 	ID3D12Resource*             GetRenderTarget() const         { return _renderTargets[_backBufferIndex].Get(); }
 	ID3D12Resource*             GetDepthStencil() const         { return _depthStencil.Get(); }
-	ID3D12CommandQueue*         GetCommandQueue() const         { return _commandQueue.Get(); }
-	ID3D12CommandAllocator*     GetCommandAllocator() const     { return _commandAllocators[_backBufferIndex].Get(); }
-	ID3D12GraphicsCommandList*  GetCommandList() const          { return _commandList.Get(); }
+	D3D_FEATURE_LEVEL           GetDeviceFeatureLevel() const   { return _d3dFeatureLevel; }
 	DXGI_FORMAT                 GetBackBufferFormat() const     { return _backBufferFormat; }
 	DXGI_FORMAT                 GetDepthBufferFormat() const    { return _depthBufferFormat; }
-	//D3D12_VIEWPORT              GetScreenViewport() const       { return _screenViewport; }
-	//D3D12_RECT                  GetScissorRect() const          { return _scissorRect; }
-	UINT                        GetCurrentFrameIndex() const    { return _backBufferIndex; }
-	UINT                        GetBackBufferCount() const      { return _backBufferCount; }
 	DXGI_COLOR_SPACE_TYPE       GetColorSpace() const           { return _colorSpace; }
 	unsigned int                GetDeviceOptions() const        { return _options; }
-
+	
 	D3D12_CPU_DESCRIPTOR_HANDLE GetRenderTargetView() const {
 		D3D12_CPU_DESCRIPTOR_HANDLE handle = _rtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
 		handle.ptr += static_cast<INT>(_backBufferIndex) * _rtvDescriptorSize;
 		return handle;
 	}
-	D3D12_CPU_DESCRIPTOR_HANDLE GetDepthStencilView() const {
-		return _dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+	D3D12_CPU_DESCRIPTOR_HANDLE GetDepthStencilView() const { 
+		return _dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart(); 
 	}
 
-private:
+protected:
+	void CreateDeviceDependentResources();
+	void CreateWindowSizeDependentResources();
+	void ReleaseResources();
+
+	void ClearRenderTargetViews();
+	void PrepareCommandList(D3D12_RESOURCE_STATES beforeState = D3D12_RESOURCE_STATE_PRESENT);
+	void ExecutePresent(D3D12_RESOURCE_STATES beforeState = D3D12_RESOURCE_STATE_RENDER_TARGET);
+
+	void WaitForGpu() noexcept;
 	void MoveToNextFrame();
 	void GetAdapter(IDXGIAdapter1** ppAdapter);
 	void UpdateColorSpace();
 
-	static const size_t MAX_BACK_BUFFER_COUNT = 3;
+    static const size_t MAX_BACK_BUFFER_COUNT = 3;
 
-	UINT                                                _backBufferIndex;
+    // Device & Factory
+    Microsoft::WRL::ComPtr<ID3D12Device>                _d3dDevice;
+    Microsoft::WRL::ComPtr<IDXGIFactory4>               _dxgiFactory;
+    Microsoft::WRL::ComPtr<IDXGISwapChain3>             _swapChain;
 
-	// Direct3D objects.
-	Microsoft::WRL::ComPtr<ID3D12Device>                _d3dDevice;
-	Microsoft::WRL::ComPtr<ID3D12CommandQueue>          _commandQueue;
-	Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList>   _commandList;
-	Microsoft::WRL::ComPtr<ID3D12CommandAllocator>      _commandAllocators[MAX_BACK_BUFFER_COUNT];
+	// Command Objects
+    Microsoft::WRL::ComPtr<ID3D12CommandQueue>          _commandQueue;
+    Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList>   _commandList;
+    Microsoft::WRL::ComPtr<ID3D12CommandAllocator>      _commandAllocators[MAX_BACK_BUFFER_COUNT];
 
-	// Swap chain objects.
-	Microsoft::WRL::ComPtr<IDXGIFactory4>               _dxgiFactory;
-	Microsoft::WRL::ComPtr<IDXGISwapChain3>             _swapChain;
-	Microsoft::WRL::ComPtr<ID3D12Resource>              _renderTargets[MAX_BACK_BUFFER_COUNT];
-	Microsoft::WRL::ComPtr<ID3D12Resource>              _depthStencil;
+	// Render Targets
+    Microsoft::WRL::ComPtr<ID3D12Resource>              _renderTargets[MAX_BACK_BUFFER_COUNT];
+    Microsoft::WRL::ComPtr<ID3D12Resource>              _depthStencil;
+    Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>        _rtvDescriptorHeap;
+    Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>        _dsvDescriptorHeap;
+    UINT                                                _rtvDescriptorSize = 0;
 
-	// Presentation fence objects.
-	Microsoft::WRL::ComPtr<ID3D12Fence>                 _fence;
-	UINT64                                              _fenceValues[MAX_BACK_BUFFER_COUNT];
-	Microsoft::WRL::Wrappers::Event                     _fenceEvent;
+    // Synchronization
+    Microsoft::WRL::ComPtr<ID3D12Fence>                 _fence;
+    UINT64                                              _fenceValues[MAX_BACK_BUFFER_COUNT] = {};
+    Microsoft::WRL::Wrappers::Event                     _fenceEvent;
 
-	// Direct3D rendering objects.
-	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>        _rtvDescriptorHeap;
-	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>        _dsvDescriptorHeap;
-	UINT                                                _rtvDescriptorSize;
-	//D3D12_VIEWPORT                                      _screenViewport;
-	//D3D12_RECT                                          _scissorRect;
+	// Properties
+    DXGI_FORMAT                                         _backBufferFormat = DXGI_FORMAT_B8G8R8A8_UNORM;
+    DXGI_FORMAT                                         _depthBufferFormat = DXGI_FORMAT_D32_FLOAT;
+    UINT                                                _backBufferCount = 2;
+    UINT                                                _backBufferIndex = 0;
+    D3D_FEATURE_LEVEL                                   _d3dMinFeatureLevel = D3D_FEATURE_LEVEL_11_0;
+    D3D_FEATURE_LEVEL                                   _d3dFeatureLevel = D3D_FEATURE_LEVEL_11_0;
+    DWORD                                               _dxgiFactoryFlags = 0;
+    DXGI_COLOR_SPACE_TYPE                               _colorSpace = DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709;
+    unsigned int                                        _options = 0;
 
-	// Direct3D properties.
-	DXGI_FORMAT                                         _backBufferFormat;
-	DXGI_FORMAT                                         _depthBufferFormat;
-	UINT                                                _backBufferCount;
-	D3D_FEATURE_LEVEL                                   _d3dMinFeatureLevel;
+/*************************************************** XTK ***************************************************/
+protected:
+	struct UIEffectManager {
+		void Create(ID3D12Device* device, DXGI_FORMAT backBufferFormat, DXGI_FORMAT depthBufferFormat);
+		void Reset();
 
-	// Cached device properties.
-	D3D_FEATURE_LEVEL                                   _d3dFeatureLevel;
-	DWORD                                               _dxgiFactoryFlags;
-	RECT                                                _outputSize;
+		// 2D Effects
+		std::unique_ptr<DirectX::BasicEffect> p_pointEffect2D;
+		std::unique_ptr<DirectX::BasicEffect> p_lineEffect2D;
+		std::unique_ptr<DirectX::BasicEffect> p_triangleEffect2D;
+		std::unique_ptr<DirectX::BasicEffect> p_triangleTexturedEffect2D;
 
-	// HDR Support
-	DXGI_COLOR_SPACE_TYPE                               _colorSpace;
+		// 3D Effects
+		std::unique_ptr<DirectX::BasicEffect> p_pointEffect3D;
+		std::unique_ptr<DirectX::BasicEffect> p_lineEffect3D;
+		std::unique_ptr<DirectX::BasicEffect> p_triangleEffect3D;
+		std::unique_ptr<DirectX::BasicEffect> p_triangleTexturedEffect3D;
+		std::unique_ptr<DirectX::BasicEffect> p_shapeEffect3D;
 
-	// UIDeviceResources options (see flags above)
-	unsigned int                                        _options;
-};
+		// Skeletal Animation
+		std::unique_ptr<DirectX::SkinnedEffect> p_skinnedEffect3D;
+	};
 
-struct UIEffectManager {
-    void Create();
-    void Reset();
+	void CreateDeviceDependentResourcesXTK();
+	void CreateWindowSizeDependentResourcesXTK();
+	void ReleaseResourcesXTK();
 
-    // 2D Effects
-    std::unique_ptr<DirectX::BasicEffect> p_pointEffect2D;
-    std::unique_ptr<DirectX::BasicEffect> p_lineEffect2D;
-    std::unique_ptr<DirectX::BasicEffect> p_triangleEffect2D;
-    std::unique_ptr<DirectX::BasicEffect> p_triangleTexturedEffect2D;
-
-    // 3D Effects
-    std::unique_ptr<DirectX::BasicEffect> p_pointEffect3D;
-    std::unique_ptr<DirectX::BasicEffect> p_lineEffect3D;
-    std::unique_ptr<DirectX::BasicEffect> p_triangleEffect3D;
-    std::unique_ptr<DirectX::BasicEffect> p_triangleTexturedEffect3D;
-    std::unique_ptr<DirectX::BasicEffect> p_shapeEffect3D;
-
-    // Skeletal Animation
-    std::unique_ptr<DirectX::SkinnedEffect> p_skinnedEffect3D;
+	UIEffectManager                                                           _effectManager;
+	
+	std::unique_ptr<DirectX::GraphicsMemory>                                  p_graphicsMemory;
+	std::unique_ptr<DirectX::DescriptorHeap>                                  p_resourceDescriptors;
+	std::unique_ptr<DirectX::CommonStates>                                    p_states;
+	std::unique_ptr<DirectX::PrimitiveBatch<DirectX::VertexPositionColor>>    p_batch;
+	std::unique_ptr<DirectX::PrimitiveBatch<DirectX::VertexPositionTexture>>  p_batchTexture;
 };
 
 class UITextureManager {
-	friend class UIDXFoundation;
+	friend class UIGraphicsSystem;
 
 public:
 	// Public interface - Get texture size
 	bool Get2DImageSize(const std::wstring& imagePath, const UIColor& colorKey, RECT& textureRect);
 	bool Get2DImageSize(const std::wstring& dllPath, UINT id, const UIColor& colorKey, RECT& textureRect);
 
-private:
-	// Internal methods - Texture loading
+	// public methods - Texture loading
 	bool GetWICTextureIndexFromDLL(const std::wstring& dllPath, UINT id, const UIColor& colorKey, size_t& textureIndex);
 	bool GetWICTextureIndexFromFile(const std::wstring& filePath, const UIColor& colorKey, size_t& textureIndex);
 	bool GetDDSTextureIndexFromFile(const std::wstring& filePath, const UIColor& colorKey, size_t& textureIndex);
 
+private:
 	// Internal methods - Image conversion
 	bool ConvertImageTransparencyByWIC(Microsoft::WRL::ComPtr<IWICImagingFactory>& wicFactory, 
-									   Microsoft::WRL::ComPtr<IWICBitmapDecoder>& decoder, 
-									   const UIColor& colorKey, std::vector<uint8_t>& imageData, 
-									   UINT& width, UINT& height);
+		                               Microsoft::WRL::ComPtr<IWICBitmapDecoder>& decoder, 
+		                               const UIColor& colorKey, std::vector<uint8_t>& imageData, 
+		                               UINT& width, UINT& height);
 	bool ConvertImageTransparencyByWIC(const void* data, size_t size, const UIColor& colorKey, 
-									   std::vector<uint8_t>& imageData, UINT& width, UINT& height);
+		                               std::vector<uint8_t>& imageData, UINT& width, UINT& height);
 	bool ConvertImageTransparencyByWIC(const std::wstring& filePath, const UIColor& colorKey, 
-									   std::vector<uint8_t>& imageData, UINT& width, UINT& height);
+		                               std::vector<uint8_t>& imageData, UINT& width, UINT& height);
 	bool ConvertImageTransparencyByDDS(const std::wstring& filePath, const UIColor& colorKey, 
-									   std::vector<uint8_t>& imageData, UINT& width, UINT& height);
+		                               std::vector<uint8_t>& imageData, UINT& width, UINT& height);
 
 	// Shared utility - Create texture from image data (used by both Image and FreeType)
 	bool CreateTextureFromImageData(ID3D12Device* device, DirectX::ResourceUploadBatch& resourceUpload, 
-									Microsoft::WRL::ComPtr<ID3D12Resource>& texture, 
-									const std::vector<uint8_t>& imageData, UINT width, UINT height);
+		                            Microsoft::WRL::ComPtr<ID3D12Resource>& texture, 
+		                            const std::vector<uint8_t>& imageData, UINT width, UINT height);
 
 	// Internal methods - Utility functions
 	RECT Get2DTextureRect(ID3D12Resource* texture);
@@ -183,82 +233,44 @@ private:
 	std::unordered_map<std::wstring, size_t> _textureResourceMap;
 };
 
-
-class UIDXFoundation : public SingletonPattern<UIDXFoundation> {
-	friend class SingletonPattern<UIDXFoundation>;
-	
-	// helper classes
-	friend struct UIEffectManager;
+class UIGraphicsSystem : public SingletonPattern<UIGraphicsSystem> {
+	friend class SingletonPattern<UIGraphicsSystem>;
 	friend class UITextureManager;
+	friend class UIModel;
 
+/*************************************************** High-Level Render System API ***************************************************/
 public:
-    UIDXFoundation() noexcept(false);
-    ~UIDXFoundation();
+    UIGraphicsSystem() noexcept(false);
+    ~UIGraphicsSystem();
+    
+    // System Lifecycle
+    bool Initialize(const UIGraphicsDeviceHAL::Desc& desc);
+    void Shutdown();
 
-    // Initialization and management
-    void Initialize(int width, int height);
+    // Unified Render Interface
+    void Render();
 
-    // DirectXTK objects resources
-    void CreateResources();
-	void ResetResources();
+    // Window Events
+    bool HandleWindowResize(int width, int height);
+    void HandleDeviceLost();
 
-	void HandleWindowSizeChanged(int width, int height);
+    // Query
+    RECT GetOutputSize() const;
 
-	void Render();
-	void Render3D();
-
-	RECT GetOutputSize() const;
-	LONG GetOutputWidth() const;
-	LONG GetOutputHeight() const;
-
-	ID3D12Device* GetD3DDevice() const;
-	UIEffectManager* GetEffectManager() const;
-	UITextureManager* GetTextureManager() const;
-	UIDeviceResources* GetDeviceResources() const;
-	DirectX::CommonStates* GetCommonStates() const;
-	DirectX::DescriptorHeap* GetDescriptorHeap() const;
-
-    // Descriptor allocation strategy for GPU resource views
-    enum Descriptors {
-        // System reserved descriptors (0-9)
-        WindowsLogo = 0,
-		MSYHFont = 1,
-        SystemReservedCount = 10,
-        
-        // UI image textures (10-9999)
-        UITexturesStart = 10,
-        UITexturesCount = 9990,
-        
-        // Font character textures (10000-19999)
-        FontTexturesStart = 10000,
-        FontTexturesCount = 10000,
-        
-        // 3D model textures (20000-29999)
-        ModelTexturesStart = 20000,
-        ModelTexturesCount = 10000,
-        
-        // Total descriptor heap size
-        TotalDescriptorCount = 30000
-    };
+    // Texture Query APIs (Encapsulated Interface)
+    bool GetTextureSize(const std::wstring& imagePath, const UIColor& colorKey, RECT& textureRect) {
+        return _textureManager.Get2DImageSize(imagePath, colorKey, textureRect);
+    }
+    bool GetTextureSize(const std::wstring& dllPath, UINT id, const UIColor& colorKey, RECT& textureRect) {
+        return _textureManager.Get2DImageSize(dllPath, id, colorKey, textureRect);
+    }
 
 private:
-    void Clear();
+    // Texture Manager Instance
+    UITextureManager _textureManager;
 
-    void CreateDeviceDependentResourcesXTK();
-    void CreateWindowSizeDependentResourcesXTK();
-
-	// Device resources.
-    std::unique_ptr<UIDeviceResources>        								p_deviceResources;
-	std::unique_ptr<UIEffectManager>								        p_effects;
-	std::unique_ptr<UITextureManager>                                       p_textures;
-    std::unique_ptr<DirectX::GraphicsMemory>                                p_graphicsMemory;
-    std::unique_ptr<DirectX::DescriptorHeap>                                p_resourceDescriptors;
-    std::unique_ptr<DirectX::CommonStates>                                  p_states;
-
-    std::unique_ptr<DirectX::PrimitiveBatch<DirectX::VertexPositionColor>>  p_batch;
-	std::unique_ptr<DirectX::PrimitiveBatch<DirectX::VertexPositionTexture>>  p_batchTexture;
-	//std::unique_ptr<DirectX::SpriteBatch>                                   p_sprites;
-    //std::unique_ptr<DirectX::SpriteFont>                                    p_font;
+    // HAL Backend (Composition)
+    std::unique_ptr<UIGraphicsDeviceDX12> _graphicsDevice;
 
 /*************************************************** clip rect ***************************************************/
 public:

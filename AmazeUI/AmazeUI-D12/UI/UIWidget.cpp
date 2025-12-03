@@ -1,5 +1,5 @@
 #include "UIWidget.h"
-#include "UIApplication.h"
+#include "UIWIN32APP.h"
 
 
 using namespace std;
@@ -934,7 +934,7 @@ void UISelectList::Draw() {
 	// calc the drawing area
 	LONG dh = static_cast<LONG>(20 * _list.size());
 	RECT parentRC = p_parentUIContainer->GetBindWindowAbusoluteRect();
-	RECT abusoluteRC = parentRC.bottom + dh < UIDXFoundation::GetSingletonInstance()->GetOutputHeight() ?
+	RECT abusoluteRC = parentRC.bottom + dh < GetRectHeight()(UIGraphicsSystem::GetSingletonInstance()->GetOutputSize()) ?
 		CreateRect()(parentRC.left, parentRC.bottom, parentRC.right, parentRC.bottom + dh) :
 		CreateRect()(parentRC.left, parentRC.top - dh, parentRC.right, parentRC.top);
 	RECT relativeRC = abusoluteRC;

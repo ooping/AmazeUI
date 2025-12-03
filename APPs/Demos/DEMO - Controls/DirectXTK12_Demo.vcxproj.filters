@@ -6,7 +6,7 @@
     <ClCompile Include="..\..\..\AmazeUI\AmazeUI-D12\UI\UIAnimation.cpp">
       <Filter>AmazeUI\UI</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\AmazeUI\AmazeUI-D12\UI\UIApplication.cpp">
+    <ClCompile Include="..\..\..\AmazeUI\AmazeUI-D12\UI\UIWIN32APP.cpp">
       <Filter>AmazeUI\UI</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\AmazeUI\AmazeUI-D12\UI\UIDXFoundation.cpp">
@@ -37,7 +37,7 @@
     <ClInclude Include="..\..\..\AmazeUI\AmazeUI-D12\UI\UIAnimation.h">
       <Filter>AmazeUI\UI</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\AmazeUI\AmazeUI-D12\UI\UIApplication.h">
+    <ClInclude Include="..\..\..\AmazeUI\AmazeUI-D12\UI\UIWIN32APP.h">
       <Filter>AmazeUI\UI</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\AmazeUI\AmazeUI-D12\UI\UIDXFoundation.h">

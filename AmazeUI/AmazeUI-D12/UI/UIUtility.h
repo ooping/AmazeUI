@@ -1,20 +1,8 @@
-#include "..\CORE\Common.h"
-
 #pragma once
 
-// win32
-#ifdef _WIN32
-//
-#include <winsock2.h>
-#pragma comment(lib, "ws2_32.lib")
+#include "..\CORE\Common.h"
 
-#include <WS2tcpip.h>
-//
-#include <wincodec.h>
-#pragma comment(lib, "windowscodecs.lib")
-#endif
-
-/*-------------------------------------------------- Header files / DirectX12 --------------------------------------------------*/
+/*-------------------------------------------------- DirectX 12 --------------------------------------------------*/
 #include <d3d12.h>
 
 #if defined(NTDDI_WIN10_RS2)
@@ -26,27 +14,18 @@
 #include <DirectXMath.h>
 #include <DirectXColors.h>
 
-
-//#include "..\\Kits\\ATGTK\\d3dx12.h"
-//#include "..\\Kits\\ATGTK\\FindMedia.h"
-
-
-
-/*-------------------------------------------------- Header files / DirectX Tool Kit --------------------------------------------------*/
-// To use graphics and CPU markup events with the latest version of PIX, change this to include <pix3.h> 
-// then add the NuGet package WinPixEventRuntime to the project. 
-#include <pix.h>
-
 #ifdef _DEBUG
 #include <dxgidebug.h>
 #endif
 
+#include <pix.h>
+
+/*-------------------------------------------------- DirectX Tool Kit 12 --------------------------------------------------*/
 #include "Audio.h"
 #include "CommonStates.h"
-#include "DirectXHelpers.h"
 #include "DDSTextureLoader.h"
-#include "WICTextureLoader.h"
 #include "DescriptorHeap.h"
+#include "DirectXHelpers.h"
 #include "Effects.h"
 #include "GamePad.h"
 #include "GeometricPrimitive.h"
@@ -55,12 +34,19 @@
 #include "Model.h"
 #include "Mouse.h"
 #include "PrimitiveBatch.h"
-#include "ResourceUploadBatch.h"
 #include "RenderTargetState.h"
+#include "ResourceUploadBatch.h"
 #include "SimpleMath.h"
 #include "SpriteBatch.h"
-#include "SpriteFont.h" 
+#include "SpriteFont.h"
 #include "VertexTypes.h"
+#include "WICTextureLoader.h"
+
+
+using namespace DirectX;
+using namespace DirectX::SimpleMath;
+using Microsoft::WRL::ComPtr;
+
 
 
 // FreeType
@@ -95,9 +81,6 @@
 #define IDB_OK							80041
 #define IDB_CLOSE						80042
 
-
-
-#define WM_SIZERESET					(WM_USER+1003)
 
 /*-------------------------------------------------- UI utility functions--------------------------------------------------*/
 namespace UIShape2D {
@@ -179,7 +162,7 @@ struct UILayoutCalc {
 		SCALE_Y = 32,		// bit 6	dy1, dy2 are proportionally changed
 	};
 
-	UILayoutCalc(int flag=SIZE_X|SIZE_Y);
+	UILayoutCalc(int flag = SIZE_X | SIZE_Y);
 
 	void SetLayoutMode(int flag);										// Setting the zoom mode
 	void InitLayout(const RECT& parentRect, const RECT& rect);			// Initial calculation: Normal mode/directUI mode
