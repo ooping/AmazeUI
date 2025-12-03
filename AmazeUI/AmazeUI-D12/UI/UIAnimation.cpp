@@ -192,12 +192,12 @@ void UIAnimateEffectHitDrum::DrawHitDrumAnimate(UIImage& image, int centerX, int
 	image.operator()(centerX, centerY, scale + (_hitPower * _frameIndex / _maxFrame), static_cast<UCHAR>(255 - (250 * _frameIndex / _maxFrame)), transformMatrix);
 }
 
-void UIAnimateEffectHitDrum::DrawHitDrumAnimate(UIImage& image, RECT rc, const DirectX::XMMATRIX& transformMatrix) {
+void UIAnimateEffectHitDrum::DrawHitDrumAnimate(UIImage& image, UIRECT rc, const DirectX::XMMATRIX& transformMatrix) {
 	image.operator()(rc, 1.0f, 255, transformMatrix);
 	image.operator()(rc, 1.0f + (_hitPower * _frameIndex / _maxFrame), static_cast<UCHAR>(255 - (250 * _frameIndex / _maxFrame)), transformMatrix);
 }
 
-void UIAnimateEffectHitDrum::DrawSlicedHitDrumAnimate(UISlicedImage& slicedImage, RECT rc, const DirectX::XMMATRIX& transformMatrix) {
+void UIAnimateEffectHitDrum::DrawSlicedHitDrumAnimate(UISlicedImage& slicedImage, UIRECT rc, const DirectX::XMMATRIX& transformMatrix) {
 	slicedImage.operator()(rc, 255, transformMatrix);
 	slicedImage.operator()(ScaleRect()(rc, 1.0f + (_hitPower * _frameIndex / _maxFrame)), static_cast<UCHAR>(255 - (250 * _frameIndex / _maxFrame)), transformMatrix);
 }
@@ -273,12 +273,12 @@ float UIAnimateParticle::Lerp(float a, float b, float t) {
 	return a + t * (b - a);
 }
 
-void UIAnimateParticle::SetEmitterDirection(const UIPointFloat3& direction) {
+void UIAnimateParticle::SetEmitterDirection(const UIVector3F& direction) {
 	_emitterDirection = direction;
 	NormalizeVector(_emitterDirection);
 }
 
-void UIAnimateParticle::NormalizeVector(UIPointFloat3& vector) {
+void UIAnimateParticle::NormalizeVector(UIVector3F& vector) {
 	float length = sqrt(vector._x * vector._x + vector._y * vector._y + vector._z * vector._z);
 	if (length > 0.0f) {
 		vector._x /= length;
@@ -287,12 +287,12 @@ void UIAnimateParticle::NormalizeVector(UIPointFloat3& vector) {
 	}
 }
 
-float UIAnimateParticle::DotProduct(const UIPointFloat3& a, const UIPointFloat3& b) {
+float UIAnimateParticle::DotProduct(const UIVector3F& a, const UIVector3F& b) {
 	return a._x * b._x + a._y * b._y + a._z * b._z;
 }
 
-UIPointFloat3 UIAnimateParticle::CrossProduct(const UIPointFloat3& a, const UIPointFloat3& b) {
-	return UIPointFloat3(
+UIVector3F UIAnimateParticle::CrossProduct(const UIVector3F& a, const UIVector3F& b) {
+	return UIVector3F(
 		a._y * b._z - a._z * b._y,
 		a._z * b._x - a._x * b._z,
 		a._x * b._y - a._y * b._x
@@ -300,7 +300,7 @@ UIPointFloat3 UIAnimateParticle::CrossProduct(const UIPointFloat3& a, const UIPo
 }
 
 // Core emission algorithm — compute cone-shaped particle emission directly in world-space coordinates.
-void UIAnimateParticle::GenerateEmissionPoint(UIPointFloat3& outPosition, UIPointFloat3& outVelocity) {
+void UIAnimateParticle::GenerateEmissionPoint(UIVector3F& outPosition, UIVector3F& outVelocity) {
 	// 1. Randomly pick a position inside a circular emission area
 	float theta = RandomFloat(0, 2 * 3.14159265f);
 	float radiusRatio = sqrt(RandomFloat(0, 1.0f)); // square-root distribution yields uniform sampling over the disk
@@ -319,17 +319,17 @@ void UIAnimateParticle::GenerateEmissionPoint(UIPointFloat3& outPosition, UIPoin
 	float coneRadiusAtHeight = radius * (1.0f - heightRatio * tan(_coneAngle * 3.14159265f / 360.0f));
 
 	// 4. Construct the local-space position (cone aligned with +Y)
-	UIPointFloat3 basePos(
+	UIVector3F basePos(
 		coneRadiusAtHeight * cos(theta),
 		height,
 		coneRadiusAtHeight * sin(theta)
 	);
 
 	// 5. If emitter direction != default up (0,1,0), rotate the point to align with emitter direction
-	UIPointFloat3 defaultUp(0.0f, 1.0f, 0.0f);
+	UIVector3F defaultUp(0.0f, 1.0f, 0.0f);
 	if (abs(DotProduct(_emitterDirection, defaultUp) - 1.0f) > 0.001f) {
 		// compute rotation axis and angle
-		UIPointFloat3 rotAxis = CrossProduct(defaultUp, _emitterDirection);
+		UIVector3F rotAxis = CrossProduct(defaultUp, _emitterDirection);
 		float rotAngle = acos(DotProduct(defaultUp, _emitterDirection));
 
 		// simplified Rodrigues rotation (sufficient for common cases)
@@ -339,7 +339,7 @@ void UIAnimateParticle::GenerateEmissionPoint(UIPointFloat3& outPosition, UIPoin
 			float sinA = sin(rotAngle);
 
 			// Rodrigues: v' = v*cos(θ) + (k×v)*sin(θ) + k*(k·v)*(1-cos(θ))
-			UIPointFloat3 kCrossV = CrossProduct(rotAxis, basePos);
+			UIVector3F kCrossV = CrossProduct(rotAxis, basePos);
 			float kDotV = DotProduct(rotAxis, basePos);
 
 			basePos._x = basePos._x * cosA + kCrossV._x * sinA + rotAxis._x * kDotV * (1 - cosA);
@@ -349,7 +349,7 @@ void UIAnimateParticle::GenerateEmissionPoint(UIPointFloat3& outPosition, UIPoin
 	}
 
 	// 6. Compute final world-space position
-	outPosition = UIPointFloat3(
+	outPosition = UIVector3F(
 		_emitterPosition._x + basePos._x,
 		_emitterPosition._y + basePos._y,
 		_emitterPosition._z + basePos._z
@@ -362,7 +362,7 @@ void UIAnimateParticle::GenerateEmissionPoint(UIPointFloat3& outPosition, UIPoin
 	float sinTheta = sqrt(1 - cosTheta * cosTheta);
 
 	// local base direction (pointing up along +Y)
-	UIPointFloat3 baseDir(
+	UIVector3F baseDir(
 		sinTheta * cos(phi),
 		cosTheta,
 		sinTheta * sin(phi)
@@ -370,7 +370,7 @@ void UIAnimateParticle::GenerateEmissionPoint(UIPointFloat3& outPosition, UIPoin
 
 	// rotate direction into emitter orientation if needed
 	if (abs(DotProduct(_emitterDirection, defaultUp) - 1.0f) > 0.001f) {
-		UIPointFloat3 rotAxis = CrossProduct(defaultUp, _emitterDirection);
+		UIVector3F rotAxis = CrossProduct(defaultUp, _emitterDirection);
 		float rotAngle = acos(DotProduct(defaultUp, _emitterDirection));
 
 		if (abs(rotAngle) > 0.001f) {
@@ -378,7 +378,7 @@ void UIAnimateParticle::GenerateEmissionPoint(UIPointFloat3& outPosition, UIPoin
 			float cosA = cos(rotAngle);
 			float sinA = sin(rotAngle);
 
-			UIPointFloat3 kCrossV = CrossProduct(rotAxis, baseDir);
+			UIVector3F kCrossV = CrossProduct(rotAxis, baseDir);
 			float kDotV = DotProduct(rotAxis, baseDir);
 
 			baseDir._x = baseDir._x * cosA + kCrossV._x * sinA + rotAxis._x * kDotV * (1 - cosA);
@@ -389,7 +389,7 @@ void UIAnimateParticle::GenerateEmissionPoint(UIPointFloat3& outPosition, UIPoin
 
 	// 8. Compute final velocity vector
 	float speed = RandomFloat(_speedMin, _speedMax);
-	outVelocity = UIPointFloat3(
+	outVelocity = UIVector3F(
 		baseDir._x * speed,
 		baseDir._y * speed,
 		baseDir._z * speed
@@ -402,10 +402,10 @@ UIAnimateParticleFlame::UIAnimateParticleFlame() {
 	_flameHeight = 2.0f;
 	_flameSpreadAngle = 30.0f;
 	_flameNarrowness = 1.0f;
-	_windDirection = UIPointFloat3(0.0f, 0.0f, 0.0f);
+	_windDirection = UIVector3F(0.0f, 0.0f, 0.0f);
 }
 
-void UIAnimateParticleFlame::PlayFlameAnimate(const UIPointFloat3& position, UICameraBase3D* pCamera, int maxFrame) {
+void UIAnimateParticleFlame::PlayFlameAnimate(const UIVector3F& position, UICameraBase3D* pCamera, int maxFrame) {
 	_emitterPosition = position;
 	_pCamera = pCamera;
 	_particles.clear();
@@ -432,7 +432,7 @@ void UIAnimateParticleFlame::SetFlameHeight(float height) {
 void UIAnimateParticleFlame::DrawParticles() {
 	// Draw each particle as a 3D circle
 	for (const auto& particle : _particles) {
-		UIPointFloat3 pos(particle._position._x, particle._position._y, particle._position._z);
+		UIVector3F pos(particle._position._x, particle._position._y, particle._position._z);
 		UICircle3D circle(pos, particle._currentSize);
 		circle(particle._color, _pCamera);
 	}
@@ -457,7 +457,7 @@ void UIAnimateParticleFlame::EmitParticles() {
 		FlameParticle particle;
 
 		// Generate position and velocity using the emission algorithm
-		UIPointFloat3 emitPos, emitVel;
+		UIVector3F emitPos, emitVel;
 		GenerateEmissionPoint(emitPos, emitVel);
 
 		particle._position = emitPos;
@@ -469,7 +469,7 @@ void UIAnimateParticleFlame::EmitParticles() {
 		particle._velocity._z += RandomFloat(-0.3f, 0.3f) * _turbulence;
 
 		// Physical properties
-		particle._acceleration = UIPointFloat3(_windForce._x, _gravity, _windForce._z);
+		particle._acceleration = UIVector3F(_windForce._x, _gravity, _windForce._z);
 
 		// Lifecycle
 		particle._life = 1.0f;

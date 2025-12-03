@@ -43,7 +43,7 @@ protected:
 	void OnCreate() {}
 	void OnDestroy() {}
 	void OnNotify(int, LPARAM) {}
-	void OnSize(POINT) {}
+	void OnSize(UIPOINT) {}
 };
 
 
@@ -130,12 +130,12 @@ public:
 		return isMsgHandled;
 	}
 
-	bool CreateControl(UINT id, UIContainer* pUIContainer, const RECT& relativeRect = UIShape2D::NULL_RECT, int layoutFlag = UILayoutCalc::NO_ZOOM, bool isShow = true) {
+	bool CreateControl(UINT id, UIContainer* pUIContainer, const UIRECT& relativeRect = UIShape2D::NULL_RECT, int layoutFlag = UILayoutCalc::NO_ZOOM, bool isShow = true) {
 		_id = id;
 		return CreateWindowBase(pUIContainer, relativeRect, layoutFlag, isShow);
 	}
 
-	bool CreateControl(UINT id, UIWindowBase* pParent, const RECT& relativeRect = UIShape2D::NULL_RECT, int layoutFlag = UILayoutCalc::NO_ZOOM, bool isShow = true) {
+	bool CreateControl(UINT id, UIWindowBase* pParent, const UIRECT& relativeRect = UIShape2D::NULL_RECT, int layoutFlag = UILayoutCalc::NO_ZOOM, bool isShow = true) {
 		return CreateControl(id, pParent->GetUIContainer(), relativeRect, layoutFlag, isShow);
 	}
 
@@ -145,15 +145,15 @@ protected:
 	// message processing
 	void OnCreate()                                    { static_cast<T*>(this)->CalcArea(); }
 	void OnDestroy()                                   {}
-	void OnSize(POINT)								   { static_cast<T*>(this)->CalcArea(); }
-	void OnMouseLeave(POINT)                           {}
-	bool OnMouseMove(POINT)                            { return true; }
+	void OnSize(UIPOINT)								   { static_cast<T*>(this)->CalcArea(); }
+	void OnMouseLeave(UIPOINT)                           {}
+	bool OnMouseMove(UIPOINT)                            { return true; }
 	bool OnMouseWheel(short)                    	   { return false; }
-	bool OnLButtonDown(POINT)                          { return false; }
-	bool OnLButtonUp(POINT)                            { return false; }
-	bool OnLButtonDbClk(POINT)                         { return false; }
-	bool OnRButtonDown(POINT)                          { return false; }
-	bool OnRButtonUp(POINT)                            { return false; }
+	bool OnLButtonDown(UIPOINT)                          { return false; }
+	bool OnLButtonUp(UIPOINT)                            { return false; }
+	bool OnLButtonDbClk(UIPOINT)                         { return false; }
+	bool OnRButtonDown(UIPOINT)                          { return false; }
+	bool OnRButtonUp(UIPOINT)                            { return false; }
 	void OnKeyDown(TCHAR)                              {}
 	void OnChar(TCHAR)                                 {}
 	void OnSetFocus()                                  {}
@@ -247,7 +247,7 @@ Interval_row
 class UILayoutGrid {
 public:
 	// initialize
-	void InitPoint(const POINT& relativePT);
+	void InitPoint(const UIPOINT& relativePT);
 
 	// set cell information
 	void SetRowColumn(UINT row, UINT column, int width=100, int widthInterval=20, int height=30, int heightInterval=15);
@@ -279,7 +279,7 @@ private:
 	std::vector<int> _rowIntervalList;
 	std::vector<int> _columnIntervalList;
 
-	POINT _relativePoint;
+	UIPOINT _relativePoint;
 };
 
 
@@ -344,16 +344,16 @@ public:
 	UIString GetText();
 
 private:
-	bool OnMouseMove(POINT pt);
-	void OnMouseLeave(POINT pt);
-	bool OnLButtonDown(POINT pt);
-	bool OnLButtonUp(POINT pt);
+	bool OnMouseMove(UIPOINT pt);
+	void OnMouseLeave(UIPOINT pt);
+	bool OnLButtonDown(UIPOINT pt);
+	bool OnLButtonUp(UIPOINT pt);
 	void OnKeyDown(TCHAR nChar);
 
 	bool _isHover;
 	bool _isLButtonDown;
-	RECT _strRect;						// normal state display area
-	RECT _strRect2;						// pressed state display area
+	UIRECT _strRect;						// normal state display area
+	UIRECT _strRect2;						// pressed state display area
 	
 	std::wstring _text;
 };
@@ -380,14 +380,14 @@ public:
 	void SetMutexList(std::vector<UICheckButton*>mutexList);
 
 private:
-	bool OnMouseMove(POINT pt);
-	void OnMouseLeave(POINT pt);
-	bool OnLButtonDown(POINT pt);
+	bool OnMouseMove(UIPOINT pt);
+	void OnMouseLeave(UIPOINT pt);
+	bool OnLButtonDown(UIPOINT pt);
 
 	float _fontHeight;								// font height
 
-	RECT _checkRect;
-	RECT _strRect;									// display area
+	UIRECT _checkRect;
+	UIRECT _strRect;									// display area
 	bool _isHover;									// mouse hover
 	bool _isCheck;
 	std::wstring _text;								// display wstring
@@ -422,9 +422,9 @@ private:
 	void OnDestroy();
 	void OnSetFocus();
 	void OnKillFocus();
-	bool OnLButtonDown(POINT pt);
-	bool OnLButtonDbClk(POINT pt);
-	bool OnMouseMove(POINT pt);
+	bool OnLButtonDown(UIPOINT pt);
+	bool OnLButtonDbClk(UIPOINT pt);
+	bool OnMouseMove(UIPOINT pt);
 	void OnKeyDown(TCHAR nChar);
 	void OnChar(TCHAR nChar);
 	bool OnPaste();
@@ -432,14 +432,14 @@ private:
 	bool OnCut();
 
 	void EraseSelectArea();
-	void CalcCaretPassChar(POINT& pt);
+	void CalcCaretPassChar(UIPOINT& pt);
 	void CalcBeginDrawXPos();
 
 	float _fontHeight;					// font related
 	UIColor _fontColor;
 
-	RECT _drawRectAllow;				// drawing area allow drawing wstring
-	RECT _drawRectReal;					// drawing wstring actual drawing area may exceed the allowed drawing area
+	UIRECT _drawRectAllow;				// drawing area allow drawing wstring
+	UIRECT _drawRectReal;					// drawing wstring actual drawing area may exceed the allowed drawing area
 
 	std::wstring _text;					// drawing wstring
 	int _beginDrawXPos;					// drawing start x coordinate
@@ -471,9 +471,9 @@ public:
 	std::vector<std::wstring> GetTextList();
 
 private:
-	bool OnMouseMove(POINT pt);
-	void OnMouseLeave(POINT pt);
-	bool OnLButtonDown(POINT pt);
+	bool OnMouseMove(UIPOINT pt);
+	void OnMouseLeave(UIPOINT pt);
+	bool OnLButtonDown(UIPOINT pt);
 
 	std::vector<std::wstring> _list;
 	int _selectedectIndex;
@@ -506,10 +506,10 @@ public:
 private:
 	void OnCreate();
 	void OnKillFocus();
-	bool OnMouseMove(POINT pt);
-	void OnMouseLeave(POINT pt);
-	bool OnLButtonDbClk(POINT pt);
-	bool OnLButtonDown(POINT pt);
+	bool OnMouseMove(UIPOINT pt);
+	void OnMouseLeave(UIPOINT pt);
+	bool OnLButtonDbClk(UIPOINT pt);
+	bool OnLButtonDown(UIPOINT pt);
 	void OnNotify(int id, LPARAM param);
 
 	void SetDropDown(bool flag);
@@ -542,9 +542,9 @@ public:
 	void SetCoordXY(int coordFlag);
 
 private:
-	bool OnMouseMove(POINT pt);
-	bool OnLButtonDown(POINT pt);
-	bool OnLButtonDbClk(POINT pt);
+	bool OnMouseMove(UIPOINT pt);
+	bool OnLButtonDown(UIPOINT pt);
+	bool OnLButtonDbClk(UIPOINT pt);
 
 	void CalcBarArea();
 
@@ -553,11 +553,11 @@ private:
 	double _posScale;					// scroll start position ratio to the middle area
 
 	bool _isHover;						// mouse hover
-	POINT _prePoint;					// record the previous point
+	UIPOINT _prePoint;					// record the previous point
 	
 	// area information
-	RECT _scrollRect;
-	RECT _barRect;					
+	UIRECT _scrollRect;
+	UIRECT _barRect;					
 };
 
 /*------------------------------------------------------- UIGrid -------------------------------------------------------*/
@@ -578,10 +578,10 @@ class UIGrid : public UIControlBase<UIGrid>, public UIContainerHelp<UIGrid>, pub
 		// create cell control  release control
 		void CreateCellControl(UIContainer *pUIContainer, int firstRowPos, int firstColumnPos, int id=0);
 		bool DeleteCellControl();
-		void MoveCellControl(const RECT& rc);
+		void MoveCellControl(const UIRECT& rc);
 		void DrawCellControl();
 
-		RECT _pos;								// cell position	
+		UIRECT _pos;								// cell position	
 
 		std::wstring _text;						// wstring content
 		//int _wordPos;							// wstring position left, center, right
@@ -660,14 +660,14 @@ public:
 
 private:
 	void OnCreate();
-	bool OnLButtonDown(POINT pt);
-	bool OnLButtonDownUnfix(POINT point);
-	void OnLButtonDownFix(POINT point);
-	bool OnLButtonDbClk(POINT pt);
+	bool OnLButtonDown(UIPOINT pt);
+	bool OnLButtonDownUnfix(UIPOINT point);
+	void OnLButtonDownFix(UIPOINT point);
+	bool OnLButtonDbClk(UIPOINT pt);
 	void OnHscroll(int code, UIScrollBar* pScrollBar);
 	void OnVscroll(int code, UIScrollBar* pScrollBar);
 	bool OnMouseWheel(short zDelta);
-	bool OnMouseMove(POINT pt);
+	bool OnMouseMove(UIPOINT pt);
 	void OnKeyDown(TCHAR nChar);
 	//
 	void OnKeyDownArrows(TCHAR nChar);
@@ -698,7 +698,7 @@ private:
 	void CalcScrollBarRect();
 	void CalcDrawBeginRowColumn(UINT& beginRow, UINT& beginColumn);
 	void CalcCellsPos();
-	bool CalcCellIndexUnfix(UINT& row, UINT& column, POINT point);				// calculate the cell in the unFixGrid range
+	bool CalcCellIndexUnfix(UINT& row, UINT& column, UIPOINT point);				// calculate the cell in the unFixGrid range
 	inline void CalcCellsRange(UINT& beginRow, UINT& endRow, UINT& beginColumn, UINT& endColumn);
 	//	
 	void SetNoSel();
@@ -720,10 +720,10 @@ private:
 	bool _allRowColumnActive;									// selected all row and column flag
 
 	// drawing area
-	RECT _noScrollArea;											// area without scroll bar
-	RECT _gridArea;												// grid area in client area
-	RECT _unfixGridArea;										// unfix area in grid area
-	RECT _xScrollBarArea, _yScrollBarArea;						// scroll bar area
+	UIRECT _noScrollArea;											// area without scroll bar
+	UIRECT _gridArea;												// grid area in client area
+	UIRECT _unfixGridArea;										// unfix area in grid area
+	UIRECT _xScrollBarArea, _yScrollBarArea;						// scroll bar area
 
 	bool _isDraw;
 	
@@ -757,14 +757,14 @@ class UIChart : public UIControlBase<UIChart> {
 	typedef std::pair<float, float> RANGE_FLOAT;
 	typedef std::vector<RANGE_FLOAT> VECTOR_RANGE; 
 
-	// PointFloat2 has been moved to UIUtility.h, use UIPointFloat2
-	typedef std::vector<UIPointFloat2> VECTOR_POINT2; 
+	// VectorFloat2 has been moved to UIUtility.h, use UIVector2F
+	typedef std::vector<UIVector2F> VECTOR_POINT2; 
 
 	struct CurveInfo {	
 		CurveInfo();
 
 		bool CalcCoordRange(float& xMin, float& xMax, float& yMin, float& yMax);			// calculate the coordinate range of the line
-		bool JudgePointNearLine(POINT& p0, POINT& p1, POINT& p2);							// judge whether the point p0 is near the line (p1,p2)
+		bool JudgePointNearLine(UIPOINT& p0, UIPOINT& p1, UIPOINT& p2);						// judge whether the point p0 is near the line (p1,p2)
 		bool operator==(std::wstring textName);												// overload the comparison  name as key
 
 		VECTOR_POINT2 _pointList;
@@ -822,11 +822,11 @@ public:
 	void CalcXYCoordRange();
 
 private:
-	bool OnLButtonDown(POINT pt);
-	bool OnLButtonUp(POINT pt);
-	bool OnRButtonDown(POINT pt);
-	bool OnRButtonUp(POINT pt);
-	bool OnMouseMove(POINT pt);
+	bool OnLButtonDown(UIPOINT pt);
+	bool OnLButtonUp(UIPOINT pt);
+	bool OnRButtonDown(UIPOINT pt);
+	bool OnRButtonUp(UIPOINT pt);
+	bool OnMouseMove(UIPOINT pt);
 	//
 	void AddCurve(int yFlag, std::wstring textName);
 	void AddCurve(int yFlag, std::wstring textName, float xValue, float yValue);
@@ -846,7 +846,7 @@ private:
 	void DrawCurveList1();
 	void DrawCurveList2();
 	void DrawCurve(CurveInfo& curve, int yFlag);
-	void Draw2DPoint(POINT& pointPos, UIColor& color, bool bigPointFlag);
+	void Draw2DPoint(UIPOINT& pointPos, UIColor& color, bool bigPointFlag);
 
 	// coordinate range related
 	void SaveCurCoordRange();														// save current coordinate range
@@ -855,25 +855,25 @@ private:
 	void CalcCoordSymmetry(RANGE_FLOAT& rangeCoord);								// calculate coordinate symmetry
 
 	// coordinate value and real position conversion
-	void TransfromCoordToPos(POINT& pointPos, UIPointFloat2& pointCoord, int yFlag);
-	bool TransfromPosToCoord(POINT& pointPos, UIPointFloat2& pointCoord, int yFlag);
+	void TransfromCoordToPos(UIPOINT& pointPos, UIVector2F& pointCoord, int yFlag);
+	bool TransfromPosToCoord(UIPOINT& pointPos, UIVector2F& pointCoord, int yFlag);
 
 	// point range judgment
-	bool IsPosPointInbox(POINT& pointPos, const RECT& rect);
-	bool IsCoordPointInbox(UIPointFloat2& pointCoord, UIPointFloat2& p1, UIPointFloat2& p2, bool nearYFlag=false);
-	bool IsCoordPointInCoordRange(UIPointFloat2& pointCoord, int yFlag);
+	bool IsPosPointInbox(UIPOINT& pointPos, const UIRECT& rect);
+	bool IsCoordPointInbox(UIVector2F& pointCoord, UIVector2F& p1, UIVector2F& p2, bool nearYFlag=false);
+	bool IsCoordPointInCoordRange(UIVector2F& pointCoord, int yFlag);
 
 	// judge whether the point is near the curve
-	bool IsPointNearCurve(POINT& point, int yFlag);
-	bool IsPointNearCurvePoint(POINT& point, CurveInfo& curve, int yFlag);
-	bool IsPointNearCurveLine(POINT& point, CurveInfo& curve, int yFlag);
+	bool IsPointNearCurve(UIPOINT& point, int yFlag);
+	bool IsPointNearCurvePoint(UIPOINT& point, CurveInfo& curve, int yFlag);
+	bool IsPointNearCurveLine(UIPOINT& point, CurveInfo& curve, int yFlag);
 
 	// calculate intersection point
-	UIPointFloat2 CalcIntersectionPoint(UIPointFloat2& prePoint, UIPointFloat2& curPoint, int outBoxIndex, int yFlag);
-	inline bool CalcLeftIntersectionPoint(UIPointFloat2& pointCoord, float& k, float& b, int yFlag);
-	inline bool CalcTopIntersectionPoint(UIPointFloat2& pointCoord, float& k, float& b, int yFlag);
-	inline bool CalcRightIntersectionPoint(UIPointFloat2& pointCoord, float& k, float& b, int yFlag);
-	inline bool CalcBottomIntersectionPoint(UIPointFloat2& pointCoord, float& k, float& b, int yFlag);
+	UIVector2F CalcIntersectionPoint(UIVector2F& prePoint, UIVector2F& curPoint, int outBoxIndex, int yFlag);
+	inline bool CalcLeftIntersectionPoint(UIVector2F& pointCoord, float& k, float& b, int yFlag);
+	inline bool CalcTopIntersectionPoint(UIVector2F& pointCoord, float& k, float& b, int yFlag);
+	inline bool CalcRightIntersectionPoint(UIVector2F& pointCoord, float& k, float& b, int yFlag);
+	inline bool CalcBottomIntersectionPoint(UIVector2F& pointCoord, float& k, float& b, int yFlag);
 
 	// internal calculation mode
 	enum CalcModeInside {
@@ -885,7 +885,7 @@ private:
 		ADDPOINT
 	};
 		
-	RECT _gridRect;															// area information
+	UIRECT _gridRect;															// area information
 	
 	UINT _rowNum;															// grid row and column number
 	UINT _columnNum;
@@ -903,11 +903,11 @@ private:
 	bool _isY2CoordRangeCalc;												// xy coordinate range calculation flag
 	
 	bool _isDrawZoomRect;													// zoom frame information
-	POINT _lPointBeginPos, _lPointEndPos;
-	POINT _rPointPosUndo;
+	UIPOINT _lPointBeginPos, _lPointEndPos;
+	UIPOINT _rPointPosUndo;
 	
 	bool _isMove;															// move information
-	POINT _rPointPosMove;
+	UIPOINT _rPointPosMove;
 	
 	bool _isShowToolTip;													// tooltip information
 	std::wstring _tooltipStr;
@@ -945,9 +945,9 @@ public:
 	int GetCurCell();
 
 private:
-	bool OnMouseMove(POINT pt);
-	void OnMouseLeave(POINT pt);
-	bool OnLButtonDown(POINT pt);
+	bool OnMouseMove(UIPOINT pt);
+	void OnMouseLeave(UIPOINT pt);
+	bool OnLButtonDown(UIPOINT pt);
 
 	void DrawTab();
 	void DrawTabSelLine();
@@ -974,11 +974,11 @@ private:
 	bool _isDraw;
 
 	// tab related
-	RECT _tabRC;
-	std::vector<RECT> _tabRCList;
+	UIRECT _tabRC;
+	std::vector<UIRECT> _tabRCList;
 	int _hoverIndex;
 	//
-	RECT _lineRC;
+	UIRECT _lineRC;
 
 	// cellList
 	struct CellData {
@@ -988,8 +988,8 @@ private:
 		CellData() : _title(L""), p_win(NULL) {}
 	};
 	std::vector<CellData> _cellList;
-	std::vector<RECT> _cellRCList;
-	RECT _cellRC;
+	std::vector<UIRECT> _cellRCList;
+	UIRECT _cellRC;
 	//
 	UINT _selectedIndex;
 
@@ -1032,10 +1032,10 @@ public:
 	void Draw();
 
 private:
-	bool OnMouseMove(POINT pt);
-	bool OnMouseLeave(POINT pt);
+	bool OnMouseMove(UIPOINT pt);
+	bool OnMouseLeave(UIPOINT pt);
 
-	POINT _curMousePos;
+	UIPOINT _curMousePos;
 	bool _isHover;
 };
 
@@ -1043,10 +1043,10 @@ private:
 class UIChart3D : public UIControlBase<UIChart3D> {
 	friend UIControlBase;
 
-	// PointFloat3 has been moved to UIUtility.h, use UIPointFloat3
+	// VectorFloat3 has been moved to UIUtility.h, use UIVector3F
 
 	typedef std::pair<float, float> RANGE_FLOAT_3D;
-	typedef std::vector<UIPointFloat3> VECTOR_POINT3;
+	typedef std::vector<UIVector3F> VECTOR_POINT3;
 
 	struct CurveInfo {	
 		CurveInfo();
@@ -1073,14 +1073,14 @@ class UIChart3D : public UIControlBase<UIChart3D> {
 	   chart3d.AddDataPoint(75.0f, 30.0f, 50.0f, UIColor::Blue, 12.0f);    // Blue sphere, 12 pixel radius
 	   
 	   // 3. Convert data coordinates to world coordinates
-	   PointFloat3 worldPoint = chart3d.DataToWorld({25.0f, 10.0f, 100.0f});
+	   VectorFloat3 worldPoint = chart3d.DataToWorld({25.0f, 10.0f, 100.0f});
 	   
 	   // 4. Convert world coordinates to screen coordinates for mouse interaction
-	   POINT screenPos = chart3d.WorldToScreen(worldPoint);
+	   UIPOINT screenPos = chart3d.WorldToScreen(worldPoint);
 	   
 	   // 5. Reverse conversion for mouse picking
-	   PointFloat3 pickedWorld = chart3d.ScreenToWorld(mousePos, 0.5f);
-	   PointFloat3 pickedData = chart3d.WorldToData(pickedWorld);
+	   VectorFloat3 pickedWorld = chart3d.ScreenToWorld(mousePos, 0.5f);
+	   VectorFloat3 pickedData = chart3d.WorldToData(pickedWorld);
 	   
 	   // 6. Clear all data points when needed
 	   chart3d.ClearDataPoints();
@@ -1093,25 +1093,25 @@ public:
 	void Draw();
 
 	// Mouse event handlers
-	bool OnRButtonDown(POINT pt);
-	bool OnRButtonUp(POINT pt);
-	bool OnMouseMove(POINT pt);
-	void OnMouseLeave(POINT pt);
+	bool OnRButtonDown(UIPOINT pt);
+	bool OnRButtonUp(UIPOINT pt);
+	bool OnMouseMove(UIPOINT pt);
+	void OnMouseLeave(UIPOINT pt);
 
 	// Coordinate system setup
 	void SetDataCoordRange(float xMin, float xMax, float yMin, float yMax, float zMin, float zMax);
 
 	// Curve management
-	void AddCurve(UIString curveName, const std::vector<UIPointFloat3>& points, UIColor color = UIColor::White);
+	void AddCurve(UIString curveName, const std::vector<UIVector3F>& points, UIColor color = UIColor::White);
 	void AddCurve(UIString curveName, const std::vector<float>& xList, const std::vector<float>& yList, const std::vector<float>& zList, UIColor color = UIColor::White);
 	void ClearAllCurves();
 	void CalcXYCoordRange();
 
 	// Coordinate transformation functions
-	UIPointFloat3 DataToWorld(const UIPointFloat3& dataCoord) const;
-	UIPointFloat3 WorldToData(const UIPointFloat3& worldCoord) const;
-	POINT WorldToScreen(const UIPointFloat3& worldCoord);
-	UIPointFloat3 ScreenToWorld(const POINT& screenPos, float depth = 0.0f);
+	UIVector3F DataToWorld(const UIVector3F& dataCoord) const;
+	UIVector3F WorldToData(const UIVector3F& worldCoord) const;
+	UIPOINT WorldToScreen(const UIVector3F& worldCoord);
+	UIVector3F ScreenToWorld(const UIPOINT& screenPos, float depth = 0.0f);
 
 private:
 	// 3D axes calculation and drawing functions
@@ -1125,28 +1125,28 @@ private:
 	// Curve data
 	CURVE_LIST _curveList;							     // 3D curve list
 
-	UIPointFloat3 _axisLengths = {1.0f, 1.0f, 1.0f};  	 // World coordinate axis lengths
+	UIVector3F _axisLengths = {1.0f, 1.0f, 1.0f};  	 // World coordinate axis lengths
 
 	// Pre-calculated axes coordinates in world space (calculated in CalcArea)
-	UIPointFloat3 _axesOrigin = {0.0f, 0.0f, 0.0f};      // Origin point in world coordinates
-	UIPointFloat3 _xAxisEnd = {1.0f, 0.0f, 0.0f};        // X axis end point in world coordinates
-	UIPointFloat3 _yAxisEnd = {0.0f, 1.0f, 0.0f};        // Y axis end point in world coordinates
-	UIPointFloat3 _zAxisEnd = {0.0f, 0.0f, 1.0f};        // Z axis end point in world coordinates
+	UIVector3F _axesOrigin = {0.0f, 0.0f, 0.0f};      // Origin point in world coordinates
+	UIVector3F _xAxisEnd = {1.0f, 0.0f, 0.0f};        // X axis end point in world coordinates
+	UIVector3F _yAxisEnd = {0.0f, 1.0f, 0.0f};        // Y axis end point in world coordinates
+	UIVector3F _zAxisEnd = {0.0f, 0.0f, 1.0f};        // Z axis end point in world coordinates
 
 	// Axis subdivision points (5 intermediate points between origin and end)
-	std::vector<UIPointFloat3> _xAxisTicks;     // X axis subdivision points
-	std::vector<UIPointFloat3> _yAxisTicks;     // Y axis subdivision points  
-	std::vector<UIPointFloat3> _zAxisTicks;     // Z axis subdivision points
+	std::vector<UIVector3F> _xAxisTicks;     // X axis subdivision points
+	std::vector<UIVector3F> _yAxisTicks;     // Y axis subdivision points  
+	std::vector<UIVector3F> _zAxisTicks;     // Z axis subdivision points
 
 	// Tick mark lines perpendicular to each axis
-	std::vector<std::pair<UIPointFloat3, UIPointFloat3>> _xTickLines;  // X axis tick marks
-	std::vector<std::pair<UIPointFloat3, UIPointFloat3>> _yTickLines;  // Y axis tick marks
-	std::vector<std::pair<UIPointFloat3, UIPointFloat3>> _zTickLines;  // Z axis tick marks
+	std::vector<std::pair<UIVector3F, UIVector3F>> _xTickLines;  // X axis tick marks
+	std::vector<std::pair<UIVector3F, UIVector3F>> _yTickLines;  // Y axis tick marks
+	std::vector<std::pair<UIVector3F, UIVector3F>> _zTickLines;  // Z axis tick marks
 
 	// Arrow triangles at axis endpoints
-	std::vector<UIPointFloat3> _xArrowTriangle;  // X axis arrow triangle (3 vertices)
-	std::vector<UIPointFloat3> _yArrowTriangle;  // Y axis arrow triangle (3 vertices)
-	std::vector<UIPointFloat3> _zArrowTriangle;  // Z axis arrow triangle (3 vertices)
+	std::vector<UIVector3F> _xArrowTriangle;  // X axis arrow triangle (3 vertices)
+	std::vector<UIVector3F> _yArrowTriangle;  // Y axis arrow triangle (3 vertices)
+	std::vector<UIVector3F> _zArrowTriangle;  // Z axis arrow triangle (3 vertices)
 
 	// 3D coordinate system definition
 	RANGE_FLOAT_3D _xDataRange = {0.0f, 1.0f};  // Data coordinate range for X axis
@@ -1154,7 +1154,7 @@ private:
 	RANGE_FLOAT_3D _zDataRange = {0.0f, 1.0f};  // Data coordinate range for Z axis
 
 	// Mouse interaction state
-	POINT _lastMousePos = {0, 0};
+	UIPOINT _lastMousePos = {0, 0};
 	bool _moveFlag = false;  // Right button down flag
 
 	DirectX::XMMATRIX _inheritedTransformMatrix;
@@ -1176,7 +1176,7 @@ public:
 	static T* CreateWidget(
 		int id,
 		UIContainer* pContainer,
-		const RECT& rect = UIShape2D::NULL_RECT,
+		const UIRECT& rect = UIShape2D::NULL_RECT,
 		int layoutFlag = UILayoutCalc::NO_ZOOM,
 		bool isShow = true
 	) {
@@ -1210,7 +1210,7 @@ public:
 	static T* CreateWidget(
 		int id,
 		UIWindowBase* pParent,
-		const RECT& rect = UIShape2D::NULL_RECT,
+		const UIRECT& rect = UIShape2D::NULL_RECT,
 		int layoutFlag = UILayoutCalc::NO_ZOOM,
 		bool isShow = true
 	) {
@@ -1258,7 +1258,7 @@ template<typename T>
 inline T* UICreateWidget(
 	UIContainer* pContainer,
 	int id = 0,
-	const RECT& rect = UIShape2D::NULL_RECT,
+	const UIRECT& rect = UIShape2D::NULL_RECT,
 	int layoutFlag = UILayoutCalc::NO_ZOOM,
 	bool isShow = true
 ) {
@@ -1270,7 +1270,7 @@ template<typename T>
 inline T* UICreateWidget(
 	UIWindowBase* pParent,
 	int id = 0,
-	const RECT& rect = UIShape2D::NULL_RECT,
+	const UIRECT& rect = UIShape2D::NULL_RECT,
 	int layoutFlag = UILayoutCalc::NO_ZOOM,
 	bool isShow = true
 ) {

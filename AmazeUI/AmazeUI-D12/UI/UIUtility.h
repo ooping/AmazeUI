@@ -43,16 +43,18 @@
 #include "WICTextureLoader.h"
 
 
-using namespace DirectX;
-using namespace DirectX::SimpleMath;
-using Microsoft::WRL::ComPtr;
 
 
 
-// FreeType
-#include <ft2build.h>
-#include FT_FREETYPE_H
-#include FT_GLYPH_H
+
+/*-------------------------------------------------- Types --------------------------------------------------*/
+// using UIVEC2 = DirectX::XMFLOAT2;
+// using UIVEC3 = DirectX::XMFLOAT3;
+// using UIVEC4 = DirectX::XMFLOAT4;
+// using UIMX4x4 = DirectX::XMFLOAT4X4;
+// using UIMX3x3 = DirectX::XMFLOAT3X3;
+
+
 
 
 
@@ -82,57 +84,131 @@ using Microsoft::WRL::ComPtr;
 #define IDB_CLOSE						80042
 
 
+/*-------------------------------------------------- vector math --------------------------------------------------*/
+namespace UIVectorMath {
+    struct VectorFloat2 {
+        float _x;
+        float _y;
+
+        VectorFloat2(DirectX::XMFLOAT2 vec) : _x(vec.x), _y(vec.y) {}
+        VectorFloat2(float x = 0.0f, float y = 0.0f) : _x(x), _y(y) {}
+        
+        VectorFloat2 operator+(const VectorFloat2& other) const {
+            return VectorFloat2(_x + other._x, _y + other._y);
+        }
+        VectorFloat2 operator-(const VectorFloat2& other) const {
+            return VectorFloat2(_x - other._x, _y - other._y);
+        }
+        VectorFloat2 operator*(float scale) const {
+            return VectorFloat2(_x * scale, _y * scale);
+        }
+        
+        DirectX::XMFLOAT2 ToXMFLOAT2() const {
+            return DirectX::XMFLOAT2(_x, _y);
+        }
+    };
+
+    struct VectorFloat3 {
+        float _x;
+        float _y;
+        float _z;
+
+        VectorFloat3(DirectX::XMFLOAT3 vec) : _x(vec.x), _y(vec.y), _z(vec.z) {}
+        VectorFloat3(float x = 0.0f, float y = 0.0f, float z = 0.0f) : _x(x), _y(y), _z(z) {}
+        
+        VectorFloat3 operator+(const VectorFloat3& other) const {
+            return VectorFloat3(_x + other._x, _y + other._y, _z + other._z);
+        }
+        VectorFloat3 operator-(const VectorFloat3& other) const {
+            return VectorFloat3(_x - other._x, _y - other._y, _z - other._z);
+        }
+        VectorFloat3 operator*(float scale) const {
+            return VectorFloat3(_x * scale, _y * scale, _z * scale);
+        }
+
+        DirectX::XMFLOAT3 ToXMFLOAT3() const {
+            return DirectX::XMFLOAT3(_x, _y, _z);
+        }
+    };
+
+    inline float Distance2D(const VectorFloat2& _p1, const VectorFloat2& _p2) {
+        float _dx = _p1._x - _p2._x;
+        float _dy = _p1._y - _p2._y;
+        return sqrt(_dx * _dx + _dy * _dy);
+    }
+
+    inline float Distance3D(const VectorFloat3& _p1, const VectorFloat3& _p2) {
+        float _dx = _p1._x - _p2._x;
+        float _dy = _p1._y - _p2._y;
+        float _dz = _p1._z - _p2._z;
+        return sqrt(_dx * _dx + _dy * _dy + _dz * _dz);
+    }
+
+    // interpolation
+    inline VectorFloat2 Lerp2D(const VectorFloat2& _a, const VectorFloat2& _b, float _t) {
+        return _a + (_b - _a) * _t;
+    }
+
+    inline VectorFloat3 Lerp3D(const VectorFloat3& _a, const VectorFloat3& _b, float _t) {
+        return _a + (_b - _a) * _t;
+    }
+
+    // dot product
+    inline float Dot2D(const VectorFloat2& _a, const VectorFloat2& _b) {
+        return _a._x * _b._x + _a._y * _b._y;
+    }
+
+    inline float Dot3D(const VectorFloat3& _a, const VectorFloat3& _b) {
+        return _a._x * _b._x + _a._y * _b._y + _a._z * _b._z;
+    }
+
+    // Cross product (2D returns scalar, 3D returns vector)
+    inline float Cross2D(const VectorFloat2& _a, const VectorFloat2& _b) {
+        return _a._x * _b._y - _a._y * _b._x;
+    }
+
+    inline VectorFloat3 Cross3D(const VectorFloat3& _a, const VectorFloat3& _b) {
+        return VectorFloat3(
+            _a._y * _b._z - _a._z * _b._y,
+            _a._z * _b._x - _a._x * _b._z,
+            _a._x * _b._y - _a._y * _b._x
+        );
+    }
+
+    // Vector length
+    inline float Length2D(const VectorFloat2& _p) {
+        return sqrt(_p._x * _p._x + _p._y * _p._y);
+    }
+
+    inline float Length3D(const VectorFloat3& _p) {
+        return sqrt(_p._x * _p._x + _p._y * _p._y + _p._z * _p._z);
+    }
+
+    // Vector normalization
+    inline VectorFloat2 Normalize2D(const VectorFloat2& _p) {
+        float _length = Length2D(_p);
+        if (_length > 0.0f) {
+            return _p * (1.0f / _length);
+        }
+        return VectorFloat2(0.0f, 0.0f);
+    }
+
+    inline VectorFloat3 Normalize3D(const VectorFloat3& _p) {
+        float _length = Length3D(_p);
+        if (_length > 0.0f) {
+            return _p * (1.0f / _length);
+        }
+        return VectorFloat3(0.0f, 0.0f, 0.0f);
+    }
+}
+
+// Type aliases provided for backward compatibility
+using UIVector2F = UIVectorMath::VectorFloat2;
+using UIVector3F = UIVectorMath::VectorFloat3;
+
+
 /*-------------------------------------------------- UI utility functions--------------------------------------------------*/
-namespace UIShape2D {
-	constexpr RECT NULL_RECT = {0, 0, 0, 0};
-	constexpr POINT NULL_POINT = {0, 0};
-	constexpr SIZE NULL_SIZE = {0, 0};
 
-	struct CreateRect {
-		RECT operator()(POINT point, SIZE size);
-        RECT operator()(LONG left, LONG top, LONG right, LONG bottom);
-	};
-
-	struct CreatePoint {
-		POINT operator()(LONG x, LONG y);
-	};
-
-	struct CreateSize {
-		SIZE operator()(LONG x, LONG y);
-	};
-
-	struct GetRectWidth {
-		LONG operator()(const RECT& rc);
-	};
-
-	struct GetRectHeight {
-		LONG operator()(const RECT& rc);
-	};
-
-	struct GetRectCenter {
-		POINT operator()(const RECT& rc);
-	};
-
-	struct CompareRects {
-		bool operator()(const RECT& r1, const RECT& r2);
-	};
-
-	struct IntersectRects {
-		RECT operator()(const RECT& rc1, const RECT& rc2);
-	};
-
-	struct ComparePoints {
-		bool operator()(const POINT& p1, const POINT& p2);
-	};
-
-	struct ContainsPoint {
-		bool operator()(const POINT& point, const RECT& rect);
-	};
-
-	struct ScaleRect {
-		RECT operator()(const RECT& rc, float scale);
-	};
-};
 
 
 // Control Dynamic Scaling Auxiliary Class
@@ -165,13 +241,13 @@ struct UILayoutCalc {
 	UILayoutCalc(int flag = SIZE_X | SIZE_Y);
 
 	void SetLayoutMode(int flag);										// Setting the zoom mode
-	void InitLayout(const RECT& parentRect, const RECT& rect);			// Initial calculation: Normal mode/directUI mode
-	RECT CalcLayout(LONG cx, LONG cy);									// Calc new state
+	void InitLayout(const UIRECT& parentRect, const UIRECT& rect);			// Initial calculation: Normal mode/directUI mode
+	UIRECT CalcLayout(LONG cx, LONG cy);									// Calc new state
 
 	int _zoomModeflag;		// Layout Mode
 
-	RECT _parentRect;		// The area of the parent form
-	RECT _rect;				// Control relative to parent form area
+	UIRECT _parentRect;		// The area of the parent form
+	UIRECT _rect;				// Control relative to parent form area
 };
 
 
@@ -206,11 +282,16 @@ public:
           _a(static_cast<uint8_t>(color.f[3] * 255.0f)), 
           valid(true) {}
 
-	DirectX::XMVECTORF32 ToXMVECTORF32(uint8_t alpha) const { return DirectX::XMVECTORF32{_r/255.0f, _g/255.0f, _b/255.0f, alpha/255.0f}; }
-    DirectX::XMVECTORF32 ToXMVECTORF32() const { return DirectX::XMVECTORF32{_r/255.0f, _g/255.0f, _b/255.0f, _a/255.0f}; }
-    uint32_t ToRGBA() const { return static_cast<uint32_t>(_r) << 24 | static_cast<uint32_t>(_g) << 16 | 
-									 static_cast<uint32_t>(_b) << 8 |  static_cast<uint32_t>(_a); }
-
+	DirectX::XMVECTORF32 ToXMVECTORF32(uint8_t alpha) const { 
+        return DirectX::XMVECTORF32{_r / 255.0f, _g / 255.0f, _b / 255.0f, alpha / 255.0f}; 
+    }
+    DirectX::XMVECTORF32 ToXMVECTORF32() const { 
+        return DirectX::XMVECTORF32{_r / 255.0f, _g / 255.0f, _b / 255.0f, _a / 255.0f}; 
+    }
+    uint32_t ToRGBA() const { 
+        return static_cast<uint32_t>(_r) << 24 | static_cast<uint32_t>(_g) << 16 | 
+               static_cast<uint32_t>(_b) << 8 | static_cast<uint32_t>(_a); 
+    }
     std::wstring ToWStringForU32() const { return L"(" + std::to_wstring(ToRGBA()) + L")"; }
 
 	bool operator<(const UIColor& other) const { return ToRGBA() < other.ToRGBA(); }
@@ -298,131 +379,8 @@ inline const UIColor UIColor::SelectedBlue = UIColor(187, 233, 255, 255);
 inline const UIColor UIColor::Gray95 = UIColor(242, 242, 242, 255);
 
 
-/*-------------------------------------------------- Point Structures and Utilities --------------------------------------------------*/
-namespace UIPointFloat {
-    struct PointFloat2 {
-        float _x;
-        float _y;
-
-        PointFloat2(DirectX::XMFLOAT2 vec) : _x(vec.x), _y(vec.y) {}
-        PointFloat2(float x = 0.0f, float y = 0.0f) : _x(x), _y(y) {}
-        
-        PointFloat2 operator+(const PointFloat2& other) const {
-            return PointFloat2(_x + other._x, _y + other._y);
-        }
-        PointFloat2 operator-(const PointFloat2& other) const {
-            return PointFloat2(_x - other._x, _y - other._y);
-        }
-        PointFloat2 operator*(float scale) const {
-            return PointFloat2(_x * scale, _y * scale);
-        }
-        
-        DirectX::XMFLOAT2 ToXMFLOAT2() const {
-            return DirectX::XMFLOAT2(_x, _y);
-        }
-    };
-
-    struct PointFloat3 {
-        float _x;
-        float _y;
-        float _z;
-
-        PointFloat3(DirectX::XMFLOAT3 vec) : _x(vec.x), _y(vec.y), _z(vec.z) {}
-        PointFloat3(float x = 0.0f, float y = 0.0f, float z = 0.0f) : _x(x), _y(y), _z(z) {}
-        
-        PointFloat3 operator+(const PointFloat3& other) const {
-            return PointFloat3(_x + other._x, _y + other._y, _z + other._z);
-        }
-        PointFloat3 operator-(const PointFloat3& other) const {
-            return PointFloat3(_x - other._x, _y - other._y, _z - other._z);
-        }
-        PointFloat3 operator*(float scale) const {
-            return PointFloat3(_x * scale, _y * scale, _z * scale);
-        }
-
-        DirectX::XMFLOAT3 ToXMFLOAT3() const {
-            return DirectX::XMFLOAT3(_x, _y, _z);
-        }
-    };
-
-    inline float Distance2D(const PointFloat2& _p1, const PointFloat2& _p2) {
-        float _dx = _p1._x - _p2._x;
-        float _dy = _p1._y - _p2._y;
-        return sqrt(_dx * _dx + _dy * _dy);
-    }
-
-    inline float Distance3D(const PointFloat3& _p1, const PointFloat3& _p2) {
-        float _dx = _p1._x - _p2._x;
-        float _dy = _p1._y - _p2._y;
-        float _dz = _p1._z - _p2._z;
-        return sqrt(_dx * _dx + _dy * _dy + _dz * _dz);
-    }
-
-    // interpolation
-    inline PointFloat2 Lerp2D(const PointFloat2& _a, const PointFloat2& _b, float _t) {
-        return _a + (_b - _a) * _t;
-    }
-
-    inline PointFloat3 Lerp3D(const PointFloat3& _a, const PointFloat3& _b, float _t) {
-        return _a + (_b - _a) * _t;
-    }
-
-    // dot product
-    inline float Dot2D(const PointFloat2& _a, const PointFloat2& _b) {
-        return _a._x * _b._x + _a._y * _b._y;
-    }
-
-    inline float Dot3D(const PointFloat3& _a, const PointFloat3& _b) {
-        return _a._x * _b._x + _a._y * _b._y + _a._z * _b._z;
-    }
-
-    // Cross product (2D returns scalar, 3D returns vector)
-    inline float Cross2D(const PointFloat2& _a, const PointFloat2& _b) {
-        return _a._x * _b._y - _a._y * _b._x;
-    }
-
-    inline PointFloat3 Cross3D(const PointFloat3& _a, const PointFloat3& _b) {
-        return PointFloat3(
-            _a._y * _b._z - _a._z * _b._y,
-            _a._z * _b._x - _a._x * _b._z,
-            _a._x * _b._y - _a._y * _b._x
-        );
-    }
-
-    // Vector length
-    inline float Length2D(const PointFloat2& _p) {
-        return sqrt(_p._x * _p._x + _p._y * _p._y);
-    }
-
-    inline float Length3D(const PointFloat3& _p) {
-        return sqrt(_p._x * _p._x + _p._y * _p._y + _p._z * _p._z);
-    }
-
-    // Vector normalization
-    inline PointFloat2 Normalize2D(const PointFloat2& _p) {
-        float _length = Length2D(_p);
-        if (_length > 0.0f) {
-            return _p * (1.0f / _length);
-        }
-        return PointFloat2(0.0f, 0.0f);
-    }
-
-    inline PointFloat3 Normalize3D(const PointFloat3& _p) {
-        float _length = Length3D(_p);
-        if (_length > 0.0f) {
-            return _p * (1.0f / _length);
-        }
-        return PointFloat3(0.0f, 0.0f, 0.0f);
-    }
-}
-
-// Type aliases provided for backward compatibility
-using UIPointFloat2 = UIPointFloat::PointFloat2;
-using UIPointFloat3 = UIPointFloat::PointFloat3;
-
-
-
-#if _WIN32
+/*-------------------------------------------------- Utilities --------------------------------------------------*/
+#if USE_WIN32
 // Helper class for COM exceptions
 class com_exception : public std::exception {
 public:

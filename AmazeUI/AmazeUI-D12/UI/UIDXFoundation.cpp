@@ -8,6 +8,8 @@ using namespace DirectX;
 using namespace SimpleMath;
 using namespace UIShape2D;
 
+using namespace DirectX;
+using namespace DirectX::SimpleMath;
 using Microsoft::WRL::ComPtr; 
 
 
@@ -851,8 +853,8 @@ void UIGraphicsDeviceDX12::UIEffectManager::Reset() {
 }
 
 // Get texture rect
-RECT UITextureManager::Get2DTextureRect(ID3D12Resource* texture) {
-    RECT rect = NULL_RECT;
+UIRECT UITextureManager::Get2DTextureRect(ID3D12Resource* texture) {
+    UIRECT rect = NULL_RECT;
     if (!texture) {
         return rect;
     }
@@ -873,11 +875,11 @@ RECT UITextureManager::Get2DTextureRect(ID3D12Resource* texture) {
 }
 
 // ComPtr version overload
-RECT UITextureManager::Get2DTextureRect(const ComPtr<ID3D12Resource>& texture) {
+UIRECT UITextureManager::Get2DTextureRect(const ComPtr<ID3D12Resource>& texture) {
     return Get2DTextureRect(texture.Get());
 }
 
-bool UITextureManager::Get2DImageSize(const wstring& imagePath, const UIColor& colorKey, RECT& textureRect) {
+bool UITextureManager::Get2DImageSize(const wstring& imagePath, const UIColor& colorKey, UIRECT& textureRect) {
     // load texture resource
     size_t textureIndex = 0;
 
@@ -900,7 +902,7 @@ bool UITextureManager::Get2DImageSize(const wstring& imagePath, const UIColor& c
     return true;
 }
 
-bool UITextureManager::Get2DImageSize(const wstring& dllPath, UINT id, const UIColor& colorKey, RECT& textureRect) {
+bool UITextureManager::Get2DImageSize(const wstring& dllPath, UINT id, const UIColor& colorKey, UIRECT& textureRect) {
     // load texture resource
     size_t textureIndex = 0;
     if (!GetWICTextureIndexFromDLL(dllPath, id, colorKey, textureIndex)) {
@@ -1441,17 +1443,17 @@ void UIGraphicsSystem::HandleDeviceLost() {
     _graphicsDevice->HandleDeviceLost();
 }
 
-RECT UIGraphicsSystem::GetOutputSize() const {
+UIRECT UIGraphicsSystem::GetOutputSize() const {
     // HAL backend get output size
     return _graphicsDevice->GetOutputSize();
 }
 
-void UIGraphicsSystem::Calculate2DPoint(const XMFLOAT2& point, XMFLOAT2& p) {
-    p.x = point.x + 0.5f;
-    p.y = point.y + 0.5f;
+void UIGraphicsSystem::Calculate2DPoint(const UIVector2F& point, UIVector2F& p) {
+    p._x = point._x + 0.5f;
+    p._y = point._y + 0.5f;
 }
 
-void UIGraphicsSystem::Calculate2DLinePoints(const XMFLOAT2& start, const XMFLOAT2& end, XMFLOAT2& p1, XMFLOAT2& p2) {
+void UIGraphicsSystem::Calculate2DLinePoints(const UIVector2F& start, const UIVector2F& end, UIVector2F& p1, UIVector2F& p2) {
     // for the "Top-Left Rule" in the triangle rending
     // Horizontal line: Move 1 pixel down, add 1 pixel right  
     // Vertical line: Move 1 pixel right, add 1 pixel down
@@ -1459,38 +1461,38 @@ void UIGraphicsSystem::Calculate2DLinePoints(const XMFLOAT2& start, const XMFLOA
     // Diagonal line (bottom endpoint): Move 1 pixel down 
     p1 = start;
     p2 = end;
-    if (fabs(p1.x - p2.x)<0.001f) {
-        p1.x += 1.0f;
-        p2.x += 1.0f;
-        p1.y > p2.y ? p1.y += 1.0f : p2.y += 1.0f;
+    if (fabs(p1._x - p2._x) < 0.001f) {
+        p1._x += 1.0f;
+        p2._x += 1.0f;
+        p1._y > p2._y ? p1._y += 1.0f : p2._y += 1.0f;
 
-    } else if (fabs(p1.y - p2.y) < 0.001f) {
-        p1.y += 1.0f;
-        p2.y += 1.0f;
-        p1.x > p2.x ? p1.x += 1.0f : p2.x += 1.0f;
+    } else if (fabs(p1._y - p2._y) < 0.001f) {
+        p1._y += 1.0f;
+        p2._y += 1.0f;
+        p1._x > p2._x ? p1._x += 1.0f : p2._x += 1.0f;
     } else {
-        p1.x > p2.x ? p1.x += 1.0f : p2.x += 1.0f;
-        p1.y > p2.y ? p1.y += 1.0f : p2.y += 1.0f;
+        p1._x > p2._x ? p1._x += 1.0f : p2._x += 1.0f;
+        p1._y > p2._y ? p1._y += 1.0f : p2._y += 1.0f;
     }
 }
 
-void UIGraphicsSystem::Calculate2DRectPoints(const XMFLOAT2& start, const XMFLOAT2& end, XMFLOAT2& ps, XMFLOAT2& pe) {
-    ps.x = start.x<=end.x ? start.x:end.x;
-    ps.y = start.y<=end.y ? start.y:end.y;
-    pe.x = start.x>end.x ? start.x:end.x;
-    pe.y = start.y>end.y ? start.y:end.y;
-    pe.x += 1.0f;
-    pe.y += 1.0f;
+void UIGraphicsSystem::Calculate2DRectPoints(const UIVector2F& start, const UIVector2F& end, UIVector2F& ps, UIVector2F& pe) {
+    ps._x = start._x <= end._x ? start._x : end._x;
+    ps._y = start._y <= end._y ? start._y : end._y;
+    pe._x = start._x > end._x ? start._x : end._x;
+    pe._y = start._y > end._y ? start._y : end._y;
+    pe._x += 1.0f;
+    pe._y += 1.0f;
 }
 
-void UIGraphicsSystem::BeginScreenClipRect(const RECT& clipRC, bool execute) {
-    RECT tempRC = NULL_RECT;
+void UIGraphicsSystem::BeginScreenClipRect(const UIRECT& clipRC, bool execute) {
+    UIRECT tempRC = NULL_RECT;
 
     if (clipRC.left > clipRC.right || clipRC.top > clipRC.bottom) {
         tempRC = NULL_RECT;
     } else {
         if (_clipRectStack.size() > 0) {
-            RECT preClipRC = _clipRectStack.top();
+            UIRECT preClipRC = _clipRectStack.top();
 
             // calculate cross clip rect
             if (CompareRects()(preClipRC, NULL_RECT)==false) {
@@ -1523,14 +1525,14 @@ void UIGraphicsSystem::EndScreenClipRect(bool execute) {
     }
 }
 
-RECT UIGraphicsSystem::GetCurrentClipRect() const {
+UIRECT UIGraphicsSystem::GetCurrentClipRect() const {
     if (_clipRectStack.size() > 0) {
         return _clipRectStack.top();
     }
     return NULL_RECT;
 }
 
-void UIGraphicsSystem::ExecuteClipRect(const RECT& clipRC) {
+void UIGraphicsSystem::ExecuteClipRect(const UIRECT& clipRC) {
     auto commandList = _graphicsDevice->GetCommandList();
 
     if (CompareRects()(clipRC, NULL_RECT)) {
@@ -1543,7 +1545,7 @@ void UIGraphicsSystem::ExecuteClipRect(const RECT& clipRC) {
 }
 
 void UIGraphicsSystem::ResetClipRect() {
-    _clipRectStack = stack<RECT>();
+    _clipRectStack = stack<UIRECT>();
     ExecuteClipRect(NULL_RECT);
 }
 
@@ -1782,30 +1784,30 @@ bool UIGraphicsSystem::GetCharTextureResourceFT(const wchar_t& wch, float fontSi
     return true;
 }
 
-void UIGraphicsSystem::Draw2DCharTextureFT(size_t textureIndex, XMFLOAT2 position, float z, float scale, UCHAR alpha, int renderLevel) {
-    position.x = round(position.x);
-    position.y = round(position.y);
+void UIGraphicsSystem::Draw2DCharTextureFT(size_t textureIndex, UIVector2F position, float z, float scale, UCHAR alpha, int renderLevel) {
+    position._x = round(position._x);
+    position._y = round(position._y);
 
     // get texture resource
     CharTextureResource& resource = _charTextureResources[textureIndex];
 
     // get original texture size
-    const RECT textureRect = _textureManager.Get2DTextureRect(resource._texture);
+    const UIRECT textureRect = _textureManager.Get2DTextureRect(resource._texture);
 
     // calculate destination rectangle end point
-    XMFLOAT2 dstEnd;
-    dstEnd.x = position.x + (float)(GetRectWidth()(textureRect)) * scale;
-    dstEnd.y = position.y + (float)(GetRectHeight()(textureRect)) * scale;
+    UIVector2F dstEnd;
+    dstEnd._x = position._x + (float)(GetRectWidth()(textureRect)) * scale;
+    dstEnd._y = position._y + (float)(GetRectHeight()(textureRect)) * scale;
 
     // Get view space Z value using 2D transform
     float viewZ = UICameraUI2D::GetSingletonInstance()->CalculateViewZByOrtho(z);
 
     // Create vertex data
     vector<VertexPositionTexture> vertices = {
-        { {position.x, position.y, viewZ}, XMFLOAT2(0.f, 0.f) },
-        { {dstEnd.x, position.y, viewZ}, XMFLOAT2(1.f, 0.f) },
-        { {position.x, dstEnd.y, viewZ}, XMFLOAT2(0.f, 1.f) },
-        { {dstEnd.x, dstEnd.y, viewZ}, XMFLOAT2(1.f, 1.f) }
+        { {position._x, position._y, viewZ}, XMFLOAT2(0.f, 0.f) },
+        { {dstEnd._x, position._y, viewZ}, XMFLOAT2(1.f, 0.f) },
+        { {position._x, dstEnd._y, viewZ}, XMFLOAT2(0.f, 1.f) },
+        { {dstEnd._x, dstEnd._y, viewZ}, XMFLOAT2(1.f, 1.f) }
     };
 
     // define index data
@@ -1815,28 +1817,28 @@ void UIGraphicsSystem::Draw2DCharTextureFT(size_t textureIndex, XMFLOAT2 positio
                              resource._gpuDescriptor, _graphicsDevice->p_states->LinearClamp(), alpha, GetCurrentClipRect(), UICameraUI2D::GetSingletonInstance(), renderLevel);
 }
 
-void UIGraphicsSystem::Draw3DCharTextureFT(size_t textureIndex, XMFLOAT2 position, float z, float scale, UCHAR alpha, int renderLevel, const XMMATRIX& transformMatrix) {
-    position.x = round(position.x);
-    //position.y = round(position.y);
+void UIGraphicsSystem::Draw3DCharTextureFT(size_t textureIndex, UIVector2F position, float z, float scale, UCHAR alpha, int renderLevel, const XMMATRIX& transformMatrix) {
+    position._x = round(position._x);
+    //position._y = round(position._y);
 
     // get original texture size 
-    const RECT textureRect = _textureManager.Get2DTextureRect(_charTextureResources[textureIndex]._texture);
+    const UIRECT textureRect = _textureManager.Get2DTextureRect(_charTextureResources[textureIndex]._texture);
 
-    XMFLOAT2 dstEnd;
-    dstEnd.x = position.x + (float)(GetRectWidth()(textureRect)) * scale;
-    dstEnd.y = position.y + (float)(GetRectHeight()(textureRect)) * scale;
+    UIVector2F dstEnd;
+    dstEnd._x = position._x + (float)(GetRectWidth()(textureRect)) * scale;
+    dstEnd._y = position._y + (float)(GetRectHeight()(textureRect)) * scale;
 
-    XMFLOAT2 ps, pe;
+    UIVector2F ps, pe;
     Calculate2DRectPoints(position, dstEnd, ps, pe);
-    vector<XMFLOAT3> wps;
+    vector<UIVector3F> wps;
     UIZPlaneTransform::TransformRectPoints(transformMatrix, ps, pe, z, wps);
 
     // create vertices with texture coordinates
     vector<VertexPositionTexture> vertices = {
-        { {wps[0].x, wps[0].y, wps[0].z - 50.0f}, XMFLOAT2(0.f, 0.f) },
-        { {wps[1].x, wps[1].y, wps[1].z - 50.0f}, XMFLOAT2(1.f, 0.f) },
-        { {wps[2].x, wps[2].y, wps[2].z - 50.0f}, XMFLOAT2(0.f, 1.f) },
-        { {wps[3].x, wps[3].y, wps[3].z - 50.0f}, XMFLOAT2(1.f, 1.f) }
+        { {wps[0]._x, wps[0]._y, wps[0]._z - 50.0f}, XMFLOAT2(0.f, 0.f) },
+        { {wps[1]._x, wps[1]._y, wps[1]._z - 50.0f}, XMFLOAT2(1.f, 0.f) },
+        { {wps[2]._x, wps[2]._y, wps[2]._z - 50.0f}, XMFLOAT2(0.f, 1.f) },
+        { {wps[3]._x, wps[3]._y, wps[3]._z - 50.0f}, XMFLOAT2(1.f, 1.f) }
     };
     // Define indices for two triangles
     vector<uint16_t> indices = { 0, 1, 2, 1, 3, 2 };
@@ -1846,32 +1848,32 @@ void UIGraphicsSystem::Draw3DCharTextureFT(size_t textureIndex, XMFLOAT2 positio
                              alpha, GetCurrentClipRect(), UICameraUI3D::GetSingletonInstance(), renderLevel);
 }
 
-XMFLOAT2 UIGraphicsSystem::CalculateTextPosition(const std::wstring& text, const RECT& rc, UIFontPos alignment, float fontSize, float lineSpacing) {
+UIVector2F UIGraphicsSystem::CalculateTextPosition(const std::wstring& text, const UIRECT& rc, UIFontPos alignment, float fontSize, float lineSpacing) {
     // measure text size
-    SIZE textSize = GetTextSizeFT(text, fontSize, lineSpacing);
+    UISIZE textSize = GetTextSizeFT(text, fontSize, lineSpacing);
     float textWidth = (float)textSize.cx;
     float textHeight = (float)textSize.cy;
     
-    XMFLOAT2 position;
+    UIVector2F position;
 
     // Horizontal alignment
     switch (alignment) {
         case UIFontPos::TopLeft:
         case UIFontPos::MiddleLeft:
         case UIFontPos::BottomLeft:
-            position.x = (float)rc.left;
+            position._x = (float)rc.left;
             break;
         
         case UIFontPos::TopCenter:
         case UIFontPos::MiddleCenter:
         case UIFontPos::BottomCenter:
-            position.x = rc.left + (rc.right - rc.left - textWidth) / 2.f;
+            position._x = rc.left + (rc.right - rc.left - textWidth) / 2.f;
             break;
         
         case UIFontPos::TopRight:
         case UIFontPos::MiddleRight:
         case UIFontPos::BottomRight:
-            position.x = rc.right - textWidth;
+            position._x = rc.right - textWidth;
             break;
     }
 
@@ -1880,28 +1882,28 @@ XMFLOAT2 UIGraphicsSystem::CalculateTextPosition(const std::wstring& text, const
         case UIFontPos::TopLeft:
         case UIFontPos::TopCenter:
         case UIFontPos::TopRight:
-            position.y = (float)rc.top;
+            position._y = (float)rc.top;
             break;
         
         case UIFontPos::MiddleLeft:
         case UIFontPos::MiddleCenter:
         case UIFontPos::MiddleRight:
-            position.y = rc.top + (GetRectHeight()(rc) - textHeight) / 2.f;
+            position._y = rc.top + (GetRectHeight()(rc) - textHeight) / 2.f;
             break;
         
         case UIFontPos::BottomLeft:
         case UIFontPos::BottomCenter:
         case UIFontPos::BottomRight:
-            position.y = rc.bottom - textHeight;
+            position._y = rc.bottom - textHeight;
             break;
     }
 
     return position;
 }
 
-void UIGraphicsSystem::Draw2DTextFT(const wstring& text, const XMFLOAT2& position, float z, const UIColor& color, float fontSize, int renderLevel) {
-    float x = position.x;
-    float y = position.y;
+void UIGraphicsSystem::Draw2DTextFT(const wstring& text, const UIVector2F& position, float z, const UIColor& color, float fontSize, int renderLevel) {
+    float x = position._x;
+    float y = position._y;
 
     FTSizeFont ftSizeFont;
     GetFTSizeFont(fontSize, ftSizeFont);
@@ -1924,15 +1926,15 @@ void UIGraphicsSystem::Draw2DTextFT(const wstring& text, const XMFLOAT2& positio
         float charY = y + baselineYFromTop - resource._top;
         
         // draw character
-        Draw2DCharTextureFT(textureIndex, XMFLOAT2(charX, charY), z, 1.0f, 255, renderLevel);
+        Draw2DCharTextureFT(textureIndex, UIVector2F(charX, charY), z, 1.0f, 255, renderLevel);
         
         // update pen position
         x += resource._advance;
     }
 }
 
-void UIGraphicsSystem::Draw2DTextFT(const wstring& text, const RECT& rc, UIFontPos alignment, float z, const UIColor& color, float fontSize, int renderLevel) { 
-    XMFLOAT2 position = CalculateTextPosition(text, rc, alignment, fontSize);
+void UIGraphicsSystem::Draw2DTextFT(const wstring& text, const UIRECT& rc, UIFontPos alignment, float z, const UIColor& color, float fontSize, int renderLevel) { 
+    UIVector2F position = CalculateTextPosition(text, rc, alignment, fontSize);
 
     UIScreenClipRectGuard clipRect(rc);
     Draw2DTextFT(text, position, z, color, fontSize, renderLevel);
@@ -1970,7 +1972,7 @@ vector<wstring> UIGraphicsSystem::SplitTextIntoLines(const wstring& text) {
     return lines;
 }
 
-void UIGraphicsSystem::Draw2DTextMultiLineFT(const wstring& text, const XMFLOAT2& position, float z, const UIColor& color, float fontSize, float lineSpacing, int renderLevel) {
+void UIGraphicsSystem::Draw2DTextMultiLineFT(const wstring& text, const UIVector2F& position, float z, const UIColor& color, float fontSize, float lineSpacing, int renderLevel) {
     if (text.empty()) {
         return;
     }
@@ -1984,33 +1986,33 @@ void UIGraphicsSystem::Draw2DTextMultiLineFT(const wstring& text, const XMFLOAT2
     float lineHeight = ftSizeFont._ftFontHeight * lineSpacing;
     
     // Render each line
-    XMFLOAT2 currentPos = position;
+    UIVector2F currentPos = position;
     for (const auto& line : lines) {
         if (!line.empty()) {
             Draw2DTextFT(line, currentPos, z, color, fontSize, renderLevel);  // Call Level 1 core function
         }
-        currentPos.y += lineHeight;
+        currentPos._y += lineHeight;
     }
 }
 
-void UIGraphicsSystem::Draw2DTextMultiLineFT(const wstring& text, const RECT& rc, UIFontPos alignment, float z, const UIColor& color, float fontSize, float lineSpacing, int renderLevel) {
+void UIGraphicsSystem::Draw2DTextMultiLineFT(const wstring& text, const UIRECT& rc, UIFontPos alignment, float z, const UIColor& color, float fontSize, float lineSpacing, int renderLevel) {
     if (text.empty()) {
         return;
     }
 
-    XMFLOAT2 position = CalculateTextPosition(text, rc, alignment, fontSize, lineSpacing);
+    UIVector2F position = CalculateTextPosition(text, rc, alignment, fontSize, lineSpacing);
     
     UIScreenClipRectGuard clipRect(rc);
     Draw2DTextMultiLineFT(text, position, z, color, fontSize, lineSpacing, renderLevel);
 }
 
-void UIGraphicsSystem::Draw3DTextFT(const wstring& text, const XMFLOAT2& position, float z, const UIColor& color, float fontSize, int renderLevel,
+void UIGraphicsSystem::Draw3DTextFT(const wstring& text, const UIVector2F& position, float z, const UIColor& color, float fontSize, int renderLevel,
 					              const XMMATRIX& transformMatrix) {
     FTSizeFont ftSizeFont;
     GetFTSizeFont(fontSize, ftSizeFont);
 
-    float x = position.x;
-    float y = position.y;
+    float x = position._x;
+    float y = position._y;
 
     int baselineYFromTop = ftSizeFont._ftFontAscent;
     
@@ -2030,26 +2032,26 @@ void UIGraphicsSystem::Draw3DTextFT(const wstring& text, const XMFLOAT2& positio
         float charY = y + baselineYFromTop - resource._top;
         
         // draw character
-        Draw3DCharTextureFT(textureIndex, XMFLOAT2(charX, charY), z, 1.0f, 255, renderLevel, transformMatrix);
+        Draw3DCharTextureFT(textureIndex, UIVector2F(charX, charY), z, 1.0f, 255, renderLevel, transformMatrix);
         
         // update pen position
         x += resource._advance;
     }
 }
 
-void UIGraphicsSystem::Draw3DTextFT(const wstring& text, const RECT& rc, UIFontPos alignment, float z, const UIColor& color, float fontSize, int renderLevel,
+void UIGraphicsSystem::Draw3DTextFT(const wstring& text, const UIRECT& rc, UIFontPos alignment, float z, const UIColor& color, float fontSize, int renderLevel,
 					         const XMMATRIX& transformMatrix) {
     if (text.empty()) {
         return;
     }
 
-    XMFLOAT2 position = CalculateTextPosition(text, rc, alignment, fontSize);
+    UIVector2F position = CalculateTextPosition(text, rc, alignment, fontSize);
 
     //UIScreenClipRectGuard clipRect(rc);
     Draw3DTextFT(text, position, z, color, fontSize, renderLevel, transformMatrix);
 }
 
-void UIGraphicsSystem::Draw3DTextMultiLineFT(const wstring& text, const XMFLOAT2& position, float z, const UIColor& color, float fontSize, float lineSpacing, int renderLevel,
+void UIGraphicsSystem::Draw3DTextMultiLineFT(const wstring& text, const UIVector2F& position, float z, const UIColor& color, float fontSize, float lineSpacing, int renderLevel,
 					  		               const XMMATRIX& transformMatrix) {
     if (text.empty()) {
         return;
@@ -2064,32 +2066,32 @@ void UIGraphicsSystem::Draw3DTextMultiLineFT(const wstring& text, const XMFLOAT2
     float lineHeight = ftSizeFont._ftFontHeight * lineSpacing;
     
     // Render each line
-    XMFLOAT2 currentPos = position;
+    UIVector2F currentPos = position;
     for (const auto& line : lines) {
         if (!line.empty()) {
             Draw3DTextFT(line, currentPos, z, color, fontSize, renderLevel, transformMatrix);  // Call Level 1 core function
         }
-        currentPos.y += lineHeight;
+        currentPos._y += lineHeight;
     }
 }
 
-void UIGraphicsSystem::Draw3DTextMultiLineFT(const wstring& text, const RECT& rc, UIFontPos alignment, float z, const UIColor& color, float fontSize, float lineSpacing, int renderLevel,
+void UIGraphicsSystem::Draw3DTextMultiLineFT(const wstring& text, const UIRECT& rc, UIFontPos alignment, float z, const UIColor& color, float fontSize, float lineSpacing, int renderLevel,
 					  		               const XMMATRIX& transformMatrix) {
     if (text.empty()) {
         return;
     }
 
-    XMFLOAT2 position = CalculateTextPosition(text, rc, alignment, fontSize, lineSpacing);
+    UIVector2F position = CalculateTextPosition(text, rc, alignment, fontSize, lineSpacing);
 
     //UIScreenClipRectGuard clipRect(rc);
     Draw3DTextMultiLineFT(text, position, z, color, fontSize, lineSpacing, renderLevel, transformMatrix);
 }
 
-void UIGraphicsSystem::Draw3DWorldTextFT(const std::wstring& text, const DirectX::XMFLOAT3& worldPosition,
+void UIGraphicsSystem::Draw3DWorldTextFT(const std::wstring& text, const UIVector3F& worldPosition,
                                        const UIColor& color, float fontSize, int renderLevel, UICameraBase3D* pCamera) {
-    float x = worldPosition.x;
-    float y = worldPosition.y;
-    float z = worldPosition.z;
+    float x = worldPosition._x;
+    float y = worldPosition._y;
+    float z = worldPosition._z;
 
     FTSizeFont ftSizeFont;
     GetFTSizeFont(fontSize, ftSizeFont);
@@ -2115,14 +2117,14 @@ void UIGraphicsSystem::Draw3DWorldTextFT(const std::wstring& text, const DirectX
         float charY = y - CalculateWorldLengthFromPixelLength((float)(baselineOffset - resource._top), worldPosition, pCamera);
         
         // Pass fontSize as scale parameter for Draw3DWorldCharTextureFT to perform correct pixel-to-world conversion
-        Draw3DWorldCharTextureFT(textureIndex, XMFLOAT3(charX, charY, z), 1, 255, renderLevel, pCamera);
+        Draw3DWorldCharTextureFT(textureIndex, UIVector3F{charX, charY, z}, 1, 255, renderLevel, pCamera);
         
         // Update pen position (world space)
         x += CalculateWorldLengthFromPixelLength((float)resource._advance, worldPosition, pCamera);
     }
 }
 
-void UIGraphicsSystem::Draw3DWorldCharTextureFT(size_t textureIndex, DirectX::XMFLOAT3 worldPosition, float scale, UCHAR alpha, int renderLevel, UICameraBase3D* pCamera) {
+void UIGraphicsSystem::Draw3DWorldCharTextureFT(size_t textureIndex, UIVector3F worldPosition, float scale, UCHAR alpha, int renderLevel, UICameraBase3D* pCamera) {
     // Get texture resource
     CharTextureResource& resource = _charTextureResources[textureIndex];
     
@@ -2133,13 +2135,13 @@ void UIGraphicsSystem::Draw3DWorldCharTextureFT(size_t textureIndex, DirectX::XM
     // Create world-space vertex data - fix Y coordinate ordering to ensure correct vertical positioning
     vector<VertexPositionTexture> vertices = {
         // Top-left (UV: 0, 0)
-        { {worldPosition.x, worldPosition.y, worldPosition.z}, XMFLOAT2(0.f, 0.f) },
+        { {worldPosition._x, worldPosition._y, worldPosition._z}, XMFLOAT2(0.f, 0.f) },
         // Top-right (UV: 1, 0) 
-        { {worldPosition.x + charWorldWidth, worldPosition.y, worldPosition.z}, XMFLOAT2(1.f, 0.f) },
+        { {worldPosition._x + charWorldWidth, worldPosition._y, worldPosition._z}, XMFLOAT2(1.f, 0.f) },
         // Bottom-left (UV: 0, 1)
-        { {worldPosition.x, worldPosition.y - charWorldHeight, worldPosition.z}, XMFLOAT2(0.f, 1.f) },
+        { {worldPosition._x, worldPosition._y - charWorldHeight, worldPosition._z}, XMFLOAT2(0.f, 1.f) },
         // Bottom-right (UV: 1, 1)
-        { {worldPosition.x + charWorldWidth, worldPosition.y - charWorldHeight, worldPosition.z}, XMFLOAT2(1.f, 1.f) }
+        { {worldPosition._x + charWorldWidth, worldPosition._y - charWorldHeight, worldPosition._z}, XMFLOAT2(1.f, 1.f) }
     };
     
     // Define index data
@@ -2150,12 +2152,12 @@ void UIGraphicsSystem::Draw3DWorldCharTextureFT(size_t textureIndex, DirectX::XM
                              resource._gpuDescriptor, _graphicsDevice->p_states->LinearClamp(), alpha, GetCurrentClipRect(), pCamera, renderLevel);
 }
 
-SIZE UIGraphicsSystem::GetTextSizeFT(const wstring& text, float fontSize, float lineSpacing) {
+UISIZE UIGraphicsSystem::GetTextSizeFT(const wstring& text, float fontSize, float lineSpacing) {
     FTSizeFont ftSizeFont;
     GetFTSizeFont(fontSize, ftSizeFont);
     int lineHeight = (int)(ftSizeFont._ftFontHeight * lineSpacing);
 
-    SIZE size;
+    UISIZE size;
     size.cx = 0;
     size.cy = lineHeight;
 
@@ -2184,21 +2186,21 @@ SIZE UIGraphicsSystem::GetTextSizeFT(const wstring& text, float fontSize, float 
 
 /*************************************************** 2D UI APIs ***************************************************/
 
-void UIGraphicsSystem::Draw2DPoint(const XMFLOAT2& point, float z, const UIColor& color, float pointSize, int renderLevel) {
+void UIGraphicsSystem::Draw2DPoint(const UIVector2F& point, float z, const UIColor& color, float pointSize, int renderLevel) {
     float viewZ = UICameraUI2D::GetSingletonInstance()->CalculateViewZByOrtho(z);
 
-    XMFLOAT2 p;
+    UIVector2F p;
     Calculate2DPoint(point, p);
 
     // Define the point size (2x2 pixels)
-    const float halfSize = pointSize/2;
+    const float halfSize = pointSize / 2;
     
     // Create a small square with 4 vertices
     vector<VertexPositionColor> vertices = {
-        {{ p.x - halfSize, p.y - halfSize, viewZ }, color.ToXMVECTORF32()},
-        {{ p.x - halfSize, p.y + halfSize, viewZ }, color.ToXMVECTORF32()},
-        {{ p.x + halfSize, p.y - halfSize, viewZ }, color.ToXMVECTORF32()},
-        {{ p.x + halfSize, p.y + halfSize, viewZ }, color.ToXMVECTORF32()}
+        {{ p._x - halfSize, p._y - halfSize, viewZ }, color.ToXMVECTORF32()},
+        {{ p._x - halfSize, p._y + halfSize, viewZ }, color.ToXMVECTORF32()},
+        {{ p._x + halfSize, p._y - halfSize, viewZ }, color.ToXMVECTORF32()},
+        {{ p._x + halfSize, p._y + halfSize, viewZ }, color.ToXMVECTORF32()}
     };
     // Define the indexes of the two triangles
     vector<uint16_t> indices = { 
@@ -2209,28 +2211,28 @@ void UIGraphicsSystem::Draw2DPoint(const XMFLOAT2& point, float z, const UIColor
     RegisterBatchData(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, vertices, indices, _graphicsDevice->_effectManager.p_triangleEffect2D, GetCurrentClipRect(), UICameraUI2D::GetSingletonInstance(), renderLevel);
 }
 
-void UIGraphicsSystem::Draw2DPoints(const vector<XMFLOAT2>& points, float z, const UIColor& color, float pointSize, int renderLevel) {
+void UIGraphicsSystem::Draw2DPoints(const vector<UIVector2F>& points, float z, const UIColor& color, float pointSize, int renderLevel) {
     // call Draw2DPoint for each point
     for (const auto& point : points) {
         Draw2DPoint(point, z, color, pointSize, renderLevel);
     }
 }
 
-void UIGraphicsSystem::Draw2DLine(const XMFLOAT2& start, const XMFLOAT2& end, float z, const UIColor& color, float lineWidth, int renderLevel) {
+void UIGraphicsSystem::Draw2DLine(const UIVector2F& start, const UIVector2F& end, float z, const UIColor& color, float lineWidth, int renderLevel) {
     XMVECTORF32 finalColor = color.ToXMVECTORF32();
 
-    XMFLOAT2 p1, p2;
+    UIVector2F p1, p2;
     Calculate2DLinePoints(start, end, p1, p2);
     // calculate line direction vector
-    XMFLOAT2 dir = { p2.x - p1.x, p2.y - p1.y };
-    float length = sqrt(dir.x * dir.x + dir.y * dir.y);
+    UIVector2F dir = { p2._x - p1._x, p2._y - p1._y };
+    float length = sqrt(dir._x * dir._x + dir._y * dir._y);
     if (length < 0.0001f) {
         return;
     }
     // normalize and calculate normal vector
-    dir.x /= length;
-    dir.y /= length;
-    XMFLOAT2 normal = { -dir.y, dir.x };
+    dir._x /= length;
+    dir._y /= length;
+    UIVector2F normal = { -dir._y, dir._x };
     // calculate four vertices, using transformed viewZ
     float halfWidth = max(1.0f, lineWidth) * 0.5f;
 
@@ -2239,10 +2241,10 @@ void UIGraphicsSystem::Draw2DLine(const XMFLOAT2& start, const XMFLOAT2& end, fl
 
     // Calculate four vertices
     vector<VertexPositionColor> vertices = {
-        {{ p1.x + normal.x * halfWidth, p1.y + normal.y * halfWidth, viewZ }, finalColor},
-        {{ p1.x - normal.x * halfWidth, p1.y - normal.y * halfWidth, viewZ }, finalColor},
-        {{ p2.x + normal.x * halfWidth, p2.y + normal.y * halfWidth, viewZ }, finalColor},
-        {{ p2.x - normal.x * halfWidth, p2.y - normal.y * halfWidth, viewZ }, finalColor}
+        {{ p1._x + normal._x * halfWidth, p1._y + normal._y * halfWidth, viewZ }, finalColor},
+        {{ p1._x - normal._x * halfWidth, p1._y - normal._y * halfWidth, viewZ }, finalColor},
+        {{ p2._x + normal._x * halfWidth, p2._y + normal._y * halfWidth, viewZ }, finalColor},
+        {{ p2._x - normal._x * halfWidth, p2._y - normal._y * halfWidth, viewZ }, finalColor}
     };
     // draw two triangles
     vector<uint16_t> indices = { 0, 1, 2, 1, 3, 2 };
@@ -2251,15 +2253,15 @@ void UIGraphicsSystem::Draw2DLine(const XMFLOAT2& start, const XMFLOAT2& end, fl
 }
 
 // Draw a 2D rectangle with specified color, hollow style
-void UIGraphicsSystem::Draw2DRectOutline(const XMFLOAT2& start, const XMFLOAT2& end, float z, const UIColor& color, float lineWidth, int renderLevel) {    
-    Draw2DLine(XMFLOAT2(start.x, start.y), XMFLOAT2(end.x, start.y), z, color, lineWidth, renderLevel); // up
-    Draw2DLine(XMFLOAT2(end.x, start.y), XMFLOAT2(end.x, end.y), z, color, lineWidth, renderLevel); //right
-    Draw2DLine(XMFLOAT2(start.x, end.y), XMFLOAT2(end.x, end.y), z, color, lineWidth, renderLevel); // down
-    Draw2DLine(XMFLOAT2(start.x, start.y), XMFLOAT2(start.x, end.y), z, color, lineWidth, renderLevel); // left
+void UIGraphicsSystem::Draw2DRectOutline(const UIVector2F& start, const UIVector2F& end, float z, const UIColor& color, float lineWidth, int renderLevel) {    
+    Draw2DLine(UIVector2F(start._x, start._y), UIVector2F(end._x, start._y), z, color, lineWidth, renderLevel); // up
+    Draw2DLine(UIVector2F(end._x, start._y), UIVector2F(end._x, end._y), z, color, lineWidth, renderLevel); //right
+    Draw2DLine(UIVector2F(start._x, end._y), UIVector2F(end._x, end._y), z, color, lineWidth, renderLevel); // down
+    Draw2DLine(UIVector2F(start._x, start._y), UIVector2F(start._x, end._y), z, color, lineWidth, renderLevel); // left
 }
 
-void UIGraphicsSystem::Draw2DRectSolid(const XMFLOAT2& start, const XMFLOAT2& end, float z, 
-						             const UIColor& colorLT, const UIColor& colorRT, const UIColor& colorLB, const UIColor& colorRB, UCHAR alpha, int renderLevel) {
+void UIGraphicsSystem::Draw2DRectSolid(const UIVector2F& start, const UIVector2F& end, float z, 
+						               const UIColor& colorLT, const UIColor& colorRT, const UIColor& colorLB, const UIColor& colorRB, UCHAR alpha, int renderLevel) {
     XMVECTORF32  finalColorLT = colorLT.ToXMVECTORF32(alpha);
     XMVECTORF32  finalColorRT = colorRT.ToXMVECTORF32(alpha);
     XMVECTORF32  finalColorLB = colorLB.ToXMVECTORF32(alpha);
@@ -2267,17 +2269,17 @@ void UIGraphicsSystem::Draw2DRectSolid(const XMFLOAT2& start, const XMFLOAT2& en
     
     // ps: real start point
     // pe: real end point
-    XMFLOAT2 ps, pe;
+    UIVector2F ps, pe;
     Calculate2DRectPoints(start, end, ps, pe);
 
     float viewZ = UICameraUI2D::GetSingletonInstance()->CalculateViewZByOrtho(z);
 
     // Create vertices for the rectangle corners
     vector<VertexPositionColor> vertices = {
-        {{ ps.x, ps.y, viewZ }, finalColorLT},         // Top-left (0)
-        {{ pe.x, ps.y, viewZ }, finalColorRT},         // Top-right (1)
-        {{ ps.x, pe.y, viewZ }, finalColorLB},         // Bottom-left (2)
-        {{ pe.x, pe.y, viewZ }, finalColorRB}          // Bottom-right (3)
+        {{ ps._x, ps._y, viewZ }, finalColorLT},         // Top-left (0)
+        {{ pe._x, ps._y, viewZ }, finalColorRT},         // Top-right (1)
+        {{ ps._x, pe._y, viewZ }, finalColorLB},         // Bottom-left (2)
+        {{ pe._x, pe._y, viewZ }, finalColorRB}          // Bottom-right (3)
     };
     
     // Define indices for two triangles
@@ -2287,18 +2289,18 @@ void UIGraphicsSystem::Draw2DRectSolid(const XMFLOAT2& start, const XMFLOAT2& en
 }
 
 // Draw a 2D rectangle with specified color, alpha transparency and z-depth
-void UIGraphicsSystem::Draw2DRectSolid(const XMFLOAT2& start, const XMFLOAT2& end, float z, const UIColor& color, UCHAR alpha, int renderLevel) {
+void UIGraphicsSystem::Draw2DRectSolid(const UIVector2F& start, const UIVector2F& end, float z, const UIColor& color, UCHAR alpha, int renderLevel) {
     Draw2DRectSolid(start, end, z, color, color, color, color, alpha, renderLevel);
 }
 
 void UIGraphicsSystem::Draw2DImage(size_t textureIndex, 
-                            RECT srcRect, XMFLOAT2 dstStart, XMFLOAT2 dstEnd, 
+                            UIRECT srcRect, UIVector2F dstStart, UIVector2F dstEnd, 
                             float z, UCHAR alpha, int renderLevel) {
     // get texture resource
     UITextureManager::TextureResource& resource = _textureManager._textureResources[textureIndex];
 
     // get original texture size 
-    const RECT textureRect = _textureManager.Get2DTextureRect(resource._texture);
+    const UIRECT textureRect = _textureManager.Get2DTextureRect(resource._texture);
 
     // if srcRect is NULL_RECT, use textureRect
     if (IsRectEmpty(&srcRect)) {
@@ -2306,13 +2308,13 @@ void UIGraphicsSystem::Draw2DImage(size_t textureIndex,
     }
 
     // if dstEnd is 0, calculate it
-    if (dstEnd.x == 0 || dstEnd.y == 0) {
-        dstEnd.x = dstStart.x + (float)(GetRectWidth()(srcRect)) - 1;
-        dstEnd.y = dstStart.y + (float)(GetRectHeight()(srcRect)) - 1;
+    if (dstEnd._x == 0 || dstEnd._y == 0) {
+        dstEnd._x = dstStart._x + (float)(GetRectWidth()(srcRect)) - 1;
+        dstEnd._y = dstStart._y + (float)(GetRectHeight()(srcRect)) - 1;
     }
 
     // calculate real rectangle points
-    XMFLOAT2 ps, pe;
+    UIVector2F ps, pe;
     Calculate2DRectPoints(dstStart, dstEnd, ps, pe);
 
     // Get view space Z value using 2D transform
@@ -2326,10 +2328,10 @@ void UIGraphicsSystem::Draw2DImage(size_t textureIndex,
 
     // create vertex data
     vector<VertexPositionTexture> vertices = {
-        { {ps.x, ps.y, viewZ}, XMFLOAT2(texLeft, texTop) },      // Top-left
-        { {pe.x, ps.y, viewZ}, XMFLOAT2(texRight, texTop) },     // Top-right
-        { {ps.x, pe.y, viewZ}, XMFLOAT2(texLeft, texBottom) },   // Bottom-left
-        { {pe.x, pe.y, viewZ}, XMFLOAT2(texRight, texBottom) }   // Bottom-right
+        { {ps._x, ps._y, viewZ}, XMFLOAT2(texLeft, texTop) },      // Top-left
+        { {pe._x, ps._y, viewZ}, XMFLOAT2(texRight, texTop) },     // Top-right
+        { {ps._x, pe._y, viewZ}, XMFLOAT2(texLeft, texBottom) },   // Bottom-left
+        { {pe._x, pe._y, viewZ}, XMFLOAT2(texRight, texBottom) }   // Bottom-right
     };
 
     // define index data
@@ -2340,7 +2342,7 @@ void UIGraphicsSystem::Draw2DImage(size_t textureIndex,
 }
 
 void UIGraphicsSystem::Draw2DImage(const wstring& filePath, const UIColor& colorKey,
-                            const RECT& srcRect, const XMFLOAT2& dstStart, const XMFLOAT2& dstEnd,
+                            const UIRECT& srcRect, const UIVector2F& dstStart, const UIVector2F& dstEnd,
                             float z, UCHAR alpha, int renderLevel) {
     size_t textureIndex = 0;
     // check is dds file
@@ -2357,7 +2359,7 @@ void UIGraphicsSystem::Draw2DImage(const wstring& filePath, const UIColor& color
 }
 
 void UIGraphicsSystem::Draw2DImage(const wstring& dllPath, UINT id, const UIColor& colorKey,
-                                   const RECT& srcRect, const XMFLOAT2& dstStart, const XMFLOAT2& dstEnd,
+                                   const UIRECT& srcRect, const UIVector2F& dstStart, const UIVector2F& dstEnd,
                                    float z, UCHAR alpha, int renderLevel) {
     size_t textureIndex = 0; 
     if (!_textureManager.GetWICTextureIndexFromDLL(dllPath, id, colorKey, textureIndex)) {
@@ -2366,19 +2368,19 @@ void UIGraphicsSystem::Draw2DImage(const wstring& dllPath, UINT id, const UIColo
     Draw2DImage(textureIndex, srcRect, dstStart, dstEnd, z, alpha, renderLevel);
 }
 
-void UIGraphicsSystem::Draw3DPoint(const XMFLOAT2& point, float z, const UIColor& color, float pointSize, int renderLevel, const XMMATRIX& transformMatrix) {
+void UIGraphicsSystem::Draw3DPoint(const UIVector2F& point, float z, const UIColor& color, float pointSize, int renderLevel, const XMMATRIX& transformMatrix) {
     XMVECTORF32 finalColor = color.ToXMVECTORF32();
 
-    XMFLOAT2 p;
+    UIVector2F p;
     Calculate2DPoint(point, p);
 
-    XMFLOAT3 wp;
+    UIVector3F wp;
     UIZPlaneTransform::TransformPoint(transformMatrix, p, z, wp);
 
     Draw3DWorldCircle(wp, pointSize / 2, finalColor, 255, renderLevel, UICameraUI3D::GetSingletonInstance());
 }
 
-void UIGraphicsSystem::Draw3DPoints(const vector<XMFLOAT2>& points, float z, const UIColor& color, float pointSize, int renderLevel,
+void UIGraphicsSystem::Draw3DPoints(const vector<UIVector2F>& points, float z, const UIColor& color, float pointSize, int renderLevel,
                                   const XMMATRIX& transformMatrix) {
     // call Draw3DPoint for each point
     for (const auto& point : points) {
@@ -2386,49 +2388,49 @@ void UIGraphicsSystem::Draw3DPoints(const vector<XMFLOAT2>& points, float z, con
     }
 }
 
-void UIGraphicsSystem::Draw3DLine(const XMFLOAT2& start, const XMFLOAT2& end, float z, const UIColor& color, float lineWidth, int renderLevel, const XMMATRIX& transformMatrix) { 
-    XMFLOAT2 p1, p2;
+void UIGraphicsSystem::Draw3DLine(const UIVector2F& start, const UIVector2F& end, float z, const UIColor& color, float lineWidth, int renderLevel, const XMMATRIX& transformMatrix) { 
+    UIVector2F p1, p2;
     Calculate2DLinePoints(start, end, p1, p2);
 
-    vector<XMFLOAT3> wps;
+    vector<UIVector3F> wps;
     UIZPlaneTransform::TransformLinePoints(transformMatrix, p1, p2, z, wps);
 
     Draw3DWorldLine(wps[0], wps[1], color, lineWidth, renderLevel, UICameraUI3D::GetSingletonInstance());
 }
 
-void UIGraphicsSystem::Draw3DRectOutline(const XMFLOAT2& start, const XMFLOAT2& end, float z, const UIColor& color, float lineWidth, int renderLevel, const XMMATRIX& transformMatrix) {    
-    XMFLOAT2 ps, pe;
+void UIGraphicsSystem::Draw3DRectOutline(const UIVector2F& start, const UIVector2F& end, float z, const UIColor& color, float lineWidth, int renderLevel, const XMMATRIX& transformMatrix) {    
+    UIVector2F ps, pe;
     Calculate2DRectPoints(start, end, ps, pe);
-    vector<XMFLOAT3> wps;
+    vector<UIVector3F> wps;
     UIZPlaneTransform::TransformRectPoints(transformMatrix, ps, pe, z, wps);
     
     Draw3DWorldRectOutline(wps[0], wps[1], wps[2], wps[3], color, lineWidth, renderLevel, UICameraUI3D::GetSingletonInstance());
 }
 
 // Draw a 3D rectangle with specified color, alpha transparency and z-depth
-void UIGraphicsSystem::Draw3DRectSolid(const XMFLOAT2& start, const XMFLOAT2& end, float z,
+void UIGraphicsSystem::Draw3DRectSolid(const UIVector2F& start, const UIVector2F& end, float z,
                                      const UIColor& colorLT, const UIColor& colorRT, const UIColor& colorLB, const UIColor& colorRB, UCHAR alpha, int renderLevel,
                                      const XMMATRIX& transformMatrix) {
-    XMFLOAT2 ps, pe;
+    UIVector2F ps, pe;
     Calculate2DRectPoints(start, end, ps, pe);
-    vector<XMFLOAT3> wps;
+    vector<UIVector3F> wps;
     UIZPlaneTransform::TransformRectPoints(transformMatrix, ps, pe, z, wps);
     
     Draw3DWorldRectSolid(wps[0], wps[1], wps[2], wps[3], colorLT, colorRT, colorLB, colorRB, alpha, renderLevel, UICameraUI3D::GetSingletonInstance());
 }
 
-void UIGraphicsSystem::Draw3DRectSolid(const XMFLOAT2& start, const XMFLOAT2& end, float z,
+void UIGraphicsSystem::Draw3DRectSolid(const UIVector2F& start, const UIVector2F& end, float z,
                                      const UIColor& color, UCHAR alpha, int renderLevel,
                                      const XMMATRIX& transformMatrix) {
     Draw3DRectSolid(start, end, z, color, color, color, color, alpha, renderLevel, transformMatrix);
 }
 
 void UIGraphicsSystem::Draw3DImage(size_t textureIndex, 
-                                 RECT srcRect, XMFLOAT2 dstStart, XMFLOAT2 dstEnd, 
+                                 UIRECT srcRect, UIVector2F dstStart, UIVector2F dstEnd, 
                                  float z, UCHAR alpha, int renderLevel,
                                  const XMMATRIX& transformMatrix) {
     // get the texture rect
-    const RECT textureRect = _textureManager.Get2DTextureRect(_textureManager._textureResources[textureIndex]._texture);
+    const UIRECT textureRect = _textureManager.Get2DTextureRect(_textureManager._textureResources[textureIndex]._texture);
 
     // if srcRect is NULL_RECT, use textureRect
     if (IsRectEmpty(&srcRect)) {
@@ -2436,35 +2438,33 @@ void UIGraphicsSystem::Draw3DImage(size_t textureIndex,
     }
 
     // if dstEnd is 0, calculate it
-    if (dstEnd.x == 0 || dstEnd.y == 0) {
-        dstEnd.x = dstStart.x + (float)(GetRectWidth()(srcRect));
-        dstEnd.y = dstStart.y + (float)(GetRectHeight()(srcRect));
+    if (dstEnd._x == 0 || dstEnd._y == 0) {
+        dstEnd._x = dstStart._x + (float)(GetRectWidth()(srcRect));
+        dstEnd._y = dstStart._y + (float)(GetRectHeight()(srcRect));
     }
 
-    XMFLOAT2 ps, pe;
+    UIVector2F ps, pe;
     Calculate2DRectPoints(dstStart, dstEnd, ps, pe);
-    vector<XMFLOAT3> wps;
+    vector<UIVector3F> wps;
     UIZPlaneTransform::TransformRectPoints(transformMatrix, ps, pe, z, wps);
 
     Draw3DWorldImage(textureIndex, srcRect, wps[0], wps[1], wps[2], wps[3], alpha, renderLevel, UICameraUI3D::GetSingletonInstance());
 }
 
 void UIGraphicsSystem::Draw3DImage(const wstring& dllPath, UINT id, const UIColor& colorKey,
-					 const RECT& srcRect, const XMFLOAT2& dstStart, const XMFLOAT2& dstEnd, 
-					 float z, UCHAR alpha, int renderLevel,
-					 const XMMATRIX& transformMatrix) {
+				 const UIRECT& srcRect, const UIVector2F& dstStart, const UIVector2F& dstEnd, 
+				 float z, UCHAR alpha, int renderLevel,
+				 const XMMATRIX& transformMatrix) {
     size_t textureIndex = 0; 
     if (!_textureManager.GetWICTextureIndexFromDLL(dllPath, id, colorKey, textureIndex)) {
         return;
     }
 
     Draw3DImage(textureIndex, srcRect, dstStart, dstEnd, z, alpha, renderLevel, transformMatrix);
-}
-
-void UIGraphicsSystem::Draw3DImage(const wstring& filePath, const UIColor& colorKey,
-					 const RECT& srcRect, const XMFLOAT2& dstStart, const XMFLOAT2& dstEnd, 
-					 float z, UCHAR alpha, int renderLevel,
-					 const XMMATRIX& transformMatrix) {
+}void UIGraphicsSystem::Draw3DImage(const wstring& filePath, const UIColor& colorKey,
+				 const UIRECT& srcRect, const UIVector2F& dstStart, const UIVector2F& dstEnd, 
+				 float z, UCHAR alpha, int renderLevel,
+				 const XMMATRIX& transformMatrix) {
     size_t textureIndex = 0;
     // check is dds file
     if (filePath.find(L".dds") != wstring::npos) {
@@ -2478,12 +2478,10 @@ void UIGraphicsSystem::Draw3DImage(const wstring& filePath, const UIColor& color
     }
 
     Draw3DImage(textureIndex, srcRect, dstStart, dstEnd, z, alpha, renderLevel, transformMatrix);
-}
-
-void UIGraphicsSystem::Draw3DWorldPoint(const XMFLOAT3& point, const UIColor& color, int renderLevel, UICameraBase3D* pCamera) {
+}void UIGraphicsSystem::Draw3DWorldPoint(const UIVector3F& point, const UIColor& color, int renderLevel, UICameraBase3D* pCamera) {
     // Create point vertex
     vector<VertexPositionColor> vertices = {
-        {{point.x, point.y, point.z}, color.ToXMVECTORF32()}
+        {{point._x, point._y, point._z}, color.ToXMVECTORF32()}
     };
     
     vector<uint16_t> indices = {0};
@@ -2492,7 +2490,7 @@ void UIGraphicsSystem::Draw3DWorldPoint(const XMFLOAT3& point, const UIColor& co
     RegisterBatchData(D3D_PRIMITIVE_TOPOLOGY_POINTLIST, vertices, indices, _graphicsDevice->_effectManager.p_pointEffect3D, GetCurrentClipRect(), pCamera, renderLevel);
 }
 
-void UIGraphicsSystem::Draw3DWorldLine(const DirectX::XMFLOAT3& start, const DirectX::XMFLOAT3& end, const UIColor& colorS, const UIColor& colorE, float lineWidth, int renderLevel, UICameraBase3D* pCamera) {
+void UIGraphicsSystem::Draw3DWorldLine(const UIVector3F& start, const UIVector3F& end, const UIColor& colorS, const UIColor& colorE, float lineWidth, int renderLevel, UICameraBase3D* pCamera) {
     if (lineWidth <= 1.0f) {
         Draw3DWorldLine(start, end, colorS, colorE, renderLevel, pCamera);
     } else {
@@ -2506,7 +2504,7 @@ void UIGraphicsSystem::Draw3DWorldLine(const DirectX::XMFLOAT3& start, const Dir
     }
 }
 
-void UIGraphicsSystem::Draw3DWorldLine(const DirectX::XMFLOAT3& start, const DirectX::XMFLOAT3& end, const UIColor& color, float lineWidth, int renderLevel, UICameraBase3D* pCamera) {
+void UIGraphicsSystem::Draw3DWorldLine(const UIVector3F& start, const UIVector3F& end, const UIColor& color, float lineWidth, int renderLevel, UICameraBase3D* pCamera) {
     if (lineWidth <= 1.0f) {
         Draw3DWorldLine(start, end, color, renderLevel, pCamera);
     } else {
@@ -2514,11 +2512,11 @@ void UIGraphicsSystem::Draw3DWorldLine(const DirectX::XMFLOAT3& start, const Dir
     }
 }
 
-void UIGraphicsSystem::Draw3DWorldLine(const DirectX::XMFLOAT3& start, const DirectX::XMFLOAT3& end, const UIColor& colorS, const UIColor& colorE, int renderLevel, UICameraBase3D* pCamera) {
+void UIGraphicsSystem::Draw3DWorldLine(const UIVector3F& start, const UIVector3F& end, const UIColor& colorS, const UIColor& colorE, int renderLevel, UICameraBase3D* pCamera) {
     // Create line vertices with gradient colors
     vector<VertexPositionColor> vertices = {
-        {{start.x, start.y, start.z}, colorS.ToXMVECTORF32()},  // Start vertex with start color
-        {{end.x, end.y, end.z}, colorE.ToXMVECTORF32()}        // End vertex with end color
+        {{start._x, start._y, start._z}, colorS.ToXMVECTORF32()},  // Start vertex with start color
+        {{end._x, end._y, end._z}, colorE.ToXMVECTORF32()}        // End vertex with end color
     };
     
     vector<uint16_t> indices = {0, 1};
@@ -2527,15 +2525,17 @@ void UIGraphicsSystem::Draw3DWorldLine(const DirectX::XMFLOAT3& start, const Dir
     RegisterBatchData(D3D_PRIMITIVE_TOPOLOGY_LINELIST, vertices, indices, _graphicsDevice->_effectManager.p_lineEffect3D, GetCurrentClipRect(), pCamera, renderLevel);
 }
 	
-void UIGraphicsSystem::Draw3DWorldLine(const XMFLOAT3& start, const XMFLOAT3& end, const UIColor& color, int renderLevel, UICameraBase3D* pCamera) {
+void UIGraphicsSystem::Draw3DWorldLine(const UIVector3F& start, const UIVector3F& end, const UIColor& color, int renderLevel, UICameraBase3D* pCamera) {
     Draw3DWorldLine(start, end, color, color, renderLevel, pCamera);
 }
 
-void UIGraphicsSystem::Draw3DWorldThickLine(const XMFLOAT3& start, const XMFLOAT3& end, float lineWidth, const UIColor& color, int renderLevel, UICameraBase3D* pCamera) {
+void UIGraphicsSystem::Draw3DWorldThickLine(const UIVector3F& start, const UIVector3F& end, float lineWidth, const UIColor& color, int renderLevel, UICameraBase3D* pCamera) {
     const int segments = 8; // Number of cylinder segments
     
-    XMVECTOR startVec = XMLoadFloat3(&start);
-    XMVECTOR endVec = XMLoadFloat3(&end);
+    XMFLOAT3 startXM = start.ToXMFLOAT3();
+    XMFLOAT3 endXM = end.ToXMFLOAT3();
+    XMVECTOR startVec = XMLoadFloat3(&startXM);
+    XMVECTOR endVec = XMLoadFloat3(&endXM);
     XMVECTOR direction = XMVector3Normalize(XMVectorSubtract(endVec, startVec));
     
     // Find two vectors perpendicular to the segment
@@ -2598,7 +2598,7 @@ void UIGraphicsSystem::Draw3DWorldThickLine(const XMFLOAT3& start, const XMFLOAT
                       _graphicsDevice->_effectManager.p_triangleEffect3D, GetCurrentClipRect(), pCamera, renderLevel);
 }
 
-void UIGraphicsSystem::Draw3DWorldCircle(const XMFLOAT3& center, float pixelRadius, const UIColor& color, UCHAR alpha, int renderLevel, UICameraBase3D* pCamera) {
+void UIGraphicsSystem::Draw3DWorldCircle(const UIVector3F& center, float pixelRadius, const UIColor& color, UCHAR alpha, int renderLevel, UICameraBase3D* pCamera) {
     // Calculate camera-facing billboard
     Matrix view = pCamera->GetViewMatrix();
     XMVECTOR right = XMVectorSet(view.m[0][0], view.m[1][0], view.m[2][0], 0);
@@ -2606,7 +2606,8 @@ void UIGraphicsSystem::Draw3DWorldCircle(const XMFLOAT3& center, float pixelRadi
     
     // Convert pixel radius to world radius at given depth
     float worldRadius = CalculateWorldLengthFromPixelLength(pixelRadius, center, pCamera);
-    XMVECTOR centerVec = XMLoadFloat3(&center);
+    XMFLOAT3 centerXM = center.ToXMFLOAT3();
+    XMVECTOR centerVec = XMLoadFloat3(&centerXM);
     
     // Create very smooth circular geometry using even more triangles
     const int segments = 64; // Double the segments for ultra-smooth circle
@@ -2649,7 +2650,7 @@ void UIGraphicsSystem::Draw3DWorldCircle(const XMFLOAT3& center, float pixelRadi
                       _graphicsDevice->_effectManager.p_triangleEffect3D, GetCurrentClipRect(), pCamera, renderLevel);
 }
 
-void UIGraphicsSystem::Draw3DWorldTriangle(const XMFLOAT3& p1, const XMFLOAT3& p2, const XMFLOAT3& p3, const UIColor& color, UCHAR alpha, int renderLevel, UICameraBase3D* pCamera) {
+void UIGraphicsSystem::Draw3DWorldTriangle(const UIVector3F& p1, const UIVector3F& p2, const UIVector3F& p3, const UIColor& color, UCHAR alpha, int renderLevel, UICameraBase3D* pCamera) {
     vector<VertexPositionColor> vertices;
     vector<uint16_t> indices;
     
@@ -2658,9 +2659,9 @@ void UIGraphicsSystem::Draw3DWorldTriangle(const XMFLOAT3& p1, const XMFLOAT3& p
     XMStoreFloat4(&color4, color.ToXMVECTORF32(alpha));
     
     // Add triangle vertices with uniform color
-    vertices.emplace_back(p1, color4);
-    vertices.emplace_back(p2, color4);
-    vertices.emplace_back(p3, color4);
+    vertices.emplace_back(p1.ToXMFLOAT3(), color4);
+    vertices.emplace_back(p2.ToXMFLOAT3(), color4);
+    vertices.emplace_back(p3.ToXMFLOAT3(), color4);
     
     // Triangle indices (counter-clockwise for proper front-facing)
     indices.push_back(0);
@@ -2672,8 +2673,8 @@ void UIGraphicsSystem::Draw3DWorldTriangle(const XMFLOAT3& p1, const XMFLOAT3& p
                       _graphicsDevice->_effectManager.p_triangleEffect3D, GetCurrentClipRect(), pCamera, renderLevel);
 }
 
-void UIGraphicsSystem::Draw3DWorldTriangle(const XMFLOAT3& p1, const XMFLOAT3& p2, const XMFLOAT3& p3, 
-                                        const UIColor& color1, const UIColor& color2, const UIColor& color3, UCHAR alpha, int renderLevel, UICameraBase3D* pCamera) {
+void UIGraphicsSystem::Draw3DWorldTriangle(const UIVector3F& p1, const UIVector3F& p2, const UIVector3F& p3, 
+                                           const UIColor& color1, const UIColor& color2, const UIColor& color3, UCHAR alpha, int renderLevel, UICameraBase3D* pCamera) {
     vector<VertexPositionColor> vertices;
     vector<uint16_t> indices;
     
@@ -2684,9 +2685,9 @@ void UIGraphicsSystem::Draw3DWorldTriangle(const XMFLOAT3& p1, const XMFLOAT3& p
     XMStoreFloat4(&color4_3, color3.ToXMVECTORF32(alpha));
     
     // Add triangle vertices with individual colors for gradient effect
-    vertices.emplace_back(p1, color4_1);
-    vertices.emplace_back(p2, color4_2);
-    vertices.emplace_back(p3, color4_3);
+    vertices.emplace_back(p1.ToXMFLOAT3(), color4_1);
+    vertices.emplace_back(p2.ToXMFLOAT3(), color4_2);
+    vertices.emplace_back(p3.ToXMFLOAT3(), color4_3);
     
     // Triangle indices (counter-clockwise for proper front-facing)
     indices.push_back(0);
@@ -2698,7 +2699,7 @@ void UIGraphicsSystem::Draw3DWorldTriangle(const XMFLOAT3& p1, const XMFLOAT3& p
                       _graphicsDevice->_effectManager.p_triangleEffect3D, GetCurrentClipRect(), pCamera, renderLevel);
 }
 
-void UIGraphicsSystem::Draw3DWorldTextureTriangle(const XMFLOAT3& p1, const XMFLOAT3& p2, const XMFLOAT3& p3,
+void UIGraphicsSystem::Draw3DWorldTextureTriangle(const UIVector3F& p1, const UIVector3F& p2, const UIVector3F& p3,
                                                   const XMFLOAT2& uv1, const XMFLOAT2& uv2, const XMFLOAT2& uv3,
                                                   size_t textureIndex, UCHAR alpha, int renderLevel, UICameraBase3D* pCamera) {
     // Get texture resource
@@ -2706,9 +2707,9 @@ void UIGraphicsSystem::Draw3DWorldTextureTriangle(const XMFLOAT3& p1, const XMFL
     
     // Create vertices with texture coordinates
     vector<VertexPositionTexture> vertices = {
-        { {p1.x, p1.y, p1.z}, uv1 },
-        { {p2.x, p2.y, p2.z}, uv2 },
-        { {p3.x, p3.y, p3.z}, uv3 }
+        { {p1._x, p1._y, p1._z}, uv1 },
+        { {p2._x, p2._y, p2._z}, uv2 },
+        { {p3._x, p3._y, p3._z}, uv3 }
     };
     
     // Triangle indices
@@ -2719,7 +2720,7 @@ void UIGraphicsSystem::Draw3DWorldTextureTriangle(const XMFLOAT3& p1, const XMFL
                              resource._gpuDescriptor, _graphicsDevice->p_states->LinearClamp(), alpha, GetCurrentClipRect(), pCamera, renderLevel);
 }
 
-void UIGraphicsSystem::Draw3DWorldRectOutline(const XMFLOAT3& pLT, const XMFLOAT3& pRT, const XMFLOAT3& pLB, const XMFLOAT3& pRB,
+void UIGraphicsSystem::Draw3DWorldRectOutline(const UIVector3F& pLT, const UIVector3F& pRT, const UIVector3F& pLB, const UIVector3F& pRB,
                                             const UIColor& color, float lineWidth, int renderLevel, UICameraBase3D* pCamera) {
     Draw3DWorldLine(pLT, pRT, color, lineWidth, renderLevel, pCamera);  // Top edge
     Draw3DWorldLine(pRT, pRB, color, lineWidth, renderLevel, pCamera);  // Right edge
@@ -2727,12 +2728,12 @@ void UIGraphicsSystem::Draw3DWorldRectOutline(const XMFLOAT3& pLT, const XMFLOAT
     Draw3DWorldLine(pLB, pLT, color, lineWidth, renderLevel, pCamera);  // Left edge
 }
 
-void UIGraphicsSystem::Draw3DWorldRectSolid(const XMFLOAT3& pLT, const XMFLOAT3& pRT, const XMFLOAT3& pLB, const XMFLOAT3& pRB,
+void UIGraphicsSystem::Draw3DWorldRectSolid(const UIVector3F& pLT, const UIVector3F& pRT, const UIVector3F& pLB, const UIVector3F& pRB,
                                           const UIColor& color, UCHAR alpha, int renderLevel, UICameraBase3D* pCamera) {
     Draw3DWorldRectSolid(pLT, pRT, pLB, pRB, color, color, color, color, alpha, renderLevel, pCamera);
 }
 
-void UIGraphicsSystem::Draw3DWorldRectSolid(const XMFLOAT3& pLT, const XMFLOAT3& pRT, const XMFLOAT3& pLB, const XMFLOAT3& pRB,
+void UIGraphicsSystem::Draw3DWorldRectSolid(const UIVector3F& pLT, const UIVector3F& pRT, const UIVector3F& pLB, const UIVector3F& pRB,
                                           const UIColor& colorLT, const UIColor& colorRT, const UIColor& colorLB, const UIColor& colorRB,
                                           UCHAR alpha, int renderLevel, UICameraBase3D* pCamera) {
     // Convert colors to XMFLOAT4
@@ -2744,10 +2745,10 @@ void UIGraphicsSystem::Draw3DWorldRectSolid(const XMFLOAT3& pLT, const XMFLOAT3&
     
     // Create vertices (pLT=LT, pRT=RT, pLB=LB, pRB=RB)
     vector<VertexPositionColor> vertices = {
-        { {pLT.x, pLT.y, pLT.z}, color4_LT },  // Left-top
-        { {pRT.x, pRT.y, pRT.z}, color4_RT },  // Right-top
-        { {pLB.x, pLB.y, pLB.z}, color4_LB },  // Left-bottom
-        { {pRB.x, pRB.y, pRB.z}, color4_RB }   // Right-bottom
+        { {pLT._x, pLT._y, pLT._z}, color4_LT },  // Left-top
+        { {pRT._x, pRT._y, pRT._z}, color4_RT },  // Right-top
+        { {pLB._x, pLB._y, pLB._z}, color4_LB },  // Left-bottom
+        { {pRB._x, pRB._y, pRB._z}, color4_RB }   // Right-bottom
     };
     
     // Define indices for two triangles (0=LT, 1=RT, 2=LB, 3=RB)
@@ -2758,16 +2759,16 @@ void UIGraphicsSystem::Draw3DWorldRectSolid(const XMFLOAT3& pLT, const XMFLOAT3&
                       _graphicsDevice->_effectManager.p_triangleEffect3D, GetCurrentClipRect(), pCamera, renderLevel);
 }
 
-void UIGraphicsSystem::Draw3DWorldImage(size_t textureIndex, const RECT& srcRect, const DirectX::XMFLOAT3& pLT, const DirectX::XMFLOAT3& pRT, 
-						              const DirectX::XMFLOAT3& pLB, const DirectX::XMFLOAT3& pRB, UCHAR alpha, int renderLevel, UICameraBase3D* pCamera) {
+void UIGraphicsSystem::Draw3DWorldImage(size_t textureIndex, const UIRECT& srcRect, const UIVector3F& pLT, const UIVector3F& pRT, 
+					              const UIVector3F& pLB, const UIVector3F& pRB, UCHAR alpha, int renderLevel, UICameraBase3D* pCamera) {
     // Get texture resource
     UITextureManager::TextureResource& resource = _textureManager._textureResources[textureIndex];
     
     // Get original texture size 
-    const RECT textureRect = _textureManager.Get2DTextureRect(resource._texture);
+    const UIRECT textureRect = _textureManager.Get2DTextureRect(resource._texture);
     
     // Use provided srcRect or full texture
-    RECT actualSrcRect = srcRect;
+    UIRECT actualSrcRect = srcRect;
     if (IsRectEmpty(&srcRect)) {
         actualSrcRect = textureRect;
     }
@@ -2780,13 +2781,11 @@ void UIGraphicsSystem::Draw3DWorldImage(size_t textureIndex, const RECT& srcRect
     
     // Create vertices with texture coordinates (pLT=LT, pRT=RT, pLB=LB, pRB=RB)
     vector<VertexPositionTexture> vertices = {
-        { {pLT.x, pLT.y, pLT.z}, XMFLOAT2(texLeft, texTop) },      // Left-top
-        { {pRT.x, pRT.y, pRT.z}, XMFLOAT2(texRight, texTop) },     // Right-top
-        { {pLB.x, pLB.y, pLB.z}, XMFLOAT2(texLeft, texBottom) },   // Left-bottom
-        { {pRB.x, pRB.y, pRB.z}, XMFLOAT2(texRight, texBottom) }   // Right-bottom
-    };
-    
-    // Define indices for two triangles
+        { {pLT._x, pLT._y, pLT._z}, XMFLOAT2(texLeft, texTop) },      // Left-top
+        { {pRT._x, pRT._y, pRT._z}, XMFLOAT2(texRight, texTop) },     // Right-top
+        { {pLB._x, pLB._y, pLB._z}, XMFLOAT2(texLeft, texBottom) },   // Left-bottom
+        { {pRB._x, pRB._y, pRB._z}, XMFLOAT2(texRight, texBottom) }   // Right-bottom
+    };    // Define indices for two triangles
     vector<uint16_t> indices = { 0, 1, 2, 1, 3, 2 };
 
     // Register batch texture data
@@ -2795,7 +2794,7 @@ void UIGraphicsSystem::Draw3DWorldImage(size_t textureIndex, const RECT& srcRect
 }
 
 // Helper function to calculate world length from pixel length
-float UIGraphicsSystem::CalculateWorldLengthFromPixelLength(float pixelLength, const XMFLOAT3& worldPosition, UICameraBase3D* pCamera) {
+float UIGraphicsSystem::CalculateWorldLengthFromPixelLength(float pixelLength, const UIVector3F& worldPosition, UICameraBase3D* pCamera) {
     // Get camera matrices
     XMMATRIX view = pCamera->GetViewMatrix();
     XMMATRIX proj = pCamera->GetProjectionMatrix();
@@ -2809,7 +2808,8 @@ float UIGraphicsSystem::CalculateWorldLengthFromPixelLength(float pixelLength, c
 
     if (abs(projMatrix._34) > 0.0001f) {
         // Transform world position to view space
-        XMVECTOR worldPosVec = XMLoadFloat3(&worldPosition);
+        XMFLOAT3 worldPosXM = worldPosition.ToXMFLOAT3();
+        XMVECTOR worldPosVec = XMLoadFloat3(&worldPosXM);
         XMVECTOR viewPosVec = XMVector3Transform(worldPosVec, view);
         float viewZ = XMVectorGetZ(viewPosVec);
         
@@ -2906,7 +2906,7 @@ void UIGraphicsDeviceDX12::ReleaseResourcesXTK() {
 // Batch registration functions
 void UIGraphicsSystem::RegisterBatchData(D3D_PRIMITIVE_TOPOLOGY topology,
                                        const vector<VertexPositionColor>& vertices, const vector<uint16_t>& indices, 
-                                       unique_ptr<BasicEffect>& effect, const RECT& clipRect, UICameraBase* pCamera, int renderLevel) {
+                                       unique_ptr<BasicEffect>& effect, const UIRECT& clipRect, UICameraBase* pCamera, int renderLevel) {
     // Create new batch data with key information
     BatchData newBatch;
     newBatch._batchID = 1;  // _graphicsDevice->p_batch
@@ -2935,7 +2935,7 @@ void UIGraphicsSystem::RegisterBatchTextureData(D3D_PRIMITIVE_TOPOLOGY topology,
                                                 const vector<VertexPositionTexture>& vertices, const vector<uint16_t>& indices,
                                                 unique_ptr<BasicEffect>& effect, 
                                                 D3D12_GPU_DESCRIPTOR_HANDLE srvDescriptor, D3D12_GPU_DESCRIPTOR_HANDLE samplerDescriptor, UCHAR alpha,
-                                                const RECT& clipRect, UICameraBase* pCamera, int renderLevel) {
+                                                const UIRECT& clipRect, UICameraBase* pCamera, int renderLevel) {
     // Create new batch data with key information
     BatchData newBatch;
     newBatch._batchID = 2;  // _graphicsDevice->p_batchTexture
@@ -3119,7 +3119,7 @@ void UIGraphicsDeviceDX12::Present() {
 }
 
 bool UIGraphicsDeviceDX12::HandleWindowResize(int width, int height) {
-    RECT newRc;
+    UIRECT newRc;
     newRc.left = newRc.top = 0;
     newRc.right = width;
     newRc.bottom = height;

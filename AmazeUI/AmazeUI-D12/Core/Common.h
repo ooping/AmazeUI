@@ -1,13 +1,13 @@
 /*-------------------------------------------------- Framework Environment --------------------------------------------------*/
 #pragma once
 
-#define RENDERER_D3D9 0
-#define RENDERER_D3D12 1
+#define USE_WIN32 1
+#define USE_DX12 1
 
 #define NOMINMAX
 
 /*-------------------------------------------------- Header files / Windows --------------------------------------------------*/
-#ifdef _WIN32
+#ifdef USE_WIN32
 
 #include <winsock2.h>
 #pragma comment(lib, "ws2_32.lib")
@@ -73,16 +73,81 @@
 #include <thread>
 
 
+
+
+/*-------------------------------------------------- Types --------------------------------------------------*/
+#if USE_WIN32
+
+using UIRECT = RECT;
+using UIPOINT = POINT;
+using UISIZE = SIZE;
+
+#endif
+
+namespace UIShape2D {
+	constexpr UIRECT NULL_RECT = {0, 0, 0, 0};
+	constexpr UIPOINT NULL_POINT = {0, 0};
+	constexpr UISIZE NULL_SIZE = {0, 0};
+
+	struct CreateRect {
+		UIRECT operator()(UIPOINT point, UISIZE size);
+        UIRECT operator()(LONG left, LONG top, LONG right, LONG bottom);
+	};
+
+	struct CreatePoint {
+		UIPOINT operator()(LONG x, LONG y);
+	};
+
+	struct CreateSize {
+		UISIZE operator()(LONG x, LONG y);
+	};
+
+	struct GetRectWidth {
+		LONG operator()(const UIRECT& rc);
+	};
+
+	struct GetRectHeight {
+		LONG operator()(const UIRECT& rc);
+	};
+
+	struct GetRectCenter {
+		UIPOINT operator()(const UIRECT& rc);
+	};
+
+	struct CompareRects {
+		bool operator()(const UIRECT& r1, const UIRECT& r2);
+	};
+
+	struct IntersectRects {
+		UIRECT operator()(const UIRECT& rc1, const UIRECT& rc2);
+	};
+
+	struct ComparePoints {
+		bool operator()(const UIPOINT& p1, const UIPOINT& p2);
+	};
+
+	struct ContainsPoint {
+		bool operator()(const UIPOINT& point, const UIRECT& rect);
+	};
+
+	struct ScaleRect {
+		UIRECT operator()(const UIRECT& rc, float scale);
+	};
+};
+
+
 /*-------------------------------------------------- String Helper --------------------------------------------------*/
-#if _WIN32
 struct StringPasteFromClipboard {
+#if USE_WIN32
     void operator()(std::wstring& strBuf, HWND dstHwnd);
+#endif
 };
 
 struct StringCopyToClipboard {
+#if USE_WIN32
     void operator()(const std::wstring& strBuf, HWND srcHwnd);
-};
 #endif
+};
 
 struct StringHelper {
 	static std::wstring StringToWString(const std::string& str) {
@@ -90,7 +155,7 @@ struct StringHelper {
             return std::wstring();
         }
 
-    #ifdef _WIN32
+    #ifdef USE_WIN32
         int size = MultiByteToWideChar(CP_ACP, 0, str.c_str(), static_cast<int>(str.length()), nullptr, 0);
         std::wstring result(size, 0);
         MultiByteToWideChar(CP_ACP, 0, str.c_str(), static_cast<int>(str.length()), &result[0], size);
@@ -103,7 +168,7 @@ struct StringHelper {
             return std::string();
         }
  
-    #ifdef _WIN32
+    #ifdef USE_WIN32
         int size = WideCharToMultiByte(CP_ACP, 0, wstr.c_str(), static_cast<int>(wstr.length()), nullptr, 0, nullptr, nullptr);
         std::string result(size, 0);
         WideCharToMultiByte(CP_ACP, 0, wstr.c_str(), static_cast<int>(wstr.length()), &result[0], size, nullptr, nullptr);
@@ -178,7 +243,6 @@ struct StringHelper {
 #define WSTR_TO_STR(wstr) StringHelper::WStringToString(wstr)
 #define STR_TO_LOWER(str) StringHelper::ToLower(str)
 #define STR_TO_UPPER(str) StringHelper::ToUpper(str)
-
 
 class UIString {
 public:
@@ -651,6 +715,7 @@ protected:
 
 
 /*-------------------------------------------------- Utility --------------------------------------------------*/
+#if USE_WIN32
 // DLL Resource RAII
 struct DLLResourceRAII {
 public:
@@ -667,10 +732,7 @@ public:
     HMODULE _hDLL;
 };
 
-
-#if _WIN32
-struct CriticalSection
-{
+struct CriticalSection {
     CriticalSection() { ::InitializeCriticalSection(&_criticalSection); }
 	~CriticalSection() { ::DeleteCriticalSection(&_criticalSection); }
 
@@ -816,8 +878,4 @@ inline void FindMediaFile(
 
     throw std::exception("File not found");
 }
-
-
-
-
 #endif

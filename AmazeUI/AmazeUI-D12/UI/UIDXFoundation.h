@@ -8,6 +8,12 @@
 #include "UIWindow.h"
 
 
+// FreeType
+#include <ft2build.h>
+#include FT_FREETYPE_H
+#include FT_GLYPH_H
+
+
 class UIGraphicsDeviceHAL {
 public:
     // Graphics Device Configuration
@@ -39,7 +45,7 @@ public:
 
     // Query
     virtual const char* GetBackendName() const = 0;
-    virtual RECT GetOutputSize() const = 0;
+    virtual UIRECT GetOutputSize() const = 0;
     virtual uint32_t GetCurrentFrameIndex() const = 0;
     virtual uint32_t GetBackBufferCount() const = 0;
 };
@@ -67,7 +73,7 @@ public:
 
     // Query
     const char* GetBackendName() const override { return "DirectX 12"; }
-    RECT GetOutputSize() const override { return _outputSize; }
+    UIRECT GetOutputSize() const override { return _outputSize; }
     uint32_t GetCurrentFrameIndex() const override { return _backBufferIndex; }
 	uint32_t GetBackBufferCount() const override { return _backBufferCount; }
 
@@ -75,7 +81,7 @@ public:
 protected:
     void SetWindow(int width, int height);
 
-    RECT _outputSize = {0, 0, 1, 1};
+    UIRECT _outputSize = {0, 0, 1, 1};
     HWND _window = nullptr;
 
 /*************************************************** DX12 ***************************************************/
@@ -193,8 +199,8 @@ class UITextureManager {
 
 public:
 	// Public interface - Get texture size
-	bool Get2DImageSize(const std::wstring& imagePath, const UIColor& colorKey, RECT& textureRect);
-	bool Get2DImageSize(const std::wstring& dllPath, UINT id, const UIColor& colorKey, RECT& textureRect);
+	bool Get2DImageSize(const std::wstring& imagePath, const UIColor& colorKey, UIRECT& textureRect);
+	bool Get2DImageSize(const std::wstring& dllPath, UINT id, const UIColor& colorKey, UIRECT& textureRect);
 
 	// public methods - Texture loading
 	bool GetWICTextureIndexFromDLL(const std::wstring& dllPath, UINT id, const UIColor& colorKey, size_t& textureIndex);
@@ -220,8 +226,8 @@ private:
 		                            const std::vector<uint8_t>& imageData, UINT width, UINT height);
 
 	// Internal methods - Utility functions
-	RECT Get2DTextureRect(ID3D12Resource* texture);
-	RECT Get2DTextureRect(const Microsoft::WRL::ComPtr<ID3D12Resource>& texture);
+	UIRECT Get2DTextureRect(ID3D12Resource* texture);
+	UIRECT Get2DTextureRect(const Microsoft::WRL::ComPtr<ID3D12Resource>& texture);
 
 	// Data members - Texture resources
 	struct TextureResource {
@@ -255,13 +261,13 @@ public:
     void HandleDeviceLost();
 
     // Query
-    RECT GetOutputSize() const;
+    UIRECT GetOutputSize() const;
 
     // Texture Query APIs (Encapsulated Interface)
-    bool GetTextureSize(const std::wstring& imagePath, const UIColor& colorKey, RECT& textureRect) {
+    bool GetTextureSize(const std::wstring& imagePath, const UIColor& colorKey, UIRECT& textureRect) {
         return _textureManager.Get2DImageSize(imagePath, colorKey, textureRect);
     }
-    bool GetTextureSize(const std::wstring& dllPath, UINT id, const UIColor& colorKey, RECT& textureRect) {
+    bool GetTextureSize(const std::wstring& dllPath, UINT id, const UIColor& colorKey, UIRECT& textureRect) {
         return _textureManager.Get2DImageSize(dllPath, id, colorKey, textureRect);
     }
 
@@ -274,39 +280,39 @@ private:
 
 /*************************************************** clip rect ***************************************************/
 public:
-	void BeginScreenClipRect(const RECT& clipRC, bool execute = false);
+	void BeginScreenClipRect(const UIRECT& clipRC, bool execute = false);
 	void EndScreenClipRect(bool execute = false);
-	RECT GetCurrentClipRect() const;
-	void ExecuteClipRect(const RECT& clipRC);
+	UIRECT GetCurrentClipRect() const;
+	void ExecuteClipRect(const UIRECT& clipRC);
 	void ResetClipRect();
 
 private:
-	std::stack<RECT> _clipRectStack;
+	std::stack<UIRECT> _clipRectStack;
 
 /*************************************************** FreeType APIs ***************************************************/
 public:
 	// ========== 2D Screen Text ==========
-	void Draw2DTextFT(const std::wstring& text, const DirectX::XMFLOAT2& position, float z, const UIColor& color, float fontSize, int renderLevel = 0);
-	void Draw2DTextFT(const std::wstring& text, const RECT& rc, UIFontPos alignment, float z, const UIColor& color, float fontSize, int renderLevel = 0);
-	void Draw2DTextMultiLineFT(const std::wstring& text, const DirectX::XMFLOAT2& position, float z, const UIColor& color, float fontSize, float lineSpacing = 1.2f, int renderLevel = 0);
-	void Draw2DTextMultiLineFT(const std::wstring& text, const RECT& rc, UIFontPos alignment, float z, const UIColor& color, float fontSize, float lineSpacing = 1.2f, int renderLevel = 0);
+	void Draw2DTextFT(const std::wstring& text, const UIVector2F& position, float z, const UIColor& color, float fontSize, int renderLevel = 0);
+	void Draw2DTextFT(const std::wstring& text, const UIRECT& rc, UIFontPos alignment, float z, const UIColor& color, float fontSize, int renderLevel = 0);
+	void Draw2DTextMultiLineFT(const std::wstring& text, const UIVector2F& position, float z, const UIColor& color, float fontSize, float lineSpacing = 1.2f, int renderLevel = 0);
+	void Draw2DTextMultiLineFT(const std::wstring& text, const UIRECT& rc, UIFontPos alignment, float z, const UIColor& color, float fontSize, float lineSpacing = 1.2f, int renderLevel = 0);
 
 	// ========== 3D Screen Text ==========
-	void Draw3DTextFT(const std::wstring& text, const DirectX::XMFLOAT2& position, float z, const UIColor& color, float fontSize, int renderLevel = 0,
+	void Draw3DTextFT(const std::wstring& text, const UIVector2F& position, float z, const UIColor& color, float fontSize, int renderLevel = 0,
 		const DirectX::XMMATRIX& transformMatrix = DirectX::XMMatrixIdentity());
-	void Draw3DTextFT(const std::wstring& text, const RECT& rc, UIFontPos alignment, float z, const UIColor& color, float fontSize, int renderLevel = 0,
+	void Draw3DTextFT(const std::wstring& text, const UIRECT& rc, UIFontPos alignment, float z, const UIColor& color, float fontSize, int renderLevel = 0,
 		const DirectX::XMMATRIX& transformMatrix = DirectX::XMMatrixIdentity());
-	void Draw3DTextMultiLineFT(const std::wstring& text, const DirectX::XMFLOAT2& position, float z, const UIColor& color, float fontSize, float lineSpacing = 1.2f, int renderLevel = 0,
+	void Draw3DTextMultiLineFT(const std::wstring& text, const UIVector2F& position, float z, const UIColor& color, float fontSize, float lineSpacing = 1.2f, int renderLevel = 0,
 		const DirectX::XMMATRIX& transformMatrix = DirectX::XMMatrixIdentity());
-	void Draw3DTextMultiLineFT(const std::wstring& text, const RECT& rc, UIFontPos alignment, float z, const UIColor& color, float fontSize, float lineSpacing = 1.2f, int renderLevel = 0,
+	void Draw3DTextMultiLineFT(const std::wstring& text, const UIRECT& rc, UIFontPos alignment, float z, const UIColor& color, float fontSize, float lineSpacing = 1.2f, int renderLevel = 0,
 		const DirectX::XMMATRIX& transformMatrix = DirectX::XMMatrixIdentity());
 
 	// ========== 3D World Text ==========
-	void Draw3DWorldTextFT(const std::wstring& text, const DirectX::XMFLOAT3& worldPosition,
+	void Draw3DWorldTextFT(const std::wstring& text, const UIVector3F& worldPosition,
 		const UIColor& color, float fontSize, int renderLevel = 0, UICameraBase3D* pCamera = nullptr);
 
 	// ========== Utility Functions ==========
-	SIZE GetTextSizeFT(const std::wstring& text, float fontSize, float lineSpacing = 1.0f);
+	UISIZE GetTextSizeFT(const std::wstring& text, float fontSize, float lineSpacing = 1.0f);
 
 private:
 	void CreateResourcesFT();
@@ -314,11 +320,11 @@ private:
 
 	bool GetCharTextureResourceFT(const wchar_t& wch, float fontSize, const UIColor& color, size_t& textureIndex);
 
-	void Draw2DCharTextureFT(size_t textureIndex, DirectX::XMFLOAT2 position, float z, float scale, UCHAR alpha, int renderLevel = 0);
-	void Draw3DCharTextureFT(size_t textureIndex, DirectX::XMFLOAT2 position, float z, float scale, UCHAR alpha, int renderLevel = 0, const DirectX::XMMATRIX& transformMatrix = DirectX::XMMatrixIdentity());
-	void Draw3DWorldCharTextureFT(size_t textureIndex, DirectX::XMFLOAT3 worldPosition, float scale, UCHAR alpha, int renderLevel = 0, UICameraBase3D* pCamera = nullptr);
+	void Draw2DCharTextureFT(size_t textureIndex, UIVector2F position, float z, float scale, UCHAR alpha, int renderLevel = 0);
+	void Draw3DCharTextureFT(size_t textureIndex, UIVector2F position, float z, float scale, UCHAR alpha, int renderLevel = 0, const DirectX::XMMATRIX& transformMatrix = DirectX::XMMatrixIdentity());
+	void Draw3DWorldCharTextureFT(size_t textureIndex, UIVector3F worldPosition, float scale, UCHAR alpha, int renderLevel = 0, UICameraBase3D* pCamera = nullptr);
 
-	DirectX::XMFLOAT2 CalculateTextPosition(const std::wstring& text, const RECT& rc, UIFontPos alignment, float fontSize, float lineSpacing = 1.0f);
+	UIVector2F CalculateTextPosition(const std::wstring& text, const UIRECT& rc, UIFontPos alignment, float fontSize, float lineSpacing = 1.0f);
 	std::vector<std::wstring> SplitTextIntoLines(const std::wstring& text);
 
 	struct FTSizeFont;
@@ -338,7 +344,7 @@ private:
 	std::unordered_map<float, FTSizeFont> _ftSizeFontMap;
 
 	struct CharTextureResource {
-		ComPtr<ID3D12Resource> _texture;
+		Microsoft::WRL::ComPtr<ID3D12Resource> _texture;
 		D3D12_GPU_DESCRIPTOR_HANDLE _gpuDescriptor;
 		UINT _width, _height;
 		// int _bearingX, _bearingY;
@@ -351,95 +357,95 @@ private:
 
 /*************************************************** 2D UI APIs ***************************************************/
 public:
-	void Draw2DPoint(const DirectX::XMFLOAT2& point, float z, const UIColor& color, float pointSize = 4, int renderLevel = 0);
-	void Draw2DPoints(const std::vector<DirectX::XMFLOAT2>& points, float z, const UIColor& color, float pointSize = 4, int renderLevel = 0);
+	void Draw2DPoint(const UIVector2F& point, float z, const UIColor& color, float pointSize = 4, int renderLevel = 0);
+	void Draw2DPoints(const std::vector<UIVector2F>& points, float z, const UIColor& color, float pointSize = 4, int renderLevel = 0);
 
-	void Draw2DLine(const DirectX::XMFLOAT2& start, const DirectX::XMFLOAT2& end, float z, const UIColor& color, float lineWidth = 1.0f, int renderLevel = 0);
+	void Draw2DLine(const UIVector2F& start, const UIVector2F& end, float z, const UIColor& color, float lineWidth = 1.0f, int renderLevel = 0);
 
-	void Draw2DRectOutline(const DirectX::XMFLOAT2& start, const DirectX::XMFLOAT2& end, float z, const UIColor& color, float lineWidth = 1.0f, int renderLevel = 0);
-	void Draw2DRectSolid(const DirectX::XMFLOAT2& start, const DirectX::XMFLOAT2& end, float z, const UIColor& color, UCHAR alpha, int renderLevel = 0);
-	void Draw2DRectSolid(const DirectX::XMFLOAT2& start, const DirectX::XMFLOAT2& end, float z, 
+	void Draw2DRectOutline(const UIVector2F& start, const UIVector2F& end, float z, const UIColor& color, float lineWidth = 1.0f, int renderLevel = 0);
+	void Draw2DRectSolid(const UIVector2F& start, const UIVector2F& end, float z, const UIColor& color, UCHAR alpha, int renderLevel = 0);
+	void Draw2DRectSolid(const UIVector2F& start, const UIVector2F& end, float z, 
 						 const UIColor& colorLT, const UIColor& colorRT, const UIColor& colorLB, const UIColor& colorRB, UCHAR alpha, int renderLevel = 0);
 
 	void Draw2DImage(const std::wstring& dllPath, UINT id, const UIColor& colorKey,
-					 const RECT& srcRect, const DirectX::XMFLOAT2& dstStart, const DirectX::XMFLOAT2& dstEnd, 
+					 const UIRECT& srcRect, const UIVector2F& dstStart, const UIVector2F& dstEnd, 
 					 float z, UCHAR alpha, int renderLevel = 0);
 	void Draw2DImage(const std::wstring& filePath, const UIColor& colorKey,
-					 const RECT& srcRect, const DirectX::XMFLOAT2& dstStart, const DirectX::XMFLOAT2& dstEnd, 
+					 const UIRECT& srcRect, const UIVector2F& dstStart, const UIVector2F& dstEnd, 
 					 float z, UCHAR alpha, int renderLevel = 0);
 
 private:
 	void Draw2DImage(size_t textureIndex, 
-					 RECT srcRect, DirectX::XMFLOAT2 dstStart, DirectX::XMFLOAT2 dstEnd, 
+					 UIRECT srcRect, UIVector2F dstStart, UIVector2F dstEnd, 
 					 float z, UCHAR alpha, int renderLevel = 0);
 
-	void Calculate2DPoint(const DirectX::XMFLOAT2& point, DirectX::XMFLOAT2& p);
-	void Calculate2DLinePoints(const DirectX::XMFLOAT2& start, const DirectX::XMFLOAT2& end, DirectX::XMFLOAT2& p1, DirectX::XMFLOAT2& p2);
-	void Calculate2DRectPoints(const DirectX::XMFLOAT2& start, const DirectX::XMFLOAT2& end, DirectX::XMFLOAT2& ps, DirectX::XMFLOAT2& pe);
+	void Calculate2DPoint(const UIVector2F& point, UIVector2F& p);
+	void Calculate2DLinePoints(const UIVector2F& start, const UIVector2F& end, UIVector2F& p1, UIVector2F& p2);
+	void Calculate2DRectPoints(const UIVector2F& start, const UIVector2F& end, UIVector2F& ps, UIVector2F& pe);
 
 /*************************************************** 3D UI APIs ***************************************************/
 public:
-	void Draw3DPoint(const DirectX::XMFLOAT2& point, float z, const UIColor& color, float pointSize=4, int renderLevel = 0,
+	void Draw3DPoint(const UIVector2F& point, float z, const UIColor& color, float pointSize=4, int renderLevel = 0,
 					 const DirectX::XMMATRIX& transformMatrix = DirectX::XMMatrixIdentity());
-	void Draw3DPoints(const std::vector<DirectX::XMFLOAT2>& points, float z, const UIColor& color, float pointSize=4, int renderLevel = 0,
+	void Draw3DPoints(const std::vector<UIVector2F>& points, float z, const UIColor& color, float pointSize=4, int renderLevel = 0,
 					  const DirectX::XMMATRIX& transformMatrix = DirectX::XMMatrixIdentity());
 
-	void Draw3DLine(const DirectX::XMFLOAT2& start, const DirectX::XMFLOAT2& end, float z, const UIColor& color, float lineWidth = 1.0f, int renderLevel = 0,
+	void Draw3DLine(const UIVector2F& start, const UIVector2F& end, float z, const UIColor& color, float lineWidth = 1.0f, int renderLevel = 0,
 					const DirectX::XMMATRIX& transformMatrix = DirectX::XMMatrixIdentity());
 
-	void Draw3DRectOutline(const DirectX::XMFLOAT2& start, const DirectX::XMFLOAT2& end, float z, const UIColor& color, float lineWidth = 1.0f, int renderLevel = 0,
+	void Draw3DRectOutline(const UIVector2F& start, const UIVector2F& end, float z, const UIColor& color, float lineWidth = 1.0f, int renderLevel = 0,
 						   const DirectX::XMMATRIX& transformMatrix = DirectX::XMMatrixIdentity());
-	void Draw3DRectSolid(const DirectX::XMFLOAT2& start, const DirectX::XMFLOAT2& end, float z,
+	void Draw3DRectSolid(const UIVector2F& start, const UIVector2F& end, float z,
 						 const UIColor& color, UCHAR alpha, int renderLevel = 0,
 						 const DirectX::XMMATRIX& transformMatrix = DirectX::XMMatrixIdentity());
-	void Draw3DRectSolid(const DirectX::XMFLOAT2& start, const DirectX::XMFLOAT2& end, float z,
+	void Draw3DRectSolid(const UIVector2F& start, const UIVector2F& end, float z,
              		     const UIColor& colorLT, const UIColor& colorRT, const UIColor& colorLB, const UIColor& colorRB, UCHAR alpha, int renderLevel = 0,
 						 const DirectX::XMMATRIX& transformMatrix = DirectX::XMMatrixIdentity());
 
 	void Draw3DImage(const std::wstring& dllPath, UINT id, const UIColor& colorKey,
-					 const RECT& srcRect, const DirectX::XMFLOAT2& dstStart, const DirectX::XMFLOAT2& dstEnd, 
+					 const UIRECT& srcRect, const UIVector2F& dstStart, const UIVector2F& dstEnd, 
 					 float z, UCHAR alpha, int renderLevel = 0,
 					 const DirectX::XMMATRIX& transformMatrix = DirectX::XMMatrixIdentity());
 	void Draw3DImage(const std::wstring& filePath, const UIColor& colorKey,
-					 const RECT& srcRect, const DirectX::XMFLOAT2& dstStart, const DirectX::XMFLOAT2& dstEnd, 
+					 const UIRECT& srcRect, const UIVector2F& dstStart, const UIVector2F& dstEnd, 
 					 float z, UCHAR alpha, int renderLevel = 0,
 					 const DirectX::XMMATRIX& transformMatrix = DirectX::XMMatrixIdentity());
 
 private:
 	void Draw3DImage(size_t textureIndex, 
-					 RECT srcRect, DirectX::XMFLOAT2 dstStart, DirectX::XMFLOAT2 dstEnd, 
+					 UIRECT srcRect, UIVector2F dstStart, UIVector2F dstEnd, 
 					 float z, UCHAR alpha, int renderLevel = 0,
 					 const DirectX::XMMATRIX& transformMatrix = DirectX::XMMatrixIdentity());
 
 /*************************************************** 3D World APIs ***************************************************/
 // Use UICameraBase (UICameraGame, UICameraCtrl, etc.) to render 3D world objects in 3D world space
 public:
-	void Draw3DWorldPoint(const DirectX::XMFLOAT3& point, const UIColor& color, int renderLevel = 0, UICameraBase3D* pCamera = nullptr);
-	void Draw3DWorldLine(const DirectX::XMFLOAT3& start, const DirectX::XMFLOAT3& end, const UIColor& colorS, const UIColor& colorE, float lineWidth, int renderLevel = 0, UICameraBase3D* pCamera = nullptr);
-	void Draw3DWorldLine(const DirectX::XMFLOAT3& start, const DirectX::XMFLOAT3& end, const UIColor& color, float lineWidth, int renderLevel = 0, UICameraBase3D* pCamera = nullptr);
-	void Draw3DWorldCircle(const DirectX::XMFLOAT3& center, float pixelRadius, const UIColor& color, UCHAR alpha, int renderLevel = 0, UICameraBase3D* pCamera = nullptr);
-	void Draw3DWorldTriangle(const DirectX::XMFLOAT3& p1, const DirectX::XMFLOAT3& p2, const DirectX::XMFLOAT3& p3, const UIColor& color, UCHAR alpha, int renderLevel = 0, UICameraBase3D* pCamera = nullptr);
-	void Draw3DWorldTriangle(const DirectX::XMFLOAT3& p1, const DirectX::XMFLOAT3& p2, const DirectX::XMFLOAT3& p3, 
+	void Draw3DWorldPoint(const UIVector3F& point, const UIColor& color, int renderLevel = 0, UICameraBase3D* pCamera = nullptr);
+	void Draw3DWorldLine(const UIVector3F& start, const UIVector3F& end, const UIColor& colorS, const UIColor& colorE, float lineWidth, int renderLevel = 0, UICameraBase3D* pCamera = nullptr);
+	void Draw3DWorldLine(const UIVector3F& start, const UIVector3F& end, const UIColor& color, float lineWidth, int renderLevel = 0, UICameraBase3D* pCamera = nullptr);
+	void Draw3DWorldCircle(const UIVector3F& center, float pixelRadius, const UIColor& color, UCHAR alpha, int renderLevel = 0, UICameraBase3D* pCamera = nullptr);
+	void Draw3DWorldTriangle(const UIVector3F& p1, const UIVector3F& p2, const UIVector3F& p3, const UIColor& color, UCHAR alpha, int renderLevel = 0, UICameraBase3D* pCamera = nullptr);
+	void Draw3DWorldTriangle(const UIVector3F& p1, const UIVector3F& p2, const UIVector3F& p3, 
 							 const UIColor& color1, const UIColor& color2, const UIColor& color3, UCHAR alpha, int renderLevel = 0, UICameraBase3D* pCamera = nullptr);
-	void Draw3DWorldTextureTriangle(const DirectX::XMFLOAT3& pLT, const DirectX::XMFLOAT3& pRT, const DirectX::XMFLOAT3& pLB,
+	void Draw3DWorldTextureTriangle(const UIVector3F& pLT, const UIVector3F& pRT, const UIVector3F& pLB,
 									const DirectX::XMFLOAT2& uv1, const DirectX::XMFLOAT2& uv2, const DirectX::XMFLOAT2& uv3,
 									size_t textureIndex, UCHAR alpha, int renderLevel = 0, UICameraBase3D* pCamera = nullptr);
-	void Draw3DWorldRectOutline(const DirectX::XMFLOAT3& pLT, const DirectX::XMFLOAT3& pRT, const DirectX::XMFLOAT3& pLB, const DirectX::XMFLOAT3& pRB,
+	void Draw3DWorldRectOutline(const UIVector3F& pLT, const UIVector3F& pRT, const UIVector3F& pLB, const UIVector3F& pRB,
 								const UIColor& color, float lineWidth, int renderLevel = 0, UICameraBase3D* pCamera = nullptr);
-	void Draw3DWorldRectSolid(const DirectX::XMFLOAT3& pLT, const DirectX::XMFLOAT3& pRT, const DirectX::XMFLOAT3& pLB, const DirectX::XMFLOAT3& pRB,
+	void Draw3DWorldRectSolid(const UIVector3F& pLT, const UIVector3F& pRT, const UIVector3F& pLB, const UIVector3F& pRB,
 							  const UIColor& color, UCHAR alpha, int renderLevel = 0, UICameraBase3D* pCamera = nullptr);
-	void Draw3DWorldRectSolid(const DirectX::XMFLOAT3& pLT, const DirectX::XMFLOAT3& pRT, const DirectX::XMFLOAT3& pLB, const DirectX::XMFLOAT3& pRB,
+	void Draw3DWorldRectSolid(const UIVector3F& pLT, const UIVector3F& pRT, const UIVector3F& pLB, const UIVector3F& pRB,
 							  const UIColor& colorLT, const UIColor& colorRT, const UIColor& colorLB, const UIColor& colorRB, UCHAR alpha, int renderLevel = 0, UICameraBase3D* pCamera = nullptr);
 
-	void Draw3DWorldImage(size_t textureIndex, const RECT& srcRect, const DirectX::XMFLOAT3& pLT, const DirectX::XMFLOAT3& pRT, 
-						  const DirectX::XMFLOAT3& pLB, const DirectX::XMFLOAT3& pRB, UCHAR alpha, int renderLevel = 0, UICameraBase3D* pCamera = nullptr);
+	void Draw3DWorldImage(size_t textureIndex, const UIRECT& srcRect, const UIVector3F& pLT, const UIVector3F& pRT, 
+						  const UIVector3F& pLB, const UIVector3F& pRB, UCHAR alpha, int renderLevel = 0, UICameraBase3D* pCamera = nullptr);
 
 private:
-	void Draw3DWorldLine(const DirectX::XMFLOAT3& start, const DirectX::XMFLOAT3& end, const UIColor& colorS, const UIColor& colorE, int renderLevel = 0, UICameraBase3D* pCamera = nullptr);
-	void Draw3DWorldLine(const DirectX::XMFLOAT3& start, const DirectX::XMFLOAT3& end, const UIColor& color, int renderLevel = 0, UICameraBase3D* pCamera = nullptr);
-	void Draw3DWorldThickLine(const DirectX::XMFLOAT3& start, const DirectX::XMFLOAT3& end, float lineWidth, const UIColor& color, int renderLevel = 0, UICameraBase3D* pCamera = nullptr);
+	void Draw3DWorldLine(const UIVector3F& start, const UIVector3F& end, const UIColor& colorS, const UIColor& colorE, int renderLevel = 0, UICameraBase3D* pCamera = nullptr);
+	void Draw3DWorldLine(const UIVector3F& start, const UIVector3F& end, const UIColor& color, int renderLevel = 0, UICameraBase3D* pCamera = nullptr);
+	void Draw3DWorldThickLine(const UIVector3F& start, const UIVector3F& end, float lineWidth, const UIColor& color, int renderLevel = 0, UICameraBase3D* pCamera = nullptr);
 	
-	float CalculateWorldLengthFromPixelLength(float pixelLength, const DirectX::XMFLOAT3& worldPosition, UICameraBase3D* pCamera);
+	float CalculateWorldLengthFromPixelLength(float pixelLength, const UIVector3F& worldPosition, UICameraBase3D* pCamera);
 
 
 /*************************************************** Batch Rendering System ***************************************************/
@@ -450,7 +456,7 @@ private:
 		// as key
 		int _renderLevel;													// rendering level, smaller value renders first
 		DirectX::BasicEffect* _pEffect;										// p_batch & p_batchTexture
-		RECT _clipRect;														// p_batch & p_batchTexture
+		UIRECT _clipRect;														// p_batch & p_batchTexture
 		D3D12_GPU_DESCRIPTOR_HANDLE _srvDescriptor;							// p_batchTexture
 		D3D12_GPU_DESCRIPTOR_HANDLE _samplerDescriptor;						// p_batchTexture
 		UCHAR _alpha;														// p_batchTexture
@@ -467,7 +473,7 @@ private:
 			if (_batchID != other._batchID || 
 				_renderLevel != other._renderLevel ||
 				_pEffect != other._pEffect || 
-				memcmp(&_clipRect, &other._clipRect, sizeof(RECT)) != 0 ||
+				memcmp(&_clipRect, &other._clipRect, sizeof(UIRECT)) != 0 ||
 				_pCamera != other._pCamera) {
 				return false;
 			}
@@ -487,12 +493,12 @@ private:
 	// Batch registration functions
 	void RegisterBatchData(D3D_PRIMITIVE_TOPOLOGY topology, 
 						   const std::vector<DirectX::VertexPositionColor>& vertices, const std::vector<uint16_t>& indices, 
-						   std::unique_ptr<DirectX::BasicEffect>& effect, const RECT& clipRect, UICameraBase* pCamera, int renderLevel = 0);
+						   std::unique_ptr<DirectX::BasicEffect>& effect, const UIRECT& clipRect, UICameraBase* pCamera, int renderLevel = 0);
 	void RegisterBatchTextureData(D3D_PRIMITIVE_TOPOLOGY topology, 
 								  const std::vector<DirectX::VertexPositionTexture>& vertices, const std::vector<uint16_t>& indices,
 						   		  std::unique_ptr<DirectX::BasicEffect>& effect, 
 						   		  D3D12_GPU_DESCRIPTOR_HANDLE srvDescriptor, D3D12_GPU_DESCRIPTOR_HANDLE samplerDescriptor, UCHAR alpha,
-						   		  const RECT& clipRect, UICameraBase* pCamera, int renderLevel = 0);
+						   		  const UIRECT& clipRect, UICameraBase* pCamera, int renderLevel = 0);
 
 	// Batch execution functions
 	void ExecuteAllBatches();

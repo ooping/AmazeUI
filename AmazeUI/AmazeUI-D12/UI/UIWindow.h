@@ -33,8 +33,8 @@ public:
 	virtual ~UIWindowBase();
 
 	// create window
-	bool CreateWindowBase(UIContainer* pUIContainer, const RECT& relativeRect = UIShape2D::NULL_RECT, int layoutFlag = UILayoutCalc::NO_ZOOM, bool isShow = true);
-	bool CreateWindowBase(UIWindowBase* pParent, const RECT& relativeRect = UIShape2D::NULL_RECT, int layoutFlag = UILayoutCalc::NO_ZOOM, bool isShow = true);
+	bool CreateWindowBase(UIContainer* pUIContainer, const UIRECT& relativeRect = UIShape2D::NULL_RECT, int layoutFlag = UILayoutCalc::NO_ZOOM, bool isShow = true);
+	bool CreateWindowBase(UIWindowBase* pParent, const UIRECT& relativeRect = UIShape2D::NULL_RECT, int layoutFlag = UILayoutCalc::NO_ZOOM, bool isShow = true);
 	// destroy window
 	bool DestroyWindowBase();
 
@@ -42,7 +42,7 @@ public:
 	virtual bool HandleMessage(UINT message, WPARAM wParam, LPARAM lParam);
 
 	// set direct, unprotected setting
-	void MoveWindow(const RECT& relativeRect);
+	void MoveWindow(const UIRECT& relativeRect);
 	void ShowWindow(bool flag);
 
 	// when call this function, should make sure the parent window is focus, otherwise there are some logic problems
@@ -52,9 +52,9 @@ public:
 	void SetAsPopup(bool isPopup = true);
 
 	// read, unprotected
-	RECT GetClientRect();
-	RECT GetRelativeRect();
-	RECT GetAbsoluteRect();
+	UIRECT GetClientRect();
+	UIRECT GetRelativeRect();
+	UIRECT GetAbsoluteRect();
 	bool IsWindowFocus();
 	bool IsWindowShow();
 
@@ -74,9 +74,9 @@ protected:
 	DirectX::XMMATRIX GetTransformMatrix();
 
 	// position information
-	RECT _clientRC;								// starting from 0 size rectangle
-	POINT _relativePoint;						// starting position relative to parent window
-	POINT _abusolutePoint;						// starting position of top-level window
+	UIRECT _clientRC;								// starting from 0 size rectangle
+	UIPOINT _relativePoint;						// starting position relative to parent window
+	UIPOINT _abusolutePoint;						// starting position of top-level window
 
 	// hierarchy information
 	int _layoutLevel;							// hierarchy, determines depth value 1-1.0 2-0.99 3-0.98
@@ -144,8 +144,8 @@ public:
 	bool HandleMessagePre(UINT message, WPARAM wParam, LPARAM lParam);
 
 	// read
-	POINT GetBindWindowAbusolutePoint();
-	RECT GetBindWindowAbusoluteRect();
+	UIPOINT GetBindWindowAbusolutePoint();
+	UIRECT GetBindWindowAbusoluteRect();
 	int GetBindWindowLayoutLevel();
 	bool IsBindWindowPopup();
 
@@ -162,13 +162,13 @@ public:
 	void ForEachWindow(std::function<void(UIWindowBase*)> func);
 
 protected:
-	UIWindowBase* GetMinZChild(const POINT& pt);
+	UIWindowBase* GetMinZChild(const UIPOINT& pt);
 	UIWindowBase* GetFocusOnChild();			// find the sub-window with focus on
 
 	bool _isBindDUI;							// mark the parent window as DUI or hwnd
 	UIWindowBase* _pBindDUIWin;					// the parent window bound to DUI
 
-	POINT _preMousePt;							// the previous mouse position
+	UIPOINT _preMousePt;							// the previous mouse position
 
 	UIElementListType _winList;					// sub-window queue
 };

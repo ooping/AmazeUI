@@ -18,7 +18,7 @@ UILayoutGrid::CellInfo::CellInfo() {
 	_endColumn = -1;
 }
 
-void UILayoutGrid::InitPoint(const POINT& relativePT) {
+void UILayoutGrid::InitPoint(const UIPOINT& relativePT) {
 	_relativePoint = relativePT;
 }
 
@@ -201,7 +201,7 @@ void UIImageView::Draw() {
 	int centerY = GetRectHeight()(_clientRC) / 2 + y_;
 
 
-	RECT _imageRect;
+	UIRECT _imageRect;
 	_image.GetSize(_imageRect);
 	int imageWidth = GetRectWidth()(_imageRect);
 	int imageHeight = GetRectHeight()(_imageRect);
@@ -258,14 +258,14 @@ void UIButton::Draw() {
 	if (!IsAnimationRun()) {
 		slicedImage(x_, y_, GetRectWidth()(_clientRC), GetRectHeight()(_clientRC), 255, transformMatrix);
 	} else {
-		RECT rc = _clientRC;
+		UIRECT rc = _clientRC;
 		OffsetRect(&rc, x_, y_);
 		DrawSlicedHitDrumAnimate(slicedImage, rc, transformMatrix);
 	}
 
 	// display wstring (text offset = 5)
 	UIFont fontHelp(_z - gDeltaZ, gDefaultFontSize, renderLevel + 5);
-	RECT rc;
+	UIRECT rc;
 	if (_isLButtonDown == false) {
 		rc = _strRect;
 	} else {
@@ -298,7 +298,7 @@ UIString UIButton::GetText() {
 	return _text;
 }
 
-bool UIButton::OnMouseMove(POINT) {
+bool UIButton::OnMouseMove(UIPOINT) {
 	if (!_isHover) {
 		OnMouseHoverEvent();
 		_isHover = true;
@@ -308,20 +308,20 @@ bool UIButton::OnMouseMove(POINT) {
 	return true;
 }
 
-void UIButton::OnMouseLeave(POINT) {
+void UIButton::OnMouseLeave(UIPOINT) {
 	_isHover = false;
 	_isLButtonDown = false;
 	UIRefresh();
 }
 
-bool UIButton::OnLButtonDown(POINT) {
+bool UIButton::OnLButtonDown(UIPOINT) {
 	_isLButtonDown = true;
 	UIRefresh();
 
 	return true;
 }
 
-bool UIButton::OnLButtonUp(POINT) {
+bool UIButton::OnLButtonUp(UIPOINT) {
 	if (_isLButtonDown) {
 		if (!OnClickEvent() && _id != 0) {
 			SendMessageToParent(WM_NOTIFY, (WPARAM)_id, 0);
@@ -381,7 +381,7 @@ void UICheckButton::Draw() {
 	}
 
 	// display wstring (text offset = 5)
-	RECT rc = _strRect;
+	UIRECT rc = _strRect;
 	OffsetRect(&rc, x_, y_);
 	UIFont fontHelp(_z, _fontHeight, renderLevel + 5);
 	fontHelp(_text, rc, UIColor::Black, UIFontPos::MiddleLeft, transformMatrix);
@@ -449,7 +449,7 @@ void UISetCheckButtonMutex(UICheckButton* but1, UICheckButton* but2) {
 	UISetCheckButtonMutex(mutexList);
 }
 
-bool UICheckButton::OnMouseMove(POINT) {
+bool UICheckButton::OnMouseMove(UIPOINT) {
 	if (!_isHover) {
 		_isHover = true;
 	}
@@ -458,12 +458,12 @@ bool UICheckButton::OnMouseMove(POINT) {
 	return true;
 }
 
-void UICheckButton::OnMouseLeave(POINT) {
+void UICheckButton::OnMouseLeave(UIPOINT) {
 	_isHover = false;
 	UIRefresh();
 }
 
-bool UICheckButton::OnLButtonDown(POINT) {
+bool UICheckButton::OnLButtonDown(UIPOINT) {
 	_isCheck = !_isCheck;
 
 	// mutex related button	
@@ -512,20 +512,20 @@ void UIEdit::Draw() {
 	LONG& y_ = _abusolutePoint.y;
 
 	// draw border (offset = 1)
-	RECT rc = _clientRC;
+	UIRECT rc = _clientRC;
 	OffsetRect(&rc, x_, y_);
 	UIRect(rc, _z, renderLevel + 2)(UIColor::PrimaryBlueLight, transformMatrix);
 
 	// draw content
 	// calculate and select clip area
-	RECT clipRC = _drawRectAllow;
+	UIRECT clipRC = _drawRectAllow;
 	OffsetRect(&clipRC, x_, y_);
 
 	// get wstring size information
 	UIFont fontHelp(_z, _fontHeight, renderLevel + 5);
-	SIZE contentSize = fontHelp.GetDrawAreaSize(_text.c_str());
-	SIZE caretPassCharSize = fontHelp.GetDrawAreaSize(_text.substr(0, _caretPassChar).c_str());
-	SIZE beginAreaPassSize = fontHelp.GetDrawAreaSize(_text.substr(0, _beginAreaPassChar).c_str());
+	UISIZE contentSize = fontHelp.GetDrawAreaSize(_text.c_str());
+	UISIZE caretPassCharSize = fontHelp.GetDrawAreaSize(_text.substr(0, _caretPassChar).c_str());
+	UISIZE beginAreaPassSize = fontHelp.GetDrawAreaSize(_text.substr(0, _beginAreaPassChar).c_str());
 
 	// calculate drawing area
 	_drawRectReal.left = _drawRectAllow.left + _beginDrawXPos;
@@ -554,7 +554,7 @@ void UIEdit::Draw() {
 	{
 		UIScreenClipRectGuard uiClip(clipRC);
 
-		RECT drawRect = _drawRectReal;
+		UIRECT drawRect = _drawRectReal;
 		OffsetRect(&drawRect, x_, y_);
 		fontHelp(_text, drawRect, _fontColor, UIFontPos::MiddleLeft, transformMatrix);
 	}
@@ -625,12 +625,12 @@ void UIEdit::CalcBeginDrawXPos() {
 	if (_caretPassChar == 0) { // move the cursor to the start of the wstring
 		_beginDrawXPos = 0;
 	} else if (_caretPassChar == _text.size()) { // move the cursor to the end of the wstring
-		SIZE contentSize = fontHelp.GetDrawAreaSize(_text.c_str());
+		UISIZE contentSize = fontHelp.GetDrawAreaSize(_text.c_str());
 
 		_beginDrawXPos = contentSize.cx < GetRectWidth()(_drawRectAllow) ? 0 : -(contentSize.cx - GetRectWidth()(_drawRectAllow));
 	} else { // move the cursor to the current position
 		// calculate the length of the wstring intercepted by the insertion cursor
-		SIZE caretPassSize = fontHelp.GetDrawAreaSize(_text.substr(0, _caretPassChar).c_str());
+		UISIZE caretPassSize = fontHelp.GetDrawAreaSize(_text.substr(0, _caretPassChar).c_str());
 
 		// calculate the position of the last character of the intercepted wstring
 		int lastCharPos = caretPassSize.cx + _beginDrawXPos;
@@ -658,11 +658,11 @@ void UIEdit::SelectAllText() {
 	CalcBeginDrawXPos();
 }
 
-void UIEdit::CalcCaretPassChar(POINT& point) {
+void UIEdit::CalcCaretPassChar(UIPOINT& point) {
 	UIFont fontHelp(_z, _fontHeight);
 
 	// calc the absolute position point
-	POINT pt = point;
+	UIPOINT pt = point;
 	pt.x -= _abusolutePoint.x;
 	pt.y -= _abusolutePoint.y;
 
@@ -680,7 +680,7 @@ void UIEdit::CalcCaretPassChar(POINT& point) {
 		UINT i;
 		for (i = 0; i <= _text.size(); ++i) {
 			// substring [0-i]
-			SIZE contentSize = fontHelp.GetDrawAreaSize(_text.substr(0, i).c_str());
+			UISIZE contentSize = fontHelp.GetDrawAreaSize(_text.substr(0, i).c_str());
 
 			// if the point is beyond the intercepted wstring, continue to calculate
 			if (pt.x >= _drawRectAllow.left + _beginDrawXPos + contentSize.cx) {
@@ -716,7 +716,7 @@ void UIEdit::OnKillFocus() {
 	UIHideCaret();
 }
 
-bool UIEdit::OnLButtonDown(POINT pt) {
+bool UIEdit::OnLButtonDown(UIPOINT pt) {
 	// calc the postion of caret
 	CalcCaretPassChar(pt);
 	_isDrawCaretImmd = true;
@@ -727,14 +727,14 @@ bool UIEdit::OnLButtonDown(POINT pt) {
 	return true;
 }
 
-bool UIEdit::OnLButtonDbClk(POINT) {
+bool UIEdit::OnLButtonDbClk(UIPOINT) {
 	SelectAllText();
 
 	UIRefresh();
 	return true;
 }
 
-bool UIEdit::OnMouseMove(POINT pt) {
+bool UIEdit::OnMouseMove(UIPOINT pt) {
 	//::SetCursor(::LoadCursor(NULL, IDC_IBEAM));
 
 	if (IsKeyDown()(VK_LBUTTON) == true) {
@@ -933,11 +933,11 @@ void UISelectList::Draw() {
 
 	// calc the drawing area
 	LONG dh = static_cast<LONG>(20 * _list.size());
-	RECT parentRC = p_parentUIContainer->GetBindWindowAbusoluteRect();
-	RECT abusoluteRC = parentRC.bottom + dh < GetRectHeight()(UIGraphicsSystem::GetSingletonInstance()->GetOutputSize()) ?
+	UIRECT parentRC = p_parentUIContainer->GetBindWindowAbusoluteRect();
+	UIRECT abusoluteRC = parentRC.bottom + dh < GetRectHeight()(UIGraphicsSystem::GetSingletonInstance()->GetOutputSize()) ?
 		CreateRect()(parentRC.left, parentRC.bottom, parentRC.right, parentRC.bottom + dh) :
 		CreateRect()(parentRC.left, parentRC.top - dh, parentRC.right, parentRC.top);
-	RECT relativeRC = abusoluteRC;
+	UIRECT relativeRC = abusoluteRC;
 	OffsetRect(&relativeRC, -parentRC.left, -parentRC.top);
 	MoveWindow(relativeRC);
 
@@ -946,7 +946,7 @@ void UISelectList::Draw() {
 
 	// draw the border (background offset = 0, border offset = 1)
 	{
-		RECT rc = _clientRC;
+		UIRECT rc = _clientRC;
 		OffsetRect(&rc, x_, y_);
 		UIRect(rc, _z, renderLevel + 2)(UIColor(246, 250, 252), 220, transformMatrix);
 		UIRect(rc, _z, renderLevel + 2)(UIColor::PrimaryBlueLight, transformMatrix);
@@ -954,7 +954,7 @@ void UISelectList::Draw() {
 
 	// draw the hover (offset = 1)
 	if (_hoverIndex != -1) {
-		RECT rc = _clientRC;
+		UIRECT rc = _clientRC;
 		rc.top = _hoverIndex * 20;
 		rc.bottom = (_hoverIndex + 1) * 20;
 		++rc.left;
@@ -968,7 +968,7 @@ void UISelectList::Draw() {
 
 	// draw the content (text offset = 5)
 	for (UINT i = 0; i < _list.size(); ++i) {
-		RECT rc = _clientRC;
+		UIRECT rc = _clientRC;
 		rc.left += 5;
 		rc.top = i * 20;
 		rc.bottom = rc.top + 20;
@@ -1014,8 +1014,8 @@ void UISelectList::ClearList() {
 	_isHover = false;
 }
 
-bool UISelectList::OnMouseMove(POINT pt) {
-	POINT point = pt;
+bool UISelectList::OnMouseMove(UIPOINT pt) {
+	UIPOINT point = pt;
 	point.x -= _abusolutePoint.x;
 	point.y -= _abusolutePoint.y;
 
@@ -1032,12 +1032,12 @@ bool UISelectList::OnMouseMove(POINT pt) {
 	return true;
 }
 
-void UISelectList::OnMouseLeave(POINT) {
+void UISelectList::OnMouseLeave(UIPOINT) {
 	_hoverIndex = -1;
 }
 
-bool UISelectList::OnLButtonDown(POINT pt) {
-	POINT point = pt;
+bool UISelectList::OnLButtonDown(UIPOINT pt) {
+	UIPOINT point = pt;
 	point.x -= _abusolutePoint.x;
 	point.y -= _abusolutePoint.y;
 
@@ -1070,14 +1070,14 @@ void UIComboBox::Draw() {
 	LONG& y_ = _abusolutePoint.y;
 
 	// draw the border (offset = 1)
-	RECT rc = _clientRC;
+	UIRECT rc = _clientRC;
 	OffsetRect(&rc, x_, y_);
 	if (_isDrawBoader) {
 		UIRect(rc, _z, renderLevel + 2)(!_isHover ? UIColor::PrimaryBlueLight : UIColor::Gold, transformMatrix);
 	}
 
 	{	// draw the arrow (offset = 0 for images)
-		RECT rc2 = rc;
+		UIRECT rc2 = rc;
 		rc2.left = rc2.right - 34;
 		rc2.right = rc2.left + 32;
 		rc2.top += GetRectHeight()(rc2) / 2 - 16;
@@ -1171,7 +1171,7 @@ void UIComboBox::OnKillFocus() {
 	SetDropDown(false);
 }
 
-bool UIComboBox::OnMouseMove(POINT) {
+bool UIComboBox::OnMouseMove(UIPOINT) {
 	if (_isHover == false) {
 		_isHover = true;
 		UIRefresh();
@@ -1180,16 +1180,16 @@ bool UIComboBox::OnMouseMove(POINT) {
 	return true;
 }
 
-void UIComboBox::OnMouseLeave(POINT) {
+void UIComboBox::OnMouseLeave(UIPOINT) {
 	_isHover = false;
 	UIRefresh();
 }
 
-bool UIComboBox::OnLButtonDbClk(POINT pt) {
+bool UIComboBox::OnLButtonDbClk(UIPOINT pt) {
 	return OnLButtonDown(pt);
 }
 
-bool UIComboBox::OnLButtonDown(POINT) {
+bool UIComboBox::OnLButtonDown(UIPOINT) {
 	SetDropDown(true); //!_isDropDown
 
 	return true;
@@ -1229,7 +1229,7 @@ void UIScrollBar::Draw() {
 	LONG& y_ = _abusolutePoint.y;
 
 	// draw border (background offset = 0)
-	RECT rc = _clientRC;
+	UIRECT rc = _clientRC;
 	OffsetRect(&rc, x_, y_);
 	UIRect(rc, _z, renderLevel + 2)(UIColor::PrimaryBlueLight, 20, transformMatrix);
 
@@ -1301,10 +1301,10 @@ void UIScrollBar::SetCoordXY(int coordFlag) {
 	CalcArea();
 }
 
-bool UIScrollBar::OnMouseMove(POINT pt) {
+bool UIScrollBar::OnMouseMove(UIPOINT pt) {
 	// judge the mouse is out of the control range
 	if (IsKeyDown()(VK_LBUTTON)) {
-		POINT point = pt;
+		UIPOINT point = pt;
 		point.x -= _abusolutePoint.x;
 		point.y -= _abusolutePoint.y;
 
@@ -1343,8 +1343,8 @@ bool UIScrollBar::OnMouseMove(POINT pt) {
 	return true;
 }
 
-bool UIScrollBar::OnLButtonDown(POINT point) {
-	POINT pt = point;
+bool UIScrollBar::OnLButtonDown(UIPOINT point) {
+	UIPOINT pt = point;
 	pt.x -= _abusolutePoint.x;
 	pt.y -= _abusolutePoint.y;
 	_prePoint = pt;
@@ -1389,7 +1389,7 @@ bool UIScrollBar::OnLButtonDown(POINT point) {
 	return true;
 }
 
-bool UIScrollBar::OnLButtonDbClk(POINT pt) {
+bool UIScrollBar::OnLButtonDbClk(UIPOINT pt) {
 	return OnLButtonDown(pt);
 }
 
@@ -1477,7 +1477,7 @@ bool UIGrid::GridCellInfo::DeleteCellControl() {
 	return true;
 }
 
-void UIGrid::GridCellInfo::MoveCellControl(const RECT& rc) {
+void UIGrid::GridCellInfo::MoveCellControl(const UIRECT& rc) {
 	if (!_pCtrl) {
 		return;
 	}
@@ -1533,7 +1533,7 @@ void UIGrid::Draw() {
 	// Draw the border (offset = 1)
 	LONG& x_ = _abusolutePoint.x;
 	LONG& y_ = _abusolutePoint.y;
-	RECT rc = _clientRC;
+	UIRECT rc = _clientRC;
 	OffsetRect(&rc, x_, y_);
 	UIRect(rc, _z, renderLevel + 2)(UIColor::PrimaryBlue, _inheritedTransformMatrix);
 
@@ -1572,7 +1572,7 @@ void UIGrid::DrawSelected() {
 
 	LONG& x_ = _abusolutePoint.x;
 	LONG& y_ = _abusolutePoint.y;
-	RECT rc;
+	UIRECT rc;
 
 	// Draw the fix area normal background (offset = 0 for backgrounds)
 	if (_isFirstRowFix && _isFirstColumnFix) {
@@ -1615,7 +1615,7 @@ void UIGrid::DrawSelectedALL(UIColor& selectColor) {
 	LONG& y_ = _abusolutePoint.y;
 
 	// Draw the unfix area (offset = 0 for selection backgrounds)
-	RECT rc = CreateRect()(_unfixGridArea.left, _unfixGridArea.top, _unfixGridArea.right, _unfixGridArea.bottom);
+	UIRECT rc = CreateRect()(_unfixGridArea.left, _unfixGridArea.top, _unfixGridArea.right, _unfixGridArea.bottom);
 	OffsetRect(&rc, x_, y_);
 	UIRect(rc, _z, renderLevel + 4)(selectColor, 180, _inheritedTransformMatrix);
 }
@@ -1624,10 +1624,10 @@ void UIGrid::DrawSelectedCELL() {
 	int renderLevel = GetRenderLayout();
 	LONG& x_ = _abusolutePoint.x;
 	LONG& y_ = _abusolutePoint.y;
-	RECT rc;
+	UIRECT rc;
 
 	GridCellInfo* pSelCell = &_cellArray[_selectedRowBegin][_selectedColumnBegin];
-	RECT& pos = pSelCell->_pos;
+	UIRECT& pos = pSelCell->_pos;
 
 	{	// Draw the unfix area (offset = 1 for selection highlight)
 		rc = _unfixGridArea;
@@ -1669,7 +1669,7 @@ void UIGrid::DrawSelectedCELLS(UIColor& selectColor) {
 	int renderLevel = GetRenderLayout();
 	LONG& x_ = _abusolutePoint.x;
 	LONG& y_ = _abusolutePoint.y;
-	RECT rc;
+	UIRECT rc;
 
 	UINT beginRow, endRow, beginColumn, endColumn;
 	CalcCellsRange(beginRow, endRow, beginColumn, endColumn);
@@ -1677,8 +1677,8 @@ void UIGrid::DrawSelectedCELLS(UIColor& selectColor) {
 	GridCellInfo* pCellBegin = &_cellArray[beginRow][beginColumn];
 	GridCellInfo* pCellEnd = &_cellArray[endRow][endColumn];
 
-	RECT& posBegin = pCellBegin->_pos;
-	RECT& posEnd = pCellEnd->_pos;
+	UIRECT& posBegin = pCellBegin->_pos;
+	UIRECT& posEnd = pCellEnd->_pos;
 
 	{	// Draw the unfix area (offset = 0 for selection background)
 		rc = _unfixGridArea;
@@ -1718,7 +1718,7 @@ void UIGrid::DrawSelectedROW(UIColor& selectColor) {
 	int renderLevel = GetRenderLayout();
 	LONG& x_ = _abusolutePoint.x;
 	LONG& y_ = _abusolutePoint.y;
-	RECT rc;
+	UIRECT rc;
 
 	{	// Draw the unfix area (offset = 0 for selection background)
 		rc = _unfixGridArea;
@@ -1726,7 +1726,7 @@ void UIGrid::DrawSelectedROW(UIColor& selectColor) {
 		UIScreenClipRectGuard uiClip(rc);
 
 		for (auto i = _selectedRowList.begin(); i != _selectedRowList.end(); ++i) {
-			RECT& pos = _cellArray[*i][0]._pos;
+			UIRECT& pos = _cellArray[*i][0]._pos;
 			rc = CreateRect()(pos.right, pos.top + _firstRowPos, _gridArea.right, pos.bottom + _firstRowPos);
 			OffsetRect(&rc, x_, y_);
 			UIRect(rc, _z, renderLevel + 4)(selectColor, 180, _inheritedTransformMatrix);
@@ -1739,7 +1739,7 @@ void UIGrid::DrawSelectedROW(UIColor& selectColor) {
 		UIScreenClipRectGuard uiClip(rc);
 
 		for (auto i = _selectedRowList.begin(); i != _selectedRowList.end(); ++i) {
-			RECT& pos = _cellArray[*i][0]._pos;
+			UIRECT& pos = _cellArray[*i][0]._pos;
 			rc = CreateRect()(pos.left, pos.top + _firstRowPos, pos.right, pos.bottom + _firstRowPos);
 			OffsetRect(&rc, x_, y_);
 			UIRect(rc, _z, renderLevel + 4)(UIColor::PrimaryPurple, 250, _inheritedTransformMatrix);
@@ -1751,7 +1751,7 @@ void UIGrid::DrawSelectedCOLUMN(UIColor& selectColor) {
 	int renderLevel = GetRenderLayout();
 	LONG& x_ = _abusolutePoint.x;
 	LONG& y_ = _abusolutePoint.y;
-	RECT rc;
+	UIRECT rc;
 
 	{	// Draw the unfix area (offset = 0 for selection background)
 		rc = _unfixGridArea;
@@ -1759,7 +1759,7 @@ void UIGrid::DrawSelectedCOLUMN(UIColor& selectColor) {
 		UIScreenClipRectGuard uiClip(rc);
 
 		for (auto i = _selectedColumnList.begin(); i != _selectedColumnList.end(); ++i) {
-			RECT& pos = _cellArray[0][*i]._pos;
+			UIRECT& pos = _cellArray[0][*i]._pos;
 			rc = CreateRect()(pos.left + _firstColumnPos, pos.bottom, pos.right + _firstColumnPos, _gridArea.bottom);
 			OffsetRect(&rc, x_, y_);
 			UIRect(rc, _z, renderLevel + 4)(selectColor, 180, _inheritedTransformMatrix);
@@ -1772,7 +1772,7 @@ void UIGrid::DrawSelectedCOLUMN(UIColor& selectColor) {
 		UIScreenClipRectGuard uiClip(rc);
 
 		for (auto i = _selectedColumnList.begin(); i != _selectedColumnList.end(); ++i) {
-			RECT& pos = _cellArray[0][*i]._pos;
+			UIRECT& pos = _cellArray[0][*i]._pos;
 			rc = CreateRect()(pos.left + _firstColumnPos, pos.top, pos.right + _firstColumnPos, pos.bottom);
 			OffsetRect(&rc, x_, y_);
 			UIRect(rc, _z, renderLevel + 4)(UIColor::PrimaryPurple, 250, _inheritedTransformMatrix);
@@ -1826,7 +1826,7 @@ void UIGrid::DrawCells() {
 	// Calculate the relative gridUnfix area
 	LONG& x_ = _abusolutePoint.x;
 	LONG& y_ = _abusolutePoint.y;
-	RECT rc;
+	UIRECT rc;
 
 	// Calculate the start row and column
 	UINT endRow = _rowNum;
@@ -2136,7 +2136,7 @@ void UIGrid::CalcCellsPos() {
 	}
 }
 
-bool UIGrid::CalcCellIndexUnfix(UINT& row, UINT& column, POINT point) {
+bool UIGrid::CalcCellIndexUnfix(UINT& row, UINT& column, UIPOINT point) {
 	if (_unfixGridArea.top == _unfixGridArea.bottom || _unfixGridArea.left == _unfixGridArea.right) {
 		return false;
 	}
@@ -2310,7 +2310,7 @@ void UIGrid::SetCellText(UINT row, UINT column, UIString text, bool isAutoWidth)
 	// automatically calculate the width
 	if (isAutoWidth) {
 		UIFont fontHelp(_z, gDefaultFontSize);
-		SIZE sz = fontHelp.GetDrawAreaSize(text);
+		UISIZE sz = fontHelp.GetDrawAreaSize(text);
 		if (sz.cx > _columnWidthList[column]) {
 			SetColumnWidth(column, sz.cx);
 		}
@@ -2637,8 +2637,8 @@ void UIGrid::OnCreate() {
 	CalcArea();
 }
 
-bool UIGrid::OnLButtonDown(POINT pt) {
-	POINT point = pt;
+bool UIGrid::OnLButtonDown(UIPOINT pt) {
+	UIPOINT point = pt;
 	point.x -= _abusolutePoint.x;
 	point.y -= _abusolutePoint.y;
 
@@ -2686,7 +2686,7 @@ bool UIGrid::OnLButtonDown(POINT pt) {
 	return true;
 }
 
-bool UIGrid::OnLButtonDownUnfix(POINT point) {
+bool UIGrid::OnLButtonDownUnfix(UIPOINT point) {
 	//	judge row and column
 	UINT row, column;
 	if (!CalcCellIndexUnfix(row, column, point)) {
@@ -2710,7 +2710,7 @@ bool UIGrid::OnLButtonDownUnfix(POINT point) {
 	return true;
 }
 
-void UIGrid::OnLButtonDownFix(POINT point) {
+void UIGrid::OnLButtonDownFix(UIPOINT point) {
 	//	_pos convert to coordinate value
 	int xCoord = point.x - _firstColumnPos;
 	int yCoord = point.y - _firstRowPos;
@@ -2797,8 +2797,8 @@ void UIGrid::OnLButtonDownFix(POINT point) {
 	}
 }
 
-bool UIGrid::OnLButtonDbClk(POINT pt) {
-	POINT point = pt;
+bool UIGrid::OnLButtonDbClk(UIPOINT pt) {
+	UIPOINT point = pt;
 	point.x -= _abusolutePoint.x;
 	point.y -= _abusolutePoint.y;
 
@@ -2903,8 +2903,8 @@ bool UIGrid::OnMouseWheel(short zDelta) {
 	return true;
 }
 
-bool UIGrid::OnMouseMove(POINT pt) {
-	POINT point = pt;
+bool UIGrid::OnMouseMove(UIPOINT pt) {
+	UIPOINT point = pt;
 	point.x -= _abusolutePoint.x;
 	point.y -= _abusolutePoint.y;
 
@@ -3369,7 +3369,7 @@ bool UIChart::CurveInfo::CalcCoordRange(float& xMin, float& xMax, float& yMin, f
 }
 
 // judge if the point p0 is near the line (p1,p2)
-bool UIChart::CurveInfo::JudgePointNearLine(POINT& p0, POINT& p1, POINT& p2)
+bool UIChart::CurveInfo::JudgePointNearLine(UIPOINT& p0, UIPOINT& p1, UIPOINT& p2)
 {
 	// handle the case when the line is vertical
 	if (p1.x == p2.x) {
@@ -3397,7 +3397,7 @@ bool UIChart::CurveInfo::JudgePointNearLine(POINT& p0, POINT& p1, POINT& p2)
 	double bVert = static_cast<double>(p0.y - kVert * p0.x);
 
 	// calculate the intersection point
-	POINT intersectPoint;
+	UIPOINT intersectPoint;
 	intersectPoint.x = static_cast<long>((b - bVert) / (kVert - k));
 	intersectPoint.y = static_cast<long>(k * intersectPoint.x + b);
 
@@ -3457,7 +3457,7 @@ void UIChart::Draw() {
 	LONG& y_ = _abusolutePoint.y;
 
 	// draw the border
-	RECT rc = _clientRC;
+	UIRECT rc = _clientRC;
 	OffsetRect(&rc, x_, y_);
 	UIRect(rc, _z, renderLevel + 2)(UIColor::PrimaryBlue, _inheritedTransformMatrix);
 
@@ -3498,7 +3498,7 @@ void UIChart::DrawGrid() {
 	LONG& y_ = _abusolutePoint.y;
 
 	// draw the border
-	RECT rc = _gridRect;
+	UIRECT rc = _gridRect;
 	OffsetRect(&rc, x_, y_);
 	UIRect(rc, _z, renderLevel + 2)(UIColor::Black, _inheritedTransformMatrix);
 
@@ -3525,8 +3525,8 @@ void UIChart::DrawXCoordLable() {
 	UIFont fontHelp(_z, gDefaultFontSize, GetRenderLayout() + 5);
 
 	// Draw x axis name
-	SIZE szLabel = fontHelp.GetDrawAreaSize(L"X");
-	RECT rc = CreateRect()(UIShape2D::CreatePoint()((_clientRC.right - szLabel.cx) / 2, _clientRC.bottom - szLabel.cy - 3), szLabel);
+	UISIZE szLabel = fontHelp.GetDrawAreaSize(L"X");
+	UIRECT rc = CreateRect()(UIShape2D::CreatePoint()((_clientRC.right - szLabel.cx) / 2, _clientRC.bottom - szLabel.cy - 3), szLabel);
 	OffsetRect(&rc, x_, y_);
 	fontHelp(L"X", rc, UIColor::Black, UIFontPos::MiddleLeft, _inheritedTransformMatrix);
 }
@@ -3538,8 +3538,8 @@ void UIChart::DrawY1CoordLable() {
 	UIFont fontHelp(_z, gDefaultFontSize, GetRenderLayout() + 5);
 
 	// Draw y1 axis name
-	SIZE szLabel = fontHelp.GetDrawAreaSize(L"Y1");
-	RECT rc = CreateRect()(UIShape2D::CreatePoint()(3, (_clientRC.bottom - szLabel.cy) / 2), szLabel);
+	UISIZE szLabel = fontHelp.GetDrawAreaSize(L"Y1");
+	UIRECT rc = CreateRect()(UIShape2D::CreatePoint()(3, (_clientRC.bottom - szLabel.cy) / 2), szLabel);
 	OffsetRect(&rc, x_, y_);
 	fontHelp(L"Y1", rc, UIColor::Black, UIFontPos::MiddleLeft, _inheritedTransformMatrix);
 }
@@ -3551,8 +3551,8 @@ void UIChart::DrawY2CoordLable() {
 	UIFont fontHelp(_z, gDefaultFontSize, GetRenderLayout() + 5);
 
 	// Draw y2 axis name
-	SIZE szLabel = fontHelp.GetDrawAreaSize(L"Y2");
-	RECT rc = CreateRect()(UIShape2D::CreatePoint()(_clientRC.right - szLabel.cx - 3, (_clientRC.bottom - szLabel.cy) / 2), szLabel);
+	UISIZE szLabel = fontHelp.GetDrawAreaSize(L"Y2");
+	UIRECT rc = CreateRect()(UIShape2D::CreatePoint()(_clientRC.right - szLabel.cx - 3, (_clientRC.bottom - szLabel.cy) / 2), szLabel);
 	OffsetRect(&rc, x_, y_);
 	fontHelp(L"Y2", rc, UIColor::Black, UIFontPos::MiddleLeft, _inheritedTransformMatrix);
 }
@@ -3570,9 +3570,9 @@ void UIChart::DrawXCoord() {
 	int xPos = _gridRect.left;
 	for (UINT i = 0; i < _columnNum + 1; ++i) {
 		wstring str = format(L"{:.1f}", xCoord);
-		SIZE strSize = fontHelp.GetDrawAreaSize(str);
+		UISIZE strSize = fontHelp.GetDrawAreaSize(str);
 
-		RECT rc = CreateRect()(UIShape2D::CreatePoint()(xPos - strSize.cx / 2, _gridRect.bottom + strSize.cy / 2), strSize);
+		UIRECT rc = CreateRect()(UIShape2D::CreatePoint()(xPos - strSize.cx / 2, _gridRect.bottom + strSize.cy / 2), strSize);
 		OffsetRect(&rc, x_, y_);
 		fontHelp(str, rc, UIColor::Black, UIFontPos::MiddleLeft, _inheritedTransformMatrix);
 
@@ -3598,9 +3598,9 @@ void UIChart::DrawY1Coord() {
 		int yPos = _gridRect.bottom;
 		for (UINT i = 0; i < _rowNum + 1; ++i) {
 			wstring str = format(L"{:.1f}", yCoord);
-			SIZE strSize = fontHelp.GetDrawAreaSize(str);
+			UISIZE strSize = fontHelp.GetDrawAreaSize(str);
 
-			RECT rc = CreateRect()(UIShape2D::CreatePoint()(_gridRect.left - strSize.cx > 0 ? _gridRect.left - strSize.cx : 0, yPos - strSize.cy / 2), strSize);
+			UIRECT rc = CreateRect()(UIShape2D::CreatePoint()(_gridRect.left - strSize.cx > 0 ? _gridRect.left - strSize.cx : 0, yPos - strSize.cy / 2), strSize);
 			OffsetRect(&rc, x_, y_);
 			fontHelp(str, rc, UIColor::Black, UIFontPos::MiddleLeft, _inheritedTransformMatrix);
 
@@ -3625,9 +3625,9 @@ void UIChart::DrawY2Coord() {
 		int yPos = _gridRect.bottom;
 		for (UINT i = 0; i < _rowNum + 1; ++i) {
 			wstring str = format(L"{:.1f}", yCoord);
-			SIZE strSize = fontHelp.GetDrawAreaSize(str);
+			UISIZE strSize = fontHelp.GetDrawAreaSize(str);
 
-			RECT rc = CreateRect()(UIShape2D::CreatePoint()(_gridRect.right + strSize.cx < _clientRC.right ? _gridRect.right : _clientRC.right - strSize.cx - 5, yPos - strSize.cy / 2), strSize);
+			UIRECT rc = CreateRect()(UIShape2D::CreatePoint()(_gridRect.right + strSize.cx < _clientRC.right ? _gridRect.right : _clientRC.right - strSize.cx - 5, yPos - strSize.cy / 2), strSize);
 			OffsetRect(&rc, x_, y_);
 			fontHelp(str, rc, UIColor::Black, UIFontPos::MiddleLeft, _inheritedTransformMatrix);
 
@@ -3651,17 +3651,17 @@ void UIChart::DrawMousePosAndToolTip() {
 
 	// show mouse position
 	{
-		SIZE strSize = fontHelp.GetDrawAreaSize(_mouseCoordStr);
+		UISIZE strSize = fontHelp.GetDrawAreaSize(_mouseCoordStr);
 
-		RECT rc = CreateRect()(UIShape2D::CreatePoint()(_gridRect.right - strSize.cx - 2, _gridRect.top - strSize.cy - 2), strSize);
+		UIRECT rc = CreateRect()(UIShape2D::CreatePoint()(_gridRect.right - strSize.cx - 2, _gridRect.top - strSize.cy - 2), strSize);
 		OffsetRect(&rc, x_, y_);
 		fontHelp(_mouseCoordStr, rc, UIColor::Black, UIFontPos::MiddleLeft, _inheritedTransformMatrix);
 	}
 
 	if (_isShowToolTip) {
-		SIZE strSize = fontHelp.GetDrawAreaSize(_tooltipStr);
+		UISIZE strSize = fontHelp.GetDrawAreaSize(_tooltipStr);
 
-		RECT rc = CreateRect()(UIShape2D::CreatePoint()(_gridRect.left + 2, _gridRect.top - strSize.cy - 2), strSize);
+		UIRECT rc = CreateRect()(UIShape2D::CreatePoint()(_gridRect.left + 2, _gridRect.top - strSize.cy - 2), strSize);
 		OffsetRect(&rc, x_, y_);
 		fontHelp(_tooltipStr, rc, UIColor::Black, UIFontPos::MiddleLeft, _inheritedTransformMatrix);
 	}
@@ -3707,7 +3707,7 @@ void UIChart::DrawCurve(CurveInfo& curve, int yFlag) {
 	}
 
 	bool prePointInBoxFlag;
-	POINT prePointPos = { 0, 0 }, curPointPos = { 0, 0 };
+	UIPOINT prePointPos = { 0, 0 }, curPointPos = { 0, 0 };
 
 	// calculate the range of the points to be drawn (firstItor, lastItor)
 	VECTOR_POINT2::iterator firstItor, lastItor;
@@ -3751,8 +3751,8 @@ void UIChart::DrawCurve(CurveInfo& curve, int yFlag) {
 			}
 
 			if (prePointInBoxFlag == true) { // the previous point is in the range
-				UIPointFloat2 IntersectionPointCoord = CalcIntersectionPoint(*preItor, *itor, 2, yFlag);
-				POINT IntersectionPointPos;
+				UIVector2F IntersectionPointCoord = CalcIntersectionPoint(*preItor, *itor, 2, yFlag);
+				UIPOINT IntersectionPointPos;
 				TransfromCoordToPos(IntersectionPointPos, IntersectionPointCoord, yFlag);
 
 				UILine(prePointPos.x + x_, prePointPos.y + y_, IntersectionPointPos.x + x_, IntersectionPointPos.y + y_, _z, 1.0f, renderLevel + 2)(curve._color, _inheritedTransformMatrix);
@@ -3770,8 +3770,8 @@ void UIChart::DrawCurve(CurveInfo& curve, int yFlag) {
 			if (prePointInBoxFlag == true) { // the previous point is in the range
 				UILine(prePointPos.x + x_, prePointPos.y + y_, curPointPos.x + x_, curPointPos.y + y_, _z, 1.0f, renderLevel + 2)(curve._color, _inheritedTransformMatrix);
 			} else { // the previous point is out the range
-				UIPointFloat2 IntersectionPointCoord = CalcIntersectionPoint(*preItor, *itor, 1, yFlag);
-				POINT IntersectionPointPos;
+				UIVector2F IntersectionPointCoord = CalcIntersectionPoint(*preItor, *itor, 1, yFlag);
+				UIPOINT IntersectionPointPos;
 				TransfromCoordToPos(IntersectionPointPos, IntersectionPointCoord, yFlag);
 
 				UILine(IntersectionPointPos.x + x_, IntersectionPointPos.y + y_, curPointPos.x + x_, curPointPos.y + y_, _z, 1.0f, renderLevel + 2)(curve._color, _inheritedTransformMatrix);
@@ -3787,7 +3787,7 @@ void UIChart::DrawCurve(CurveInfo& curve, int yFlag) {
 	} while (itor < lastItor);
 }
 
-void UIChart::Draw2DPoint(POINT& pointPos, UIColor& color, bool bigPointFlag) {
+void UIChart::Draw2DPoint(UIPOINT& pointPos, UIColor& color, bool bigPointFlag) {
 	int renderLevel = GetRenderLayout();
 	LONG& x_ = _abusolutePoint.x;
 	LONG& y_ = _abusolutePoint.y;
@@ -3813,7 +3813,7 @@ void UIChart::DrawZoomRect() {
 	UIRect(_lPointEndPos.x - 2 + x_, _lPointEndPos.y - 2 + y_, _lPointEndPos.x + 2 + x_, _lPointEndPos.y + 2 + y_, _z, renderLevel + 2)(UIColor::PrimaryBlue, 180, _inheritedTransformMatrix);
 
 	// middle transparent area
-	RECT rc;
+	UIRECT rc;
 	rc.left = _lPointBeginPos.x <= _lPointEndPos.x ? _lPointBeginPos.x : _lPointEndPos.x;
 	rc.right = _lPointBeginPos.x > _lPointEndPos.x ? _lPointBeginPos.x : _lPointEndPos.x;
 	rc.top = _lPointBeginPos.y <= _lPointEndPos.y ? _lPointBeginPos.y : _lPointEndPos.y;
@@ -3886,13 +3886,13 @@ void UIChart::CalcCurveDrawRange(CurveInfo& curve, int mode) {
 	VECTOR_POINT2::iterator beginPointItor, endPointItor;
 	if (mode == NOTUSELASTDATA) { // do not use the last data
 	_NOTUSELASTDATE:
-		beginPointItor = find_if(curve._pointList.begin(), curve._pointList.end(), [v = _xCoordRange.first](const UIPointFloat2& p) { return p._x >= v; });
-		endPointItor = find_if(beginPointItor, curve._pointList.end(), [v = _xCoordRange.second](const UIPointFloat2& p) { return p._x > v; });
+		beginPointItor = find_if(curve._pointList.begin(), curve._pointList.end(), [v = _xCoordRange.first](const UIVector2F& p) { return p._x >= v; });
+		endPointItor = find_if(beginPointItor, curve._pointList.end(), [v = _xCoordRange.second](const UIVector2F& p) { return p._x > v; });
 		--endPointItor;
 	} else if (curve._beginPointIndex < 0) { // the last data does not exist
 		if (mode == RIGHTMOVE) { // curve right move
-			beginPointItor = find_if(curve._pointList.rbegin(), curve._pointList.rend(), [v = _xCoordRange.first](const UIPointFloat2& p) { return p._x < v; }).base();
-			endPointItor = find_if(beginPointItor, curve._pointList.end(), [v = _xCoordRange.second](const UIPointFloat2& p) { return p._x > v; });
+			beginPointItor = find_if(curve._pointList.rbegin(), curve._pointList.rend(), [v = _xCoordRange.first](const UIVector2F& p) { return p._x < v; }).base();
+			endPointItor = find_if(beginPointItor, curve._pointList.end(), [v = _xCoordRange.second](const UIVector2F& p) { return p._x > v; });
 			--endPointItor;
 		} else if (mode == LEFTMOVE) { // curve left move
 			goto _NOTUSELASTDATE;
@@ -3916,34 +3916,34 @@ void UIChart::CalcCurveDrawRange(CurveInfo& curve, int mode) {
 		if (mode == RIGHTMOVE) { // curve right move
 			// use the last data to accelerate the calculation
 			VECTOR_POINT2::reverse_iterator ri(beginPointItor + 1);
-			ri = find_if(ri, curve._pointList.rend(), [v = _xCoordRange.first](const UIPointFloat2& p) { return p._x < v; });
+			ri = find_if(ri, curve._pointList.rend(), [v = _xCoordRange.first](const UIVector2F& p) { return p._x < v; });
 			beginPointItor = ri.base();
 			//
 			VECTOR_POINT2::reverse_iterator ri2(endPointItor + 1);
-			ri2 = find_if(ri2, curve._pointList.rend(), [v = _xCoordRange.second](const UIPointFloat2& p) { return p._x < v; });
+			ri2 = find_if(ri2, curve._pointList.rend(), [v = _xCoordRange.second](const UIVector2F& p) { return p._x < v; });
 			endPointItor = ri2.base() - 1;
 		} else if (mode == LEFTMOVE) { // curve left move
 			// use the last data to accelerate the calculation
-			beginPointItor = find_if(beginPointItor, curve._pointList.end(), [v = _xCoordRange.first](const UIPointFloat2& p) { return p._x > v; });
+			beginPointItor = find_if(beginPointItor, curve._pointList.end(), [v = _xCoordRange.first](const UIVector2F& p) { return p._x > v; });
 			// 
-			endPointItor = find_if(endPointItor, curve._pointList.end(), [v = _xCoordRange.second](const UIPointFloat2& p) { return p._x > v; });
+			endPointItor = find_if(endPointItor, curve._pointList.end(), [v = _xCoordRange.second](const UIVector2F& p) { return p._x > v; });
 			--endPointItor;
 		} else if (mode == ZOOM) { // zoom the curve
-			beginPointItor = find_if(beginPointItor, curve._pointList.end(), [v = _xCoordRange.first](const UIPointFloat2& p) { return p._x > v; });
+			beginPointItor = find_if(beginPointItor, curve._pointList.end(), [v = _xCoordRange.first](const UIVector2F& p) { return p._x > v; });
 
 			VECTOR_POINT2::reverse_iterator ri2(endPointItor + 1);
-			ri2 = find_if(ri2, curve._pointList.rend(), [v = _xCoordRange.second](const UIPointFloat2& p) { return p._x < v; });
+			ri2 = find_if(ri2, curve._pointList.rend(), [v = _xCoordRange.second](const UIVector2F& p) { return p._x < v; });
 			endPointItor = ri2.base() - 1;
 		} else if (mode == SHRINK) { // shrink the curve
 			VECTOR_POINT2::reverse_iterator ri(beginPointItor + 1);
-			ri = find_if(ri, curve._pointList.rend(), [v = _xCoordRange.first](const UIPointFloat2& p) { return p._x < v; });
+			ri = find_if(ri, curve._pointList.rend(), [v = _xCoordRange.first](const UIVector2F& p) { return p._x < v; });
 			beginPointItor = ri.base();
 
-			endPointItor = find_if(endPointItor, curve._pointList.end(), [v = _xCoordRange.second](const UIPointFloat2& p) { return p._x > v; });
+			endPointItor = find_if(endPointItor, curve._pointList.end(), [v = _xCoordRange.second](const UIVector2F& p) { return p._x > v; });
 			--endPointItor;
 		} else if (mode == ADDPOINT) { // add the point
 			// use the last data to accelerate the calculation
-			endPointItor = find_if(endPointItor, curve._pointList.end(), [v = _xCoordRange.second](const UIPointFloat2& p) { return p._x > v; });
+			endPointItor = find_if(endPointItor, curve._pointList.end(), [v = _xCoordRange.second](const UIVector2F& p) { return p._x > v; });
 			--endPointItor;
 		}
 	}
@@ -3977,14 +3977,14 @@ void UIChart::CalcCoordSymmetry(RANGE_FLOAT& rangeCoord) {
 	}
 }
 
-bool UIChart::IsCoordPointInCoordRange(UIPointFloat2& pointCoord, int yFlag) {
+bool UIChart::IsCoordPointInCoordRange(UIVector2F& pointCoord, int yFlag) {
 	RANGE_FLOAT yCoordRange = (yFlag == 1) ? _y1CoordRange : _y2CoordRange;
 
 	return ((pointCoord._x >= _xCoordRange.first && pointCoord._x <= _xCoordRange.second) &&
 		(pointCoord._y >= yCoordRange.first && pointCoord._y <= yCoordRange.second));
 }
 
-bool UIChart::IsCoordPointInbox(UIPointFloat2& pointCoord, UIPointFloat2& p1, UIPointFloat2& p2, bool nearYFlag) {
+bool UIChart::IsCoordPointInbox(UIVector2F& pointCoord, UIVector2F& p1, UIVector2F& p2, bool nearYFlag) {
 	RANGE_FLOAT xCoordRange, yCoordRange;
 	xCoordRange.first = p1._x < p2._x ? p1._x : p2._x;
 	xCoordRange.second = p1._x > p2._x ? p1._x : p2._x;
@@ -4001,11 +4001,11 @@ bool UIChart::IsCoordPointInbox(UIPointFloat2& pointCoord, UIPointFloat2& p1, UI
 }
 
 // judge whether the postion point in a box range 
-bool UIChart::IsPosPointInbox(POINT& pointPos, const RECT& rect) {
+bool UIChart::IsPosPointInbox(UIPOINT& pointPos, const UIRECT& rect) {
 	return !(pointPos.x < rect.left || pointPos.x > rect.right || pointPos.y < rect.top || pointPos.y > rect.bottom);
 }
 
-bool UIChart::IsPointNearCurveLine(POINT& point, CurveInfo& curve, int yFlag) {
+bool UIChart::IsPointNearCurveLine(UIPOINT& point, CurveInfo& curve, int yFlag) {
 	if (!curve._isLine) {
 		return false;
 	}
@@ -4015,9 +4015,9 @@ bool UIChart::IsPointNearCurveLine(POINT& point, CurveInfo& curve, int yFlag) {
 	endPointItor = curve._pointList.begin() + curve._endPointIndex;
 
 	bool prePointInBoxFlag;
-	POINT prePointPos, curPointPos;
+	UIPOINT prePointPos, curPointPos;
 
-	UIPointFloat2 pointCoord;
+	UIVector2F pointCoord;
 	TransfromPosToCoord(point, pointCoord, yFlag);
 
 	// calculate the range to be judged
@@ -4068,7 +4068,7 @@ bool UIChart::IsPointNearCurveLine(POINT& point, CurveInfo& curve, int yFlag) {
 	return false;
 }
 
-bool UIChart::IsPointNearCurve(POINT& point, int yFlag) {
+bool UIChart::IsPointNearCurve(UIPOINT& point, int yFlag) {
 	CURVE_LIST& cuveList = yFlag == 1 ? _curveList1 : _curveList2;
 	for (CURVE_LIST::iterator i = cuveList.begin(); i != cuveList.end(); ++i) {
 		// related checks
@@ -4086,7 +4086,7 @@ bool UIChart::IsPointNearCurve(POINT& point, int yFlag) {
 	return false;
 }
 
-bool UIChart::IsPointNearCurvePoint(POINT& point, CurveInfo& curve, int yFlag) {
+bool UIChart::IsPointNearCurvePoint(UIPOINT& point, CurveInfo& curve, int yFlag) {
 	VECTOR_POINT2::iterator beginPointItor, endPointItor;
 	beginPointItor = curve._pointList.begin() + curve._beginPointIndex;
 	endPointItor = curve._pointList.begin() + curve._endPointIndex;
@@ -4098,7 +4098,7 @@ bool UIChart::IsPointNearCurvePoint(POINT& point, CurveInfo& curve, int yFlag) {
 		}
 
 		// judge whether the point is near by pos
-		POINT pointPos;
+		UIPOINT pointPos;
 		TransfromCoordToPos(pointPos, *it, yFlag);
 		if ((pointPos.x - point.x) * (pointPos.x - point.x) + (pointPos.y - point.y) * (pointPos.y - point.y) > 16) {
 			continue;
@@ -4116,14 +4116,14 @@ bool UIChart::IsPointNearCurvePoint(POINT& point, CurveInfo& curve, int yFlag) {
 	return false;
 }
 
-void UIChart::TransfromCoordToPos(POINT& pointPos, UIPointFloat2& pointCoord, int yFlag) {
+void UIChart::TransfromCoordToPos(UIPOINT& pointPos, UIVector2F& pointCoord, int yFlag) {
 	pointPos.x = _gridRect.left + static_cast<long>((pointCoord._x - _xCoordRange.first) / _coordToPosScaleX);
 
 	pointPos.y = yFlag == 1 ? _gridRect.bottom - static_cast<long>((pointCoord._y - _y1CoordRange.first) / _coordToPosScaleY1) :
 		_gridRect.bottom - static_cast<long>((pointCoord._y - _y2CoordRange.first) / _coordToPosScaleY2);
 }
 
-bool UIChart::TransfromPosToCoord(POINT& pointPos, UIPointFloat2& pointCoord, int yFlag)
+bool UIChart::TransfromPosToCoord(UIPOINT& pointPos, UIVector2F& pointCoord, int yFlag)
 {
 	// Judge whether in the box
 	if (!IsPosPointInbox(pointPos, _gridRect)) {
@@ -4147,9 +4147,9 @@ bool UIChart::TransfromPosToCoord(POINT& pointPos, UIPointFloat2& pointCoord, in
  ---|-------------|----
   6	|		7	  | 8
 */
-UIPointFloat2 UIChart::CalcIntersectionPoint(UIPointFloat2& prePoint, UIPointFloat2& curPoint, int outBoxIndex, int yFlag) {
-	UIPointFloat2 intersectPoint;
-	UIPointFloat2 outBoxPoint;
+UIVector2F UIChart::CalcIntersectionPoint(UIVector2F& prePoint, UIVector2F& curPoint, int outBoxIndex, int yFlag) {
+	UIVector2F intersectPoint;
+	UIVector2F outBoxPoint;
 
 	RANGE_FLOAT yCoordRange = (yFlag == 1) ? _y1CoordRange : _y2CoordRange;
 
@@ -4210,7 +4210,7 @@ UIPointFloat2 UIChart::CalcIntersectionPoint(UIPointFloat2& prePoint, UIPointFlo
 }
 
 // calculate the intersection of line and box's left line (coordinate)
-bool UIChart::CalcLeftIntersectionPoint(UIPointFloat2& pointCoord, float& k, float& b, int yFlag) {
+bool UIChart::CalcLeftIntersectionPoint(UIVector2F& pointCoord, float& k, float& b, int yFlag) {
 	RANGE_FLOAT yCoordRange = (yFlag == 1) ? _y1CoordRange : _y2CoordRange;
 
 	pointCoord._x = _xCoordRange.first;
@@ -4219,7 +4219,7 @@ bool UIChart::CalcLeftIntersectionPoint(UIPointFloat2& pointCoord, float& k, flo
 }
 
 // calculate the intersection of line and box's top line (coordinate)
-bool UIChart::CalcTopIntersectionPoint(UIPointFloat2& pointCoord, float& k, float& b, int yFlag) {
+bool UIChart::CalcTopIntersectionPoint(UIVector2F& pointCoord, float& k, float& b, int yFlag) {
 	RANGE_FLOAT yCoordRange = (yFlag == 1) ? _y1CoordRange : _y2CoordRange;
 
 	pointCoord._y = yCoordRange.second;
@@ -4228,7 +4228,7 @@ bool UIChart::CalcTopIntersectionPoint(UIPointFloat2& pointCoord, float& k, floa
 }
 
 // calculate the intersection of line and box's right line (coordinate)
-bool UIChart::CalcRightIntersectionPoint(UIPointFloat2& pointCoord, float& k, float& b, int yFlag) {
+bool UIChart::CalcRightIntersectionPoint(UIVector2F& pointCoord, float& k, float& b, int yFlag) {
 	RANGE_FLOAT yCoordRange = (yFlag == 1) ? _y1CoordRange : _y2CoordRange;
 
 	pointCoord._x = _xCoordRange.second;
@@ -4237,7 +4237,7 @@ bool UIChart::CalcRightIntersectionPoint(UIPointFloat2& pointCoord, float& k, fl
 }
 
 // calculate the intersection of line and box's bottom line (coordinate)
-bool UIChart::CalcBottomIntersectionPoint(UIPointFloat2& pointCoord, float& k, float& b, int yFlag) {
+bool UIChart::CalcBottomIntersectionPoint(UIVector2F& pointCoord, float& k, float& b, int yFlag) {
 	RANGE_FLOAT yCoordRange = (yFlag == 1) ? _y1CoordRange : _y2CoordRange;
 
 	pointCoord._y = yCoordRange.first;
@@ -4441,9 +4441,9 @@ void UIChart::GetXYCoordRange(float& xMin, float& xMax, float& y1Min, float& y1M
 	y2Max = _y2CoordRange.second;
 }
 
-bool UIChart::OnLButtonDown(POINT pt) {
+bool UIChart::OnLButtonDown(UIPOINT pt) {
 	// get relative position
-	POINT point = pt;
+	UIPOINT point = pt;
 	point.x -= _abusolutePoint.x;
 	point.y -= _abusolutePoint.y;
 
@@ -4474,7 +4474,7 @@ bool UIChart::OnLButtonDown(POINT pt) {
 	return true;
 }
 
-bool UIChart::OnLButtonUp(POINT) {
+bool UIChart::OnLButtonUp(UIPOINT) {
 	if (_isDrawZoomRect) {
 		_isDrawZoomRect = false;
 
@@ -4490,7 +4490,7 @@ bool UIChart::OnLButtonUp(POINT) {
 		float xMin = 0, xMax = 0, y1Min = 0, y1Max = 0;
 		if (_isY1CoordRangeCalc) {
 			// calculate the zoom rect
-			UIPointFloat2 startPointCoord, endPointCoord;
+			UIVector2F startPointCoord, endPointCoord;
 			TransfromPosToCoord(_lPointBeginPos, startPointCoord, 1);
 			TransfromPosToCoord(_lPointEndPos, endPointCoord, 1);
 
@@ -4505,7 +4505,7 @@ bool UIChart::OnLButtonUp(POINT) {
 		float y2Min = 0, y2Max = 0;
 		if (_isY2CoordRangeCalc) {
 			// calculate the zoom rect
-			UIPointFloat2 startPointCoord, endPointCoord;
+			UIVector2F startPointCoord, endPointCoord;
 			TransfromPosToCoord(_lPointBeginPos, startPointCoord, 2);
 			TransfromPosToCoord(_lPointEndPos, endPointCoord, 2);
 
@@ -4523,9 +4523,9 @@ bool UIChart::OnLButtonUp(POINT) {
 	return true;
 }
 
-bool UIChart::OnRButtonDown(POINT pt) {
+bool UIChart::OnRButtonDown(UIPOINT pt) {
 	// get relative position
-	POINT point = pt;
+	UIPOINT point = pt;
 	point.x -= _abusolutePoint.x;
 	point.y -= _abusolutePoint.y;
 
@@ -4537,9 +4537,9 @@ bool UIChart::OnRButtonDown(POINT pt) {
 	return true;
 }
 
-bool UIChart::OnRButtonUp(POINT pt) {
+bool UIChart::OnRButtonUp(UIPOINT pt) {
 	// get relative position
-	POINT point = pt;
+	UIPOINT point = pt;
 	point.x -= _abusolutePoint.x;
 	point.y -= _abusolutePoint.y;
 
@@ -4561,9 +4561,9 @@ bool UIChart::OnRButtonUp(POINT pt) {
 	return true;
 }
 
-bool UIChart::OnMouseMove(POINT pt) {
+bool UIChart::OnMouseMove(UIPOINT pt) {
 	// get relative position
-	POINT point = pt;
+	UIPOINT point = pt;
 	point.x -= _abusolutePoint.x;
 	point.y -= _abusolutePoint.y;
 
@@ -4636,8 +4636,8 @@ bool UIChart::OnMouseMove(POINT pt) {
 	}
 
 	// show the mouse position
-	UIPointFloat2 coordPoint1;
-	UIPointFloat2 coordPoint2;
+	UIVector2F coordPoint1;
+	UIVector2F coordPoint2;
 	TransfromPosToCoord(point, coordPoint1, 1);
 	TransfromPosToCoord(point, coordPoint2, 2);
 	_mouseCoordStr = format(L"{:.2f}, {:.2f}, {:.2f}", coordPoint1._x, coordPoint1._y, coordPoint2._y);
@@ -4671,7 +4671,7 @@ void UIChart::AddCurve(int yFlag, wstring textName, float xValue, float yValue) 
 				curve._isXCoordInOrder = false;
 		}
 
-		curve._pointList.push_back(UIPointFloat2(xValue, yValue));
+		curve._pointList.push_back(UIVector2F(xValue, yValue));
 
 		// check whether the draw range is calculated
 		if ((yFlag == 1 && _isY1CoordRangeCalc) || (yFlag == 2 && _isY2CoordRangeCalc)) {
@@ -4691,7 +4691,7 @@ void UIChart::AddCurve(int yFlag, wstring textName, const vector<float>& xList, 
 		curve._isXCoordInOrder = isXCoordInOrder;
 		curve._name = textName;
 		for (UINT i = 0; i < xList.size(); ++i) {
-			curve._pointList.push_back(UIPointFloat2(xList[i], yList[i]));
+			curve._pointList.push_back(UIVector2F(xList[i], yList[i]));
 		}
 		curveList.push_back(curve);
 
@@ -4856,7 +4856,7 @@ void UITab::Draw() {
 void UITab::DrawTab() {
 	int renderLevel = GetRenderLayout();
 	for (UINT i = 0; i < _tabRCList.size(); ++i) {
-		RECT rc = _tabRCList[i];
+		UIRECT rc = _tabRCList[i];
 		OffsetRect(&rc, _abusolutePoint.x, _abusolutePoint.y);
 
 		if (_hoverIndex == (int)i) {
@@ -4871,7 +4871,7 @@ void UITab::DrawTab() {
 
 void UITab::DrawTabSelLine() {
 	int renderLevel = GetRenderLayout();
-	RECT rc = _lineRC;
+	UIRECT rc = _lineRC;
 	OffsetRect(&rc, _abusolutePoint.x, _abusolutePoint.y);
 	UIRect(rc, _z, renderLevel + 2)(UIColor::PrimaryGreen, 255, _inheritedTransformMatrix);
 }
@@ -4889,15 +4889,15 @@ void UITab::DrawAnimate1Cell() {
 			OffsetRect(&_cellRCList[i], -dx, 0);
 		}
 	} else {
-		int dx = _cellRCList[_selectedIndex].top / (_maxFrame - _frameIndex + 1);
+		int dy = _cellRCList[_selectedIndex].top / (_maxFrame - _frameIndex + 1);
 
 		for (UINT i = 0; i < _cellRCList.size(); ++i) {
-			OffsetRect(&_cellRCList[i], 0, -dx);
+			OffsetRect(&_cellRCList[i], 0, -dy);
 		}
 	}
 
 	// move and draw cell
-	RECT rc = _clientRC;
+	UIRECT rc = _clientRC;
 	OffsetRect(&rc, _abusolutePoint.x, _abusolutePoint.y);
 	UIScreenClipRectGuard uiClip(rc);
 
@@ -4915,7 +4915,7 @@ void UITab::DrawAnimate1Cell() {
 				rc = _cellRCList[i];
 				OffsetRect(&rc, _abusolutePoint.x, _abusolutePoint.y);
 				if (_isAnimate3D) {
-					POINT center = GetRectCenter()(rc);
+					UIPOINT center = GetRectCenter()(rc);
 					XMMATRIX transformMatrix = UIZPlaneTransform::GetTransformMatrix(false, 0, 0, 0, false, 0, 0, true, (float)center.x, -k * XM_PI / 8, _z);
 					p_win->SetTransformMatrix(transformMatrix);
 				}
@@ -4928,7 +4928,7 @@ void UITab::DrawAnimate1Cell() {
 				rc = _cellRCList[i];
 				OffsetRect(&rc, _abusolutePoint.x, _abusolutePoint.y);
 				if (_isAnimate3D) {
-					POINT center = GetRectCenter()(rc);
+					UIPOINT center = GetRectCenter()(rc);
 					XMMATRIX transformMatrix = UIZPlaneTransform::GetTransformMatrix(false, 0, 0, 0, true, (float)center.y, -k * XM_PI / 8, false, 0, 0, _z);
 					p_win->SetTransformMatrix(transformMatrix);
 				}
@@ -4951,7 +4951,7 @@ void UITab::DrawAnimate1Tab() {
 		OffsetRect(&_lineRC, 0, dx);
 	}
 
-	RECT rc = _lineRC;
+	UIRECT rc = _lineRC;
 	OffsetRect(&rc, _abusolutePoint.x, _abusolutePoint.y);
 	UIRect(rc, _z, renderLevel + 2)(UIColor::PrimaryGreen, 255, _inheritedTransformMatrix);
 }
@@ -5004,8 +5004,8 @@ void UITab::SetAnimate3D(int isAnimate3D) {
 	_isAnimate3D = isAnimate3D;
 }
 
-bool UITab::OnMouseMove(POINT pt) {
-	POINT point = pt;
+bool UITab::OnMouseMove(UIPOINT pt) {
+	UIPOINT point = pt;
 	point.x -= _abusolutePoint.x;
 	point.y -= _abusolutePoint.y;
 
@@ -5029,15 +5029,15 @@ bool UITab::OnMouseMove(POINT pt) {
 	return true;
 }
 
-void UITab::OnMouseLeave(POINT) {
+void UITab::OnMouseLeave(UIPOINT) {
 	if (_hoverIndex != -1) {
 		_hoverIndex = -1;
 		UIRefresh();
 	}
 }
 
-bool UITab::OnLButtonDown(POINT pt) {
-	POINT point = pt;
+bool UITab::OnLButtonDown(UIPOINT pt) {
+	UIPOINT point = pt;
 	point.x -= _abusolutePoint.x;
 	point.y -= _abusolutePoint.y;
 
@@ -5077,7 +5077,7 @@ void UICanvas::Draw() {
 	int renderLevel = GetRenderLayout();
 
 	if (_alpha != 0 && _color != UIColor::Invalid) {
-		RECT rc = _clientRC;
+		UIRECT rc = _clientRC;
 		OffsetRect(&rc, _abusolutePoint.x, _abusolutePoint.y);
 		UIRect(rc, _z, renderLevel)(_color, _alpha, transformMatrix);
 	}
@@ -5107,7 +5107,7 @@ void UIColorPanel::Draw() {
 	int renderLevel = GetRenderLayout();
 	_z = 1.f;
 
-	RECT rc = _clientRC;
+	UIRECT rc = _clientRC;
 	rc.left -= 5;
 	rc.top -= 5;
 	rc.right += 5;
@@ -5134,22 +5134,22 @@ void UICanvas3D::Draw() {
 	float offsetY = 0.f;
 
 	if (_isHover) {
-		POINT curPT = _curMousePos;
+		UIPOINT curPT = _curMousePos;
 		curPT.x -= _abusolutePoint.x;
 		curPT.y -= _abusolutePoint.y;
 
 		// Calculate offset between recorded _curMousePos and center position
-		POINT center = { GetRectWidth()(_clientRC) / 2, GetRectHeight()(_clientRC) / 2 };
-		POINT offset = { curPT.x - center.x, curPT.y - center.y };
+		UIPOINT center = { GetRectWidth()(_clientRC) / 2, GetRectHeight()(_clientRC) / 2 };
+		UIPOINT offset = { curPT.x - center.x, curPT.y - center.y };
 
 		// Calculate offset ratio
 		offsetX = (float)offset.x / center.x;
 		offsetY = (float)offset.y / center.y;
 	}
 
-	RECT rc = _clientRC;
+	UIRECT rc = _clientRC;
 	OffsetRect(&rc, _abusolutePoint.x, _abusolutePoint.y);
-	POINT center = GetRectCenter()(rc);
+	UIPOINT center = GetRectCenter()(rc);
 	rc.left -= 5;
 	rc.top -= 5;
 	rc.right += 5;
@@ -5172,7 +5172,7 @@ void UICanvas3D::Draw() {
 }
 
 
-bool UICanvas3D::OnMouseMove(POINT pt) {
+bool UICanvas3D::OnMouseMove(UIPOINT pt) {
 	if (!_isHover) {
 		OnMouseHoverEvent();
 		_isHover = true;
@@ -5185,7 +5185,7 @@ bool UICanvas3D::OnMouseMove(POINT pt) {
 }
 
 
-bool UICanvas3D::OnMouseLeave(POINT) {
+bool UICanvas3D::OnMouseLeave(UIPOINT) {
 	_isHover = false;
 	UIRefresh();
 
@@ -5230,7 +5230,7 @@ UIChart3D::~UIChart3D() {
 }
 
 void UIChart3D::CalcArea() {
-	RECT ctrlRC = GetAbsoluteRect();
+	UIRECT ctrlRC = GetAbsoluteRect();
 
 	// Set camera
 	if (!_cameraCtrl.SetUpCamera(ctrlRC)) {
@@ -5242,7 +5242,7 @@ void UIChart3D::CalcArea() {
 }
 
 void UIChart3D::CalcAxes3D() {
-	RECT ctrlRC = GetAbsoluteRect();
+	UIRECT ctrlRC = GetAbsoluteRect();
 
 	// Calculate 3D axes coordinates
 	LONG ctrlWidth = GetRectWidth()(ctrlRC);
@@ -5258,8 +5258,8 @@ void UIChart3D::CalcAxes3D() {
 	float marginY = (((ctrlHeight - availablePixels) / 2.0f) / ctrlHeight) * worldHeight;
 
 	// Calculate original world coordinate point (axes origin)
-	float p0X = _cameraCtrl._target.x - (worldWidth / 2.0f) + marginX;
-	float p0Y = _cameraCtrl._target.y - (worldHeight / 2.0f) + marginY;
+	float p0X = _cameraCtrl._target._x - (worldWidth / 2.0f) + marginX;
+	float p0Y = _cameraCtrl._target._y - (worldHeight / 2.0f) + marginY;
 	float p0Z = 0.0f;
 
 	// Set axes origin
@@ -5291,7 +5291,7 @@ void UIChart3D::CalcAxes3D() {
 	// Calculate X-axis subdivision points (5 intermediate points)
 	for (int i = 1; i <= 5; ++i) {
 		float t = i / 6.0f;  // Division ratio (1/6, 2/6, 3/6, 4/6, 5/6)
-		UIPointFloat3 tickPoint = {
+		UIVector3F tickPoint = {
 			_axesOrigin._x + t * worldLength,
 			_axesOrigin._y,
 			_axesOrigin._z
@@ -5299,15 +5299,15 @@ void UIChart3D::CalcAxes3D() {
 		_xAxisTicks.push_back(tickPoint);
 
 		// Create tick mark perpendicular to X-axis (in XY plane)
-		UIPointFloat3 tickStart = { tickPoint._x, tickPoint._y - tickLength / 2, tickPoint._z };
-		UIPointFloat3 tickEnd = { tickPoint._x, tickPoint._y + tickLength / 2, tickPoint._z };
+		UIVector3F tickStart = { tickPoint._x, tickPoint._y - tickLength / 2, tickPoint._z };
+		UIVector3F tickEnd = { tickPoint._x, tickPoint._y + tickLength / 2, tickPoint._z };
 		_xTickLines.push_back({ tickStart, tickEnd });
 	}
 
 	// Calculate Y-axis subdivision points (5 intermediate points)
 	for (int i = 1; i <= 5; ++i) {
 		float t = i / 6.0f;
-		UIPointFloat3 tickPoint = {
+		UIVector3F tickPoint = {
 			_axesOrigin._x,
 			_axesOrigin._y + t * worldLength,
 			_axesOrigin._z
@@ -5315,15 +5315,15 @@ void UIChart3D::CalcAxes3D() {
 		_yAxisTicks.push_back(tickPoint);
 
 		// Create tick mark perpendicular to Y-axis (in XY plane)
-		UIPointFloat3 tickStart = { tickPoint._x - tickLength / 2, tickPoint._y, tickPoint._z };
-		UIPointFloat3 tickEnd = { tickPoint._x + tickLength / 2, tickPoint._y, tickPoint._z };
+		UIVector3F tickStart = { tickPoint._x - tickLength / 2, tickPoint._y, tickPoint._z };
+		UIVector3F tickEnd = { tickPoint._x + tickLength / 2, tickPoint._y, tickPoint._z };
 		_yTickLines.push_back({ tickStart, tickEnd });
 	}
 
 	// Calculate Z-axis subdivision points (5 intermediate points)
 	for (int i = 1; i <= 5; ++i) {
 		float t = i / 6.0f;
-		UIPointFloat3 tickPoint = {
+		UIVector3F tickPoint = {
 			_axesOrigin._x,
 			_axesOrigin._y,
 			_axesOrigin._z + t * worldLength
@@ -5331,8 +5331,8 @@ void UIChart3D::CalcAxes3D() {
 		_zAxisTicks.push_back(tickPoint);
 
 		// Create tick mark perpendicular to Z-axis (in YZ plane)
-		UIPointFloat3 tickStart = { tickPoint._x, tickPoint._y - tickLength / 2, tickPoint._z };
-		UIPointFloat3 tickEnd = { tickPoint._x, tickPoint._y + tickLength / 2, tickPoint._z };
+		UIVector3F tickStart = { tickPoint._x, tickPoint._y - tickLength / 2, tickPoint._z };
+		UIVector3F tickEnd = { tickPoint._x, tickPoint._y + tickLength / 2, tickPoint._z };
 		_zTickLines.push_back({ tickStart, tickEnd });
 	}
 
@@ -5342,26 +5342,26 @@ void UIChart3D::CalcAxes3D() {
 	float arrowHeight = arrowSize * 0.866f;  // Height of equilateral triangle (sqrt(3)/2)
 
 	// X-axis arrow (in XY plane, extending beyond X axis endpoint)
-	UIPointFloat3 xArrowTip = { _xAxisEnd._x + arrowHeight, _xAxisEnd._y, _xAxisEnd._z };
+	UIVector3F xArrowTip = { _xAxisEnd._x + arrowHeight, _xAxisEnd._y, _xAxisEnd._z };
 	_xArrowTriangle.push_back(xArrowTip);  // Tip point (extended beyond axis)
 	_xArrowTriangle.push_back({ _xAxisEnd._x, _xAxisEnd._y - halfArrowSize, _xAxisEnd._z });  // Bottom left
 	_xArrowTriangle.push_back({ _xAxisEnd._x, _xAxisEnd._y + halfArrowSize, _xAxisEnd._z });  // Bottom right
 
 	// Y-axis arrow (in XY plane, extending beyond Y axis endpoint)
-	UIPointFloat3 yArrowTip = { _yAxisEnd._x, _yAxisEnd._y + arrowHeight, _yAxisEnd._z };
+	UIVector3F yArrowTip = { _yAxisEnd._x, _yAxisEnd._y + arrowHeight, _yAxisEnd._z };
 	_yArrowTriangle.push_back(yArrowTip);  // Tip point (extended beyond axis)
 	_yArrowTriangle.push_back({ _yAxisEnd._x - halfArrowSize, _yAxisEnd._y, _yAxisEnd._z });  // Bottom left
 	_yArrowTriangle.push_back({ _yAxisEnd._x + halfArrowSize, _yAxisEnd._y, _yAxisEnd._z });  // Bottom right
 
 	// Z-axis arrow (in YZ plane, extending beyond Z axis endpoint)
-	UIPointFloat3 zArrowTip = { _zAxisEnd._x, _zAxisEnd._y, _zAxisEnd._z + arrowHeight };
+	UIVector3F zArrowTip = { _zAxisEnd._x, _zAxisEnd._y, _zAxisEnd._z + arrowHeight };
 	_zArrowTriangle.push_back(zArrowTip);  // Tip point (extended beyond axis)
 	_zArrowTriangle.push_back({ _zAxisEnd._x, _zAxisEnd._y - halfArrowSize, _zAxisEnd._z });  // Bottom left
 	_zArrowTriangle.push_back({ _zAxisEnd._x, _zAxisEnd._y + halfArrowSize, _zAxisEnd._z });  // Bottom right
 }
 
 void UIChart3D::DrawAxes3D() {
-	// Draw the three main coordinate axes using UIPointFloat3 coordinates directly
+	// Draw the three main coordinate axes using UIVector3F coordinates directly
 	UILine3D(_axesOrigin, _xAxisEnd)(UIColor::Red, &_cameraCtrl);		// X-axis (Red)
 	UILine3D(_axesOrigin, _yAxisEnd)(UIColor::Green, &_cameraCtrl);	    // Y-axis (Green)
 	UILine3D(_axesOrigin, _zAxisEnd)(UIColor::Blue, &_cameraCtrl);	    // Z-axis (Blue)
@@ -5405,7 +5405,7 @@ void UIChart3D::Draw() {
 	LONG& y_ = _abusolutePoint.y;
 
 	// draw border
-	RECT rc = _clientRC;
+	UIRECT rc = _clientRC;
 	OffsetRect(&rc, x_, y_);
 	UIRect(rc, _z, renderLevel + 2)(UIColor::PrimaryBlue, transformMatrix);
 
@@ -5419,9 +5419,9 @@ void UIChart3D::Draw() {
 	UIFont3D(18.0f)(L"3DS OOPING", { _xAxisEnd._x / 2, _yAxisEnd._y / 2, 0.0f }, UIColor::Black, &_cameraCtrl);
 }
 
-bool UIChart3D::OnRButtonDown(POINT pt) {
+bool UIChart3D::OnRButtonDown(UIPOINT pt) {
 	// Convert to control-relative coordinates
-	POINT point = pt;
+	UIPOINT point = pt;
 	point.x -= _abusolutePoint.x;
 	point.y -= _abusolutePoint.y;
 
@@ -5430,19 +5430,19 @@ bool UIChart3D::OnRButtonDown(POINT pt) {
 	return true;
 }
 
-bool UIChart3D::OnRButtonUp(POINT) {
+bool UIChart3D::OnRButtonUp(UIPOINT) {
 	_moveFlag = false;  // Clear right button down flag
 	return true;
 }
 
-void UIChart3D::OnMouseLeave(POINT) {
+void UIChart3D::OnMouseLeave(UIPOINT) {
 	_moveFlag = false;  // Clear right button down flag when mouse leaves
 }
 
-bool UIChart3D::OnMouseMove(POINT pt) {
+bool UIChart3D::OnMouseMove(UIPOINT pt) {
 	// Only allow movement when right button is down
 	if (_moveFlag) {
-		POINT point = pt;
+		UIPOINT point = pt;
 		point.x -= _abusolutePoint.x;
 		point.y -= _abusolutePoint.y;
 
@@ -5482,14 +5482,14 @@ void UIChart3D::SetDataCoordRange(float xMin, float xMax, float yMin, float yMax
 }
 
 // Coordinate transformation functions
-UIPointFloat3 UIChart3D::DataToWorld(const UIPointFloat3& dataCoord) const {
+UIVector3F UIChart3D::DataToWorld(const UIVector3F& dataCoord) const {
 	// Convert data coordinates to normalized coordinates [0,1]
 	float normalizedX = (dataCoord._x - _xDataRange.first) / (_xDataRange.second - _xDataRange.first);
 	float normalizedY = (dataCoord._y - _yDataRange.first) / (_yDataRange.second - _yDataRange.first);
 	float normalizedZ = (dataCoord._z - _zDataRange.first) / (_zDataRange.second - _zDataRange.first);
 
 	// Convert normalized coordinates to world coordinates
-	UIPointFloat3 worldCoord;
+	UIVector3F worldCoord;
 	worldCoord._x = _axesOrigin._x + normalizedX * _axisLengths._x;
 	worldCoord._y = _axesOrigin._y + normalizedY * _axisLengths._y;
 	worldCoord._z = _axesOrigin._z + normalizedZ * _axisLengths._z;
@@ -5497,14 +5497,14 @@ UIPointFloat3 UIChart3D::DataToWorld(const UIPointFloat3& dataCoord) const {
 	return worldCoord;
 }
 
-UIPointFloat3 UIChart3D::WorldToData(const UIPointFloat3& worldCoord) const {
+UIVector3F UIChart3D::WorldToData(const UIVector3F& worldCoord) const {
 	// Convert world coordinates to normalized coordinates [0,1]
 	float normalizedX = (worldCoord._x - _axesOrigin._x) / _axisLengths._x;
 	float normalizedY = (worldCoord._y - _axesOrigin._y) / _axisLengths._y;
 	float normalizedZ = (worldCoord._z - _axesOrigin._z) / _axisLengths._z;
 
 	// Convert normalized coordinates to data coordinates
-	UIPointFloat3 dataCoord;
+	UIVector3F dataCoord;
 	dataCoord._x = _xDataRange.first + normalizedX * (_xDataRange.second - _xDataRange.first);
 	dataCoord._y = _yDataRange.first + normalizedY * (_yDataRange.second - _yDataRange.first);
 	dataCoord._z = _zDataRange.first + normalizedZ * (_zDataRange.second - _zDataRange.first);
@@ -5512,7 +5512,7 @@ UIPointFloat3 UIChart3D::WorldToData(const UIPointFloat3& worldCoord) const {
 	return dataCoord;
 }
 
-POINT UIChart3D::WorldToScreen(const UIPointFloat3& worldCoord) {
+UIPOINT UIChart3D::WorldToScreen(const UIVector3F& worldCoord) {
 	// Apply view-projection transformation
 	// This is a simplified implementation - in real scenario, you would use proper matrix multiplication
 
@@ -5521,22 +5521,22 @@ POINT UIChart3D::WorldToScreen(const UIPointFloat3& worldCoord) {
 	float screenY = worldCoord._y - 0.5f * worldCoord._z;
 
 	// Convert to screen coordinates relative to control
-	RECT ctrlRC = GetAbsoluteRect();
+	UIRECT ctrlRC = GetAbsoluteRect();
 	float centerX = (ctrlRC.left + ctrlRC.right) * 0.5f;
 	float centerY = (ctrlRC.top + ctrlRC.bottom) * 0.5f;
 
-	POINT screenPos;
+	UIPOINT screenPos;
 	screenPos.x = static_cast<LONG>(centerX + screenX * 100.0f);  // Scale factor 100
 	screenPos.y = static_cast<LONG>(centerY - screenY * 100.0f);  // Y-axis inverted for screen
 
 	return screenPos;
 }
 
-UIPointFloat3 UIChart3D::ScreenToWorld(const POINT& screenPos, float depth) {
+UIVector3F UIChart3D::ScreenToWorld(const UIPOINT& screenPos, float depth) {
 	// Convert screen coordinates back to world coordinates
 	// This is the inverse of WorldToScreen
 
-	RECT ctrlRC = GetAbsoluteRect();
+	UIRECT ctrlRC = GetAbsoluteRect();
 	float centerX = (ctrlRC.left + ctrlRC.right) * 0.5f;
 	float centerY = (ctrlRC.top + ctrlRC.bottom) * 0.5f;
 
@@ -5545,7 +5545,7 @@ UIPointFloat3 UIChart3D::ScreenToWorld(const POINT& screenPos, float depth) {
 	float normY = -(screenPos.y - centerY) / 100.0f; // Y-axis inverted
 
 	// Apply inverse isometric projection (assuming depth)
-	UIPointFloat3 worldCoord;
+	UIVector3F worldCoord;
 	worldCoord._x = normX + 0.5f * depth;
 	worldCoord._y = normY + 0.5f * depth;
 	worldCoord._z = depth;
@@ -5553,7 +5553,7 @@ UIPointFloat3 UIChart3D::ScreenToWorld(const POINT& screenPos, float depth) {
 	return worldCoord;
 }
 
-void UIChart3D::AddCurve(UIString curveName, const vector<UIPointFloat3>& points, UIColor color) {
+void UIChart3D::AddCurve(UIString curveName, const vector<UIVector3F>& points, UIColor color) {
 	// Check if curve already exists
 	for (auto& curve : _curveList) {
 		if (curve._name == wstring(curveName)) {
@@ -5578,7 +5578,7 @@ void UIChart3D::AddCurve(UIString curveName, const vector<float>& xList, const v
 		return; // Arrays must have same size
 	}
 
-	vector<UIPointFloat3> points;
+	vector<UIVector3F> points;
 	for (size_t i = 0; i < xList.size(); ++i) {
 		points.push_back({ xList[i], yList[i], zList[i] });
 	}
@@ -5647,8 +5647,8 @@ void UIChart3D::DrawCurves() {
 
 		// Draw line segments between consecutive points
 		for (size_t i = 0; i < curve._pointList.size() - 1; ++i) {
-			UIPointFloat3 worldPoint1 = DataToWorld(curve._pointList[i]);
-			UIPointFloat3 worldPoint2 = DataToWorld(curve._pointList[i + 1]);
+			UIVector3F worldPoint1 = DataToWorld(curve._pointList[i]);
+			UIVector3F worldPoint2 = DataToWorld(curve._pointList[i + 1]);
 
 			// Draw line segment
 			UILine3D(worldPoint1, worldPoint2)(curve._color, &_cameraCtrl);
@@ -5656,7 +5656,7 @@ void UIChart3D::DrawCurves() {
 
 		// Draw points (4 pixel radius)
 		for (const auto& dataPoint : curve._pointList) {
-			UIPointFloat3 worldPoint = DataToWorld(dataPoint);
+			UIVector3F worldPoint = DataToWorld(dataPoint);
 
 			// Draw point as a small circle using UICircle3D
 			//UICircle3D(worldPoint, 2.0f)(curve._color, &_cameraCtrl);

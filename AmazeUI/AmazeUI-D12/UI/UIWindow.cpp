@@ -33,7 +33,7 @@ UIWindowBase::UIWindowBase() {
 UIWindowBase::~UIWindowBase() {
 }
 
-bool UIWindowBase::CreateWindowBase(UIContainer* pUIContainer, const RECT& relativeRect, int layoutFlag, bool isShow) {
+bool UIWindowBase::CreateWindowBase(UIContainer* pUIContainer, const UIRECT& relativeRect, int layoutFlag, bool isShow) {
 	// check if the parent container exists
 	if (pUIContainer == nullptr) {
 		return false;
@@ -52,7 +52,7 @@ bool UIWindowBase::CreateWindowBase(UIContainer* pUIContainer, const RECT& relat
 	// relative to parent window starting point
 	_relativePoint = UIShape2D::CreatePoint()(relativeRect.left, relativeRect.top);
 	// relative to handle window starting point
-	POINT p = p_parentUIContainer->GetBindWindowAbusolutePoint();
+	UIPOINT p = p_parentUIContainer->GetBindWindowAbusolutePoint();
 	_abusolutePoint = UIShape2D::CreatePoint()(p.x+relativeRect.left, p.y+relativeRect.top);
 
 	// layout information
@@ -66,7 +66,7 @@ bool UIWindowBase::CreateWindowBase(UIContainer* pUIContainer, const RECT& relat
 	return HandleMessage(WM_CREATE, 0, 0);
 }
 
-bool UIWindowBase::CreateWindowBase(UIWindowBase* pParent, const RECT& relativeRect, int layoutFlag, bool isShow) {
+bool UIWindowBase::CreateWindowBase(UIWindowBase* pParent, const UIRECT& relativeRect, int layoutFlag, bool isShow) {
 	return CreateWindowBase(pParent->GetUIContainer(), relativeRect, layoutFlag, isShow);
 }
 
@@ -109,10 +109,10 @@ void UIWindowBase::Draw() {
 	}
 
 	// self drawing
-	//UIRect(_abusolutePoint.x, _abusolutePoint.y, GetRectWidth()(_clientRC), GetRectHeight()(_clientRC), _z)(_RED_, 100);
+	//(_abusolutePoint.x, _abusolutePoint.y, GetRectWidth()(_clientRC), GetRectHeight()(_clientRC), _z)(_RED_, 100);
 
 	if (p_UIContainer != nullptr) {
-		//RECT rc = _clientRC;
+		//UIRECT rc = _clientRC;
 		//OffsetRect(&rc, _abusolutePoint.x, _abusolutePoint.y);
 		//UIScreenClipRectGuard uiClip(rc);
 
@@ -120,18 +120,18 @@ void UIWindowBase::Draw() {
 	}
 }
 
-RECT UIWindowBase::GetClientRect() {
+UIRECT UIWindowBase::GetClientRect() {
 	return _clientRC;
 }
 
-RECT UIWindowBase::GetRelativeRect() {
-	RECT relativeRect = _clientRC;
+UIRECT UIWindowBase::GetRelativeRect() {
+	UIRECT relativeRect = _clientRC;
 	OffsetRect(&relativeRect, _relativePoint.x, _relativePoint.y);
 	return relativeRect;
 }
 
-RECT UIWindowBase::GetAbsoluteRect() {
-	RECT abusoluteRect = _clientRC;
+UIRECT UIWindowBase::GetAbsoluteRect() {
+	UIRECT abusoluteRect = _clientRC;
 	OffsetRect(&abusoluteRect, _abusolutePoint.x, _abusolutePoint.y);
 	return abusoluteRect;
 }
@@ -148,13 +148,13 @@ void UIWindowBase::ShowWindow(bool flag) {
 	_isShow = flag;
 }
 
-void UIWindowBase::MoveWindow(const RECT& relativeRect) {
+void UIWindowBase::MoveWindow(const UIRECT& relativeRect) {
 	if (p_parentUIContainer == nullptr) {
 		return;
 	}
 
-	POINT p = p_parentUIContainer->GetBindWindowAbusolutePoint();
-	POINT tempPoint = UIShape2D::CreatePoint()(p.x+relativeRect.left, p.y+relativeRect.top);
+	UIPOINT p = p_parentUIContainer->GetBindWindowAbusolutePoint();
+	UIPOINT tempPoint = UIShape2D::CreatePoint()(p.x+relativeRect.left, p.y+relativeRect.top);
 
 	// if the position does not change, do not update the calculation
 	if (CompareRects()(relativeRect, GetRelativeRect()) && ComparePoints()(_abusolutePoint, tempPoint)) {
@@ -238,7 +238,7 @@ void UIContainer::AddChild(UIWindowBase* pWin) {
 	_winList.push_back(UIElement(pWin));
 
 	// initialize the layout information of the sub-window
-	RECT parentRect;
+	UIRECT parentRect;
 	if (_isBindDUI == true) {
 		parentRect = _pBindDUIWin->GetClientRect();
 	}
@@ -300,7 +300,7 @@ UIWindowBase* UIContainer::GetFocusOnChild() {
 	return nullptr;
 }
 
-UIWindowBase* UIContainer::GetMinZChild(const POINT& pt) {
+UIWindowBase* UIContainer::GetMinZChild(const UIPOINT& pt) {
 	vector<int> hoverIndexList;
 
 	// find all hover sub-windows
@@ -329,7 +329,7 @@ UIWindowBase* UIContainer::GetMinZChild(const POINT& pt) {
 	return pMinZWin;
 }
 
-POINT UIContainer::GetBindWindowAbusolutePoint() {
+UIPOINT UIContainer::GetBindWindowAbusolutePoint() {
 	if (_isBindDUI==true) {
 		return _pBindDUIWin->_abusolutePoint;
 	}
@@ -338,7 +338,7 @@ POINT UIContainer::GetBindWindowAbusolutePoint() {
 }
 
 
-RECT UIContainer::GetBindWindowAbusoluteRect() {
+UIRECT UIContainer::GetBindWindowAbusoluteRect() {
 	if (_isBindDUI==true) {
 		return _pBindDUIWin->GetAbsoluteRect();
 	}
@@ -383,13 +383,13 @@ bool UIContainer::HandleMessagePre(UINT message, WPARAM wParam, LPARAM lParam) {
 		} break;
 		case WM_SIZE: {
 			//SetUnFocusAll();
-			SIZE size;
+			UISIZE size;
 			size.cx = LOWORD(lParam);
 			size.cy = HIWORD(lParam);
 
 			// calculate the zoom of the sub-window
 			for (UINT i=0; i<_winList.size(); ++i) {
-				RECT newRect;
+				UIRECT newRect;
 				if (_winList[i]._layoutInfo._zoomModeflag==UILayoutCalc::NO_ZOOM) {
 					newRect = _winList[i].p_win->GetRelativeRect();
 				}
@@ -402,12 +402,12 @@ bool UIContainer::HandleMessagePre(UINT message, WPARAM wParam, LPARAM lParam) {
 		} break;
 		//case WM_MOUSEHOVER:
 		case WM_MOUSEMOVE: {
-			POINT pt;
+			UIPOINT pt;
 			pt.x = LOWORD(lParam);
 			pt.y = HIWORD(lParam);
 
 			// record the current point as the previous point
-			POINT prePoint = _preMousePt;
+			UIPOINT prePoint = _preMousePt;
 			_preMousePt = pt;
 
 			// find the sub-window that the mouse has left
@@ -453,7 +453,7 @@ bool UIContainer::HandleMessagePre(UINT message, WPARAM wParam, LPARAM lParam) {
 			isMsgHandled = pChild->HandleMessage(WM_MOUSEWHEEL, wParam, lParam);
 		} break;
 		case WM_LBUTTONDOWN: {
-			POINT pt;
+			UIPOINT pt;
 			pt.x = LOWORD(lParam);
 			pt.y = HIWORD(lParam);
 
@@ -467,7 +467,7 @@ bool UIContainer::HandleMessagePre(UINT message, WPARAM wParam, LPARAM lParam) {
 			}
 		} break;
 		case WM_LBUTTONUP: {
-			POINT pt;
+			UIPOINT pt;
 			pt.x = LOWORD(lParam);
 			pt.y = HIWORD(lParam);
 
@@ -477,7 +477,7 @@ bool UIContainer::HandleMessagePre(UINT message, WPARAM wParam, LPARAM lParam) {
 			}
 		} break;
 		case WM_RBUTTONDOWN: {
-			POINT pt;
+			UIPOINT pt;
 			pt.x = LOWORD(lParam);
 			pt.y = HIWORD(lParam);
 
@@ -488,7 +488,7 @@ bool UIContainer::HandleMessagePre(UINT message, WPARAM wParam, LPARAM lParam) {
 			}
 		} break;
 		case WM_RBUTTONUP: {
-			POINT pt;
+			UIPOINT pt;
 			pt.x = LOWORD(lParam);
 			pt.y = HIWORD(lParam);
 
@@ -498,7 +498,7 @@ bool UIContainer::HandleMessagePre(UINT message, WPARAM wParam, LPARAM lParam) {
 			}
 		} break;
 		case WM_LBUTTONDBLCLK: {
-			POINT pt;
+			UIPOINT pt;
 			pt.x = LOWORD(lParam);
 			pt.y = HIWORD(lParam);
 
@@ -863,7 +863,7 @@ bool UIFrame::HandleMessageFromHookWindow(UINT message, WPARAM wParam, LPARAM lP
 	if (_pHookWindowForPopup != nullptr && _pHookWindowForPopup->IsWindowShow()) {
 		// judge if the mouse is in the popup window
 		if (message==WM_LBUTTONDOWN || message==WM_RBUTTONDOWN || message == WM_MOUSEMOVE) {
-			POINT pt;
+			UIPOINT pt;
 			pt.x = LOWORD(lParam);
 			pt.y = HIWORD(lParam);
 

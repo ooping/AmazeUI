@@ -138,8 +138,8 @@ public:
 	void SetHitPower(float v);
 
 	void DrawHitDrumAnimate(UIImage& image, int centerX, int centerY, float scale, const DirectX::XMMATRIX& transformMatrix=DirectX::XMMatrixIdentity());
-	void DrawHitDrumAnimate(UIImage& image, RECT rc, const DirectX::XMMATRIX& transformMatrix=DirectX::XMMatrixIdentity());
-	void DrawSlicedHitDrumAnimate(UISlicedImage& slicedImage, RECT rc, const DirectX::XMMATRIX& transformMatrix=DirectX::XMMatrixIdentity());
+	void DrawHitDrumAnimate(UIImage& image, UIRECT rc, const DirectX::XMMATRIX& transformMatrix=DirectX::XMMatrixIdentity());
+	void DrawSlicedHitDrumAnimate(UISlicedImage& slicedImage, UIRECT rc, const DirectX::XMMATRIX& transformMatrix=DirectX::XMMatrixIdentity());
 
 protected:
 	float _hitPower;			// Image magnification coefficient
@@ -156,8 +156,8 @@ public:
 	virtual ~UIAnimateParticle() = default;
 	
 	// Emitter shape and position controls
-	void SetEmitterPosition(const UIPointFloat3& position) { _emitterPosition = position; }
-	void SetEmitterDirection(const UIPointFloat3& direction);
+	void SetEmitterPosition(const UIVector3F& position) { _emitterPosition = position; }
+	void SetEmitterDirection(const UIVector3F& direction);
 	void SetEmissionRadius(float radius) { _emissionRadius = radius; }
 	void SetConeAngle(float angleDegrees) { _coneAngle = angleDegrees; }
 	void SetConeHeight(float height) { _coneHeight = height; }
@@ -172,16 +172,16 @@ public:
 	
 	// Physics controls
 	void SetTurbulence(float turbulence) { _turbulence = turbulence; }
-	void SetWindForce(const UIPointFloat3& wind) { _windForce = wind; }
+	void SetWindForce(const UIVector3F& wind) { _windForce = wind; }
 	void SetGravity(float gravity) { _gravity = gravity; }
 	void SetAirResistance(float resistance) { _airResistance = resistance; }
 
 protected:
 	// Common particle structure
 	struct BaseParticle {
-		UIPointFloat3 _position;		// world space position
-		UIPointFloat3 _velocity;		// world space velocity
-		UIPointFloat3 _acceleration;	// world space acceleration
+		UIVector3F _position;		// world space position
+		UIVector3F _velocity;		// world space velocity
+		UIVector3F _acceleration;	// world space acceleration
 		UIColor _color;
 		float _life;            		// Life remaining [0, 1]
 		float _maxLife;         		// Maximum life time
@@ -198,16 +198,16 @@ protected:
 	// Utility functions
 	float RandomFloat(float min, float max);
 	float Lerp(float a, float b, float t);
-	void NormalizeVector(UIPointFloat3& vector);
-	float DotProduct(const UIPointFloat3& a, const UIPointFloat3& b);
-	UIPointFloat3 CrossProduct(const UIPointFloat3& a, const UIPointFloat3& b);
+	void NormalizeVector(UIVector3F& vector);
+	float DotProduct(const UIVector3F& a, const UIVector3F& b);
+	UIVector3F CrossProduct(const UIVector3F& a, const UIVector3F& b);
 	
 	// Core emission algorithm - generates position, direction and speed in world space
-	void GenerateEmissionPoint(UIPointFloat3& outPosition, UIPointFloat3& outVelocity);
+	void GenerateEmissionPoint(UIVector3F& outPosition, UIVector3F& outVelocity);
 
 	// Emitter shape properties (all in world space)
-	UIPointFloat3 _emitterPosition = { 0.0f, 0.0f, 0.0f };		// Emitter center position in world space
-	UIPointFloat3 _emitterDirection = { 1.0f, 0.0f, 0.0f };		// Cone axis direction (normalized)
+	UIVector3F _emitterPosition = { 0.0f, 0.0f, 0.0f };		// Emitter center position in world space
+	UIVector3F _emitterDirection = { 1.0f, 0.0f, 0.0f };		// Cone axis direction (normalized)
 	float _emissionRadius = 0.1f;								// Base emission radius
 	float _coneAngle = 30.0f;									// Cone angle in degrees
 	float _coneHeight = 2.0f;									// Cone height
@@ -226,7 +226,7 @@ protected:
 
 	// Physics properties
 	float _turbulence = 0.5f;									// Turbulence strength
-	UIPointFloat3 _windForce = { 0.0f, 0.0f, 0.0f };			// Wind force vector
+	UIVector3F _windForce = { 0.0f, 0.0f, 0.0f };			// Wind force vector
 	float _gravity = 0.0f;										// Gravity strength -9.8f
 	float _airResistance = 0.02f;								// Air resistance coefficient
 
@@ -242,7 +242,7 @@ public:
 	UIAnimateParticleFlame();
 	~UIAnimateParticleFlame() = default;
 
-	void PlayFlameAnimate(const UIPointFloat3& position, UICameraBase3D* pCamera, int maxFrame = 60);
+	void PlayFlameAnimate(const UIVector3F& position, UICameraBase3D* pCamera, int maxFrame = 60);
 
 	/*--------------------------------- Flame particle effect ---------------------------------*/
 public:
@@ -250,7 +250,7 @@ public:
 	void SetFlameHeight(float height);          // Set flame height
 	void SetFlameSpread(float angle);           // Set flame spread angle (degrees)
 	void SetFlameShape(float narrowness);       // Set flame shape narrowness
-	void SetFlameWind(const UIPointFloat3& wind); // Set wind direction
+	void SetFlameWind(const UIVector3F& wind); // Set wind direction
 
 protected:
 	// Override base particle methods
@@ -271,7 +271,7 @@ private:
 	float _flameHeight;     // Maximum flame height
 	float _flameSpreadAngle; // Flame spread angle in radians
 	float _flameNarrowness; // Shape narrowness factor
-	UIPointFloat3 _windDirection; // Wind effect direction
+	UIVector3F _windDirection; // Wind effect direction
 
 	// Helper functions
 	UIColor GetFlameColor(float lifeRatio);

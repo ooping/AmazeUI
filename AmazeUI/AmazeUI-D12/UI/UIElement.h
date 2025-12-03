@@ -5,7 +5,7 @@
 
 // clipping region RAII handler
 struct UIScreenClipRectGuard {
-	UIScreenClipRectGuard(const RECT& clipRC, bool execute = false);
+	UIScreenClipRectGuard(const UIRECT& clipRC, bool execute = false);
 	~UIScreenClipRectGuard();
 
 private:
@@ -23,19 +23,19 @@ struct UIPoint {
 
 	void operator()(const UIColor& color, const DirectX::XMMATRIX& transformMatrix = DirectX::XMMatrixIdentity());
 
-	DirectX::XMFLOAT2 _point;
+	UIVector2F _point;
 	float _z;
 	int _renderLevel;
 };
 
 // point set
 struct UIPoints {
-	UIPoints(const std::vector<POINT>& points, float z = 0.5, int renderLevel = 0);
+	UIPoints(const std::vector<UIPOINT>& points, float z = 0.5, int renderLevel = 0);
 	~UIPoints() = default;
 
 	void operator()(const UIColor& color, const DirectX::XMMATRIX& transformMatrix = DirectX::XMMatrixIdentity());
 
-	std::vector<DirectX::XMFLOAT2> _points;
+	std::vector<UIVector2F> _points;
 	float _z;
 	int _renderLevel;
 };
@@ -47,7 +47,7 @@ struct UILine {
 
 	void operator()(const UIColor& color, const DirectX::XMMATRIX& transformMatrix = DirectX::XMMatrixIdentity());
 
-	DirectX::XMFLOAT2 _start, _end;
+	UIVector2F _start, _end;
 	float _z, _width;
 	int _renderLevel;
 };
@@ -55,14 +55,14 @@ struct UILine {
 // Rectangle
 struct UIRect {
 	UIRect(LONG beginX, LONG beginY, LONG endX, LONG endY, float z, int renderLevel = 0);
-	UIRect(const RECT& rect, float z, int renderLevel = 0);
+	UIRect(const UIRECT& rect, float z, int renderLevel = 0);
 	~UIRect() = default;
 	
 	void operator()(const UIColor& color, const DirectX::XMMATRIX& transformMatrix = DirectX::XMMatrixIdentity());					// draw rectangle outline
 	void operator()(const UIColor& color, UCHAR alpha, const DirectX::XMMATRIX& transformMatrix = DirectX::XMMatrixIdentity());		// draw rectangle solid color with alpha
 	void operator()(const UIColor& colorLT, const UIColor& colorRT, const UIColor& colorLB, const UIColor& colorRB, UCHAR alpha, const DirectX::XMMATRIX& transformMatrix = DirectX::XMMatrixIdentity());
 
-	DirectX::XMFLOAT2 _start, _end;
+	UIVector2F _start, _end;
 	float _z;
 	int _renderLevel;
 };
@@ -81,12 +81,12 @@ struct UIImage {
 	UIImage(std::wstring resDLLPath, UINT id, const UIColor& colorKey, float z, int renderLevel = 0);
 	~UIImage() = default;
 	// 
-	void operator()(const RECT& srcRect, const RECT& dstRect, UCHAR alphy = 255, const DirectX::XMMATRIX& transformMatrix = DirectX::XMMatrixIdentity());
-	void operator()(const RECT& srcRect, LONG dstBeginX, LONG dstBeginY, UCHAR alphy = 255, const DirectX::XMMATRIX& transformMatrix = DirectX::XMMatrixIdentity());
-	void operator()(const RECT& dstRect, float scale=1.f, UCHAR alphy = 255, const DirectX::XMMATRIX& transformMatrix = DirectX::XMMatrixIdentity());
+	void operator()(const UIRECT& srcRect, const UIRECT& dstRect, UCHAR alphy = 255, const DirectX::XMMATRIX& transformMatrix = DirectX::XMMatrixIdentity());
+	void operator()(const UIRECT& srcRect, LONG dstBeginX, LONG dstBeginY, UCHAR alphy = 255, const DirectX::XMMATRIX& transformMatrix = DirectX::XMMatrixIdentity());
+	void operator()(const UIRECT& dstRect, float scale=1.f, UCHAR alphy = 255, const DirectX::XMMATRIX& transformMatrix = DirectX::XMMatrixIdentity());
 	void operator()(LONG dstCenterX, LONG dstCenterY, float scale=1.f, UCHAR alphy = 255, const DirectX::XMMATRIX& transformMatrix = DirectX::XMMatrixIdentity());
 
-	bool GetSize(RECT& textureRect);
+	bool GetSize(UIRECT& textureRect);
 
 	// 
 	int _sourceFlag;	// 1: imagePath, 2: resDLLPath
@@ -132,7 +132,7 @@ public:
 	UISlicedImage(std::wstring resDLLPath, UINT id, const UIColor& colorKey, int topBarHeight, int bottomBarHeight, int leftBarWidth, int rightBarWidth, float z, int renderLevel = 0);
 	~UISlicedImage() = default;
 	void operator()(LONG dstBeginX, LONG dstBeginY, LONG width, LONG height, UCHAR alphy = 255, const DirectX::XMMATRIX& transformMatrix = DirectX::XMMatrixIdentity());
-	void operator()(const RECT& dstRC, UCHAR alphy = 255, const DirectX::XMMATRIX& transformMatrix = DirectX::XMMatrixIdentity());
+	void operator()(const UIRECT& dstRC, UCHAR alphy = 255, const DirectX::XMMATRIX& transformMatrix = DirectX::XMMatrixIdentity());
 
 private:
 	UIImage _image;
@@ -172,13 +172,13 @@ struct UIFont {
 	UIFont(float z, float fontSize, int renderLevel = 0);
 	~UIFont() = default;
 
-	SIZE GetDrawAreaSize(std::wstring str);
+	UISIZE GetDrawAreaSize(std::wstring str);
 
-	void operator()(std::wstring text, const POINT& postion, const UIColor& color = UIColor::Black, const DirectX::XMMATRIX& transformMatrix = DirectX::XMMatrixIdentity());
-	void operator()(std::wstring text, const RECT& rc, const UIColor& color = UIColor::Black, UIFontPos posFlag = UIFontPos::MiddleLeft, const DirectX::XMMATRIX& transformMatrix = DirectX::XMMatrixIdentity());
+	void operator()(std::wstring text, const UIPOINT& postion, const UIColor& color = UIColor::Black, const DirectX::XMMATRIX& transformMatrix = DirectX::XMMatrixIdentity());
+	void operator()(std::wstring text, const UIRECT& rc, const UIColor& color = UIColor::Black, UIFontPos posFlag = UIFontPos::MiddleLeft, const DirectX::XMMATRIX& transformMatrix = DirectX::XMMatrixIdentity());
 
-	void operator()(std::wstring text, const POINT& postion, const UIColor& color, float lineSpacing, const DirectX::XMMATRIX& transformMatrix = DirectX::XMMatrixIdentity());
-	void operator()(std::wstring text, const RECT& rc, const UIColor& color, UIFontPos posFlag, float lineSpacing, const DirectX::XMMATRIX& transformMatrix = DirectX::XMMatrixIdentity());
+	void operator()(std::wstring text, const UIPOINT& postion, const UIColor& color, float lineSpacing, const DirectX::XMMATRIX& transformMatrix = DirectX::XMMatrixIdentity());
+	void operator()(std::wstring text, const UIRECT& rc, const UIColor& color, UIFontPos posFlag, float lineSpacing, const DirectX::XMMATRIX& transformMatrix = DirectX::XMMatrixIdentity());
 
 	float _z;
 	float _fontSize;
@@ -194,52 +194,52 @@ struct UIPoint3D {
 
 	void operator()(const UIColor& color, UICameraBase3D* pCamera);
 
-	DirectX::XMFLOAT3 _point;
+	UIVector3F _point;
 	int _renderLevel;
 };
 
 // point set
 struct UIPoints3D {
-	UIPoints3D(const std::vector<UIPointFloat3>& points, int renderLevel = 0);
+	UIPoints3D(const std::vector<UIVector3F>& points, int renderLevel = 0);
 	~UIPoints3D() = default;
 
 	void operator()(const UIColor& color, UICameraBase3D* pCamera);
 
-	std::vector<DirectX::XMFLOAT3> _points;
+	std::vector<UIVector3F> _points;
 	int _renderLevel;
 };
 
 struct UILine3D {
-	UILine3D(UIPointFloat3 start, UIPointFloat3 end, float width = 1.0f, int renderLevel = 0);
+	UILine3D(UIVector3F start, UIVector3F end, float width = 1.0f, int renderLevel = 0);
 	~UILine3D() = default;
 
 	void operator()(const UIColor& colorS, const UIColor& colorE, UICameraBase3D* pCamera);
 	void operator()(const UIColor& color, UICameraBase3D* pCamera);
 
-	DirectX::XMFLOAT3 _start, _end;
+	UIVector3F _start, _end;
 	float _width;
 	int _renderLevel;
 };
 
 struct UICircle3D {
-	UICircle3D(UIPointFloat3 center, float radius, int renderLevel = 0);
+	UICircle3D(UIVector3F center, float radius, int renderLevel = 0);
 	~UICircle3D() = default;
 
 	void operator()(const UIColor& color, UICameraBase3D* pCamera);
 
-	DirectX::XMFLOAT3 _center;
+	UIVector3F _center;
 	float _radius;
 	int _renderLevel;
 };
 
 struct UITriangle3D {
-	UITriangle3D(UIPointFloat3 p1, UIPointFloat3 p2, UIPointFloat3 p3, int renderLevel = 0);
+	UITriangle3D(UIVector3F p1, UIVector3F p2, UIVector3F p3, int renderLevel = 0);
 	~UITriangle3D() = default;
 
 	void operator()(const UIColor& color1, const UIColor& color2, const UIColor& color3, UCHAR alpha, UICameraBase3D* pCamera);
 	void operator()(const UIColor& color, UCHAR alpha, UICameraBase3D* pCamera);
 
-	DirectX::XMFLOAT3 _p1, _p2, _p3;
+	UIVector3F _p1, _p2, _p3;
 	int _renderLevel;
 };
 
@@ -247,7 +247,7 @@ struct UIFont3D {
 	UIFont3D(float fontSize, int renderLevel = 0);
 	~UIFont3D() = default;
 
-	void operator()(std::wstring text, const UIPointFloat3& position, const UIColor& color, UICameraBase3D* pCamera);
+	void operator()(std::wstring text, const UIVector3F& position, const UIColor& color, UICameraBase3D* pCamera);
 
 	float _fontSize;
 	int _renderLevel;

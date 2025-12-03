@@ -157,7 +157,7 @@ void UIWinTop::OnCreate()
 
 		// 3D Chart 1
 		auto* pChart3D101 = UICreateWidget<UIChart3D>(pCanvas100, 114);
-		vector<UIPointFloat3> points;
+		vector<UIVector3F> points;
 		for (int i = 0; i < 100; ++i) {
 			points.push_back({0, cos(i * XM_PI / 50.0f), (float)i});
 		}

@@ -6,7 +6,7 @@ using namespace DirectX;
 using namespace SimpleMath;
 using namespace UIShape2D;
 
-UIScreenClipRectGuard::UIScreenClipRectGuard(const RECT& clipRC, bool execute) {
+UIScreenClipRectGuard::UIScreenClipRectGuard(const UIRECT& clipRC, bool execute) {
 	_execute = execute;
 	UIGraphicsSystem::GetSingletonInstance()->BeginScreenClipRect(clipRC, _execute);
 }
@@ -16,7 +16,7 @@ UIScreenClipRectGuard::~UIScreenClipRectGuard() {
 }
 
 UIPoint::UIPoint(LONG x, LONG y, float z, int renderLevel) {
-	_point = XMFLOAT2((float)x, (float)y);
+	_point = UIVector2F((float)x, (float)y);
 	_z = z;
 	_renderLevel = renderLevel;
 }
@@ -29,10 +29,10 @@ void UIPoint::operator()(const UIColor& color, const DirectX::XMMATRIX& transfor
 	}
 }
 
-UIPoints::UIPoints(const vector<POINT>& points, float z, int renderLevel) {
+UIPoints::UIPoints(const vector<UIPOINT>& points, float z, int renderLevel) {
 	_points.resize(points.size());
 	for (size_t i = 0; i < points.size(); i++) {
-		_points[i] = XMFLOAT2((float)points[i].x, (float)points[i].y);
+		_points[i] = UIVector2F((float)points[i].x, (float)points[i].y);
 	}
 	_z = z;
 	_renderLevel = renderLevel;
@@ -47,8 +47,8 @@ void UIPoints::operator()(const UIColor& color, const DirectX::XMMATRIX& transfo
 }
 
 UILine::UILine(LONG beginX, LONG beginY, LONG endX, LONG endY, float z, float width, int renderLevel) {
-	_start = XMFLOAT2((float)beginX, (float)beginY);
-	_end = XMFLOAT2((float)endX, (float)endY);
+	_start = UIVector2F((float)beginX, (float)beginY);
+	_end = UIVector2F((float)endX, (float)endY);
 	_z = z;
 	_width = width;
 	_renderLevel = renderLevel;
@@ -63,15 +63,15 @@ void UILine::operator()(const UIColor& color, const DirectX::XMMATRIX& transform
 }
 
 UIRect::UIRect(LONG beginX, LONG beginY, LONG endX, LONG endY, float z, int renderLevel) {
-	_start = XMFLOAT2((float)beginX, (float)beginY);
-	_end = XMFLOAT2((float)endX, (float)endY);
+	_start = UIVector2F((float)beginX, (float)beginY);
+	_end = UIVector2F((float)endX, (float)endY);
 	_z = z;
 	_renderLevel = renderLevel;
 }
 
-UIRect::UIRect(const RECT& rect, float z, int renderLevel) {
-	_start = XMFLOAT2((float)rect.left, (float)rect.top);
-	_end = XMFLOAT2((float)(rect.right), (float)(rect.bottom));
+UIRect::UIRect(const UIRECT& rect, float z, int renderLevel) {
+	_start = UIVector2F((float)rect.left, (float)rect.top);
+	_end = UIVector2F((float)(rect.right), (float)(rect.bottom));
 	_z = z;
 	_renderLevel = renderLevel;
 }
@@ -121,7 +121,7 @@ UIImage::UIImage(std::wstring resDLLPath, UINT id, const UIColor& colorKey, floa
 	_renderLevel = renderLevel;
 }
 
-void UIImage::operator()(const RECT& srcRect, const RECT& dstRect, UCHAR alphy, const DirectX::XMMATRIX& transformMatrix) {
+void UIImage::operator()(const UIRECT& srcRect, const UIRECT& dstRect, UCHAR alphy, const DirectX::XMMATRIX& transformMatrix) {
 	if (!XMMatrixIsIdentity(transformMatrix)) {
 		if (_sourceFlag == 1)	{
 			UIGraphicsSystem::GetSingletonInstance()->Draw3DImage(_path, _colorKey, srcRect,
@@ -149,29 +149,29 @@ void UIImage::operator()(const RECT& srcRect, const RECT& dstRect, UCHAR alphy, 
 	}
 }
 
-void UIImage::operator()(const RECT& srcRect, LONG dstBeginX, LONG dstBeginY, UCHAR alphy, const DirectX::XMMATRIX& transformMatrix) {	
-	RECT dstRect = {dstBeginX, dstBeginY, 0, 0};
+void UIImage::operator()(const UIRECT& srcRect, LONG dstBeginX, LONG dstBeginY, UCHAR alphy, const DirectX::XMMATRIX& transformMatrix) {	
+	UIRECT dstRect = {dstBeginX, dstBeginY, 0, 0};
 	this->operator()(srcRect, dstRect, alphy, transformMatrix);
 }
 
-void UIImage::operator()(const RECT& dstRect, float scale, UCHAR alphy, const DirectX::XMMATRIX& transformMatrix) {
+void UIImage::operator()(const UIRECT& dstRect, float scale, UCHAR alphy, const DirectX::XMMATRIX& transformMatrix) {
 	this->operator()(NULL_RECT, scale == 1 ? dstRect : ScaleRect()(dstRect, scale), alphy, transformMatrix);
 }
 
 
 void UIImage::operator()(LONG dstCenterX, LONG dstCenterY, float scale, UCHAR alphy, const DirectX::XMMATRIX& transformMatrix) {
-	RECT textureRect;
+	UIRECT textureRect;
 	if (!GetSize(textureRect)) {
 		return;
 	}
 
-	RECT dstRect = CreateRect()(UIShape2D::CreatePoint()((LONG)(dstCenterX - (textureRect.right * scale / 2)), (LONG)(dstCenterY - (textureRect.bottom * scale / 2))), 
+	UIRECT dstRect = CreateRect()(UIShape2D::CreatePoint()((LONG)(dstCenterX - (textureRect.right * scale / 2)), (LONG)(dstCenterY - (textureRect.bottom * scale / 2))), 
 										 CreateSize()((LONG)((textureRect.right - textureRect.left) * scale), (LONG)((textureRect.bottom - textureRect.top) * scale)));
 	this->operator()(NULL_RECT, dstRect, alphy, transformMatrix);
 }
 
 
-bool UIImage::GetSize(RECT& textureRect) {
+bool UIImage::GetSize(UIRECT& textureRect) {
 	auto pGraphicsSystem = UIGraphicsSystem::GetSingletonInstance();
 	
 	if (_sourceFlag == 1) {
@@ -207,47 +207,47 @@ UISlicedImage::UISlicedImage(std::wstring resDLLPath, UINT id, const UIColor& co
 }
 
 void UISlicedImage::operator()(LONG dstBeginX, LONG dstBeginY, LONG width, LONG height, UCHAR alphy, const DirectX::XMMATRIX& transformMatrix) {
-	RECT textureRect;
+	UIRECT textureRect;
 	if (!_image.GetSize(textureRect)) {
 		return;
 	}
 	UINT imageWidth = GetRectWidth()(textureRect);
 	UINT imageHeight = GetRectHeight()(textureRect);
 
-	RECT rc1 = CreateRect()(UIShape2D::CreatePoint()(0, 0), CreateSize()(_leftBarWidth, _topBarHeight));
+	UIRECT rc1 = CreateRect()(UIShape2D::CreatePoint()(0, 0), CreateSize()(_leftBarWidth, _topBarHeight));
 	_image(rc1, dstBeginX, dstBeginY, alphy, transformMatrix);
 
-	RECT rc3 = CreateRect()(UIShape2D::CreatePoint()(imageWidth - _rightBarWidth , 0), CreateSize()(_rightBarWidth, _topBarHeight));
+	UIRECT rc3 = CreateRect()(UIShape2D::CreatePoint()(imageWidth - _rightBarWidth , 0), CreateSize()(_rightBarWidth, _topBarHeight));
 	_image(rc3, dstBeginX + width - _rightBarWidth, dstBeginY, alphy, transformMatrix);
 
-	RECT rc4 = CreateRect()(UIShape2D::CreatePoint()(0, imageHeight - _bottomBarHeight), CreateSize()(_leftBarWidth, _bottomBarHeight));
+	UIRECT rc4 = CreateRect()(UIShape2D::CreatePoint()(0, imageHeight - _bottomBarHeight), CreateSize()(_leftBarWidth, _bottomBarHeight));
 	_image(rc4, dstBeginX, dstBeginY + height - _bottomBarHeight, alphy, transformMatrix);
 
-	RECT rc6 = CreateRect()(UIShape2D::CreatePoint()(imageWidth - _rightBarWidth, imageHeight - _bottomBarHeight), CreateSize()(_rightBarWidth, _bottomBarHeight));
+	UIRECT rc6 = CreateRect()(UIShape2D::CreatePoint()(imageWidth - _rightBarWidth, imageHeight - _bottomBarHeight), CreateSize()(_rightBarWidth, _bottomBarHeight));
 	_image(rc6, dstBeginX + width - _rightBarWidth, dstBeginY + height - _bottomBarHeight, alphy, transformMatrix);
 
-	RECT rc2 = CreateRect()(UIShape2D::CreatePoint()(_leftBarWidth, 0) , CreateSize()(imageWidth - _leftBarWidth - _rightBarWidth, _topBarHeight));
-	RECT rc2d = CreateRect()(UIShape2D::CreatePoint()(dstBeginX + _leftBarWidth, dstBeginY), CreateSize()(width - _leftBarWidth - _rightBarWidth, _topBarHeight));
+	UIRECT rc2 = CreateRect()(UIShape2D::CreatePoint()(_leftBarWidth, 0) , CreateSize()(imageWidth - _leftBarWidth - _rightBarWidth, _topBarHeight));
+	UIRECT rc2d = CreateRect()(UIShape2D::CreatePoint()(dstBeginX + _leftBarWidth, dstBeginY), CreateSize()(width - _leftBarWidth - _rightBarWidth, _topBarHeight));
 	_image(rc2, rc2d, alphy, transformMatrix);
 
-	RECT rc5 = CreateRect()(UIShape2D::CreatePoint()(_leftBarWidth, imageHeight - _bottomBarHeight), CreateSize()(imageWidth - _leftBarWidth - _rightBarWidth, _bottomBarHeight));
-	RECT rc5d = CreateRect()(UIShape2D::CreatePoint()(dstBeginX + _leftBarWidth, dstBeginY + height - _bottomBarHeight), CreateSize()(width - _leftBarWidth - _rightBarWidth, _bottomBarHeight));
+	UIRECT rc5 = CreateRect()(UIShape2D::CreatePoint()(_leftBarWidth, imageHeight - _bottomBarHeight), CreateSize()(imageWidth - _leftBarWidth - _rightBarWidth, _bottomBarHeight));
+	UIRECT rc5d = CreateRect()(UIShape2D::CreatePoint()(dstBeginX + _leftBarWidth, dstBeginY + height - _bottomBarHeight), CreateSize()(width - _leftBarWidth - _rightBarWidth, _bottomBarHeight));
 	_image(rc5, rc5d, alphy, transformMatrix);
 
-	RECT rc7 = CreateRect()(UIShape2D::CreatePoint()(0, _topBarHeight), CreateSize()(_leftBarWidth, imageHeight - _topBarHeight - _bottomBarHeight));
-	RECT rc7d = CreateRect()(UIShape2D::CreatePoint()(dstBeginX, dstBeginY + _topBarHeight), CreateSize()(_leftBarWidth, height - _topBarHeight - _bottomBarHeight));
+	UIRECT rc7 = CreateRect()(UIShape2D::CreatePoint()(0, _topBarHeight), CreateSize()(_leftBarWidth, imageHeight - _topBarHeight - _bottomBarHeight));
+	UIRECT rc7d = CreateRect()(UIShape2D::CreatePoint()(dstBeginX, dstBeginY + _topBarHeight), CreateSize()(_leftBarWidth, height - _topBarHeight - _bottomBarHeight));
 	_image(rc7, rc7d, alphy, transformMatrix);
 
-	RECT rc8 = CreateRect()(UIShape2D::CreatePoint()(imageWidth - _rightBarWidth, _topBarHeight), CreateSize()(_rightBarWidth, imageHeight - _topBarHeight - _bottomBarHeight));
-	RECT rc8d = CreateRect()(UIShape2D::CreatePoint()(dstBeginX + width - _rightBarWidth, dstBeginY + _topBarHeight), CreateSize()(_rightBarWidth, height - _topBarHeight - _bottomBarHeight));
+	UIRECT rc8 = CreateRect()(UIShape2D::CreatePoint()(imageWidth - _rightBarWidth, _topBarHeight), CreateSize()(_rightBarWidth, imageHeight - _topBarHeight - _bottomBarHeight));
+	UIRECT rc8d = CreateRect()(UIShape2D::CreatePoint()(dstBeginX + width - _rightBarWidth, dstBeginY + _topBarHeight), CreateSize()(_rightBarWidth, height - _topBarHeight - _bottomBarHeight));
 	_image(rc8, rc8d, alphy, transformMatrix);
 	
-	RECT rc9 = CreateRect()(UIShape2D::CreatePoint()(_leftBarWidth, _topBarHeight), CreateSize()(imageWidth - _leftBarWidth - _rightBarWidth, imageHeight - _topBarHeight - _bottomBarHeight));
-	RECT rc9d = CreateRect()(UIShape2D::CreatePoint()(dstBeginX + _leftBarWidth, dstBeginY + _topBarHeight), CreateSize()(width - _leftBarWidth - _rightBarWidth, height - _topBarHeight - _bottomBarHeight));
+	UIRECT rc9 = CreateRect()(UIShape2D::CreatePoint()(_leftBarWidth, _topBarHeight), CreateSize()(imageWidth - _leftBarWidth - _rightBarWidth, imageHeight - _topBarHeight - _bottomBarHeight));
+	UIRECT rc9d = CreateRect()(UIShape2D::CreatePoint()(dstBeginX + _leftBarWidth, dstBeginY + _topBarHeight), CreateSize()(width - _leftBarWidth - _rightBarWidth, height - _topBarHeight - _bottomBarHeight));
 	_image(rc9, rc9d, alphy, transformMatrix);
 }
 
-void UISlicedImage::operator()(const RECT& dstRC, UCHAR alphy, const DirectX::XMMATRIX& transformMatrix) {
+void UISlicedImage::operator()(const UIRECT& dstRC, UCHAR alphy, const DirectX::XMMATRIX& transformMatrix) {
 	this->operator()(dstRC.left, dstRC.top, dstRC.right - dstRC.left, dstRC.bottom - dstRC.top, alphy, transformMatrix);
 }
 
@@ -257,16 +257,16 @@ UIFont::UIFont(float z, float fontSize, int renderLevel) {
 	_renderLevel = renderLevel;
 }
 
-void UIFont::operator()(std::wstring text, const POINT& position, const UIColor& color, const DirectX::XMMATRIX& transformMatrix) {
+void UIFont::operator()(std::wstring text, const UIPOINT& position, const UIColor& color, const DirectX::XMMATRIX& transformMatrix) {
 	if (!XMMatrixIsIdentity(transformMatrix)) {
-		UIGraphicsSystem::GetSingletonInstance()->Draw3DTextFT(text, XMFLOAT2{ (float)position.x, (float)position.y }, _z - 0.005f, color, _fontSize, _renderLevel, transformMatrix);
+		UIGraphicsSystem::GetSingletonInstance()->Draw3DTextFT(text, UIVector2F{ (float)position.x, (float)position.y }, _z - 0.005f, color, _fontSize, _renderLevel, transformMatrix);
 	}
 	else {
-		UIGraphicsSystem::GetSingletonInstance()->Draw2DTextFT(text, XMFLOAT2{ (float)position.x, (float)position.y }, _z, color, _fontSize, _renderLevel);
+		UIGraphicsSystem::GetSingletonInstance()->Draw2DTextFT(text, UIVector2F{ (float)position.x, (float)position.y }, _z, color, _fontSize, _renderLevel);
 	}
 }
 
-void UIFont::operator()(std::wstring text, const RECT& rc, const UIColor& color, UIFontPos posFlag, const DirectX::XMMATRIX& transformMatrix) {
+void UIFont::operator()(std::wstring text, const UIRECT& rc, const UIColor& color, UIFontPos posFlag, const DirectX::XMMATRIX& transformMatrix) {
 	if (!XMMatrixIsIdentity(transformMatrix)) {
 		UIGraphicsSystem::GetSingletonInstance()->Draw3DTextFT(text, rc, posFlag, _z - 0.005f, color, _fontSize, _renderLevel, transformMatrix);
 	}
@@ -275,16 +275,16 @@ void UIFont::operator()(std::wstring text, const RECT& rc, const UIColor& color,
 	}
 }
 
-void UIFont::operator()(std::wstring text, const POINT& position, const UIColor& color, float lineSpacing, const DirectX::XMMATRIX& transformMatrix) {
+void UIFont::operator()(std::wstring text, const UIPOINT& position, const UIColor& color, float lineSpacing, const DirectX::XMMATRIX& transformMatrix) {
 	if (!XMMatrixIsIdentity(transformMatrix)) {
-		UIGraphicsSystem::GetSingletonInstance()->Draw3DTextMultiLineFT(text, XMFLOAT2{ (float)position.x, (float)position.y }, _z - 0.005f, color, _fontSize, lineSpacing, _renderLevel, transformMatrix);
+		UIGraphicsSystem::GetSingletonInstance()->Draw3DTextMultiLineFT(text, UIVector2F{ (float)position.x, (float)position.y }, _z - 0.005f, color, _fontSize, lineSpacing, _renderLevel, transformMatrix);
 	}
 	else {
-		UIGraphicsSystem::GetSingletonInstance()->Draw2DTextMultiLineFT(text, XMFLOAT2{ (float)position.x, (float)position.y }, _z, color, _fontSize, lineSpacing, _renderLevel);
+		UIGraphicsSystem::GetSingletonInstance()->Draw2DTextMultiLineFT(text, UIVector2F{ (float)position.x, (float)position.y }, _z, color, _fontSize, lineSpacing, _renderLevel);
 	}
 }
 
-void UIFont::operator()(std::wstring text, const RECT& rc, const UIColor& color, UIFontPos posFlag, float lineSpacing, const DirectX::XMMATRIX& transformMatrix) {
+void UIFont::operator()(std::wstring text, const UIRECT& rc, const UIColor& color, UIFontPos posFlag, float lineSpacing, const DirectX::XMMATRIX& transformMatrix) {
 	if (!XMMatrixIsIdentity(transformMatrix)) {
 		UIGraphicsSystem::GetSingletonInstance()->Draw3DTextMultiLineFT(text, rc, posFlag, _z - 0.005f, color, _fontSize, lineSpacing, _renderLevel, transformMatrix);
 	}
@@ -293,7 +293,7 @@ void UIFont::operator()(std::wstring text, const RECT& rc, const UIColor& color,
 	}
 }
 
-SIZE UIFont::GetDrawAreaSize(std::wstring text) {
+UISIZE UIFont::GetDrawAreaSize(std::wstring text) {
 	return UIGraphicsSystem::GetSingletonInstance()->GetTextSizeFT(text, _fontSize);
 }
 
@@ -307,7 +307,7 @@ void UIPoint3D::operator()(const UIColor& color, UICameraBase3D* pCamera) {
 }
 
 // UIPoints3D implementation
-UIPoints3D::UIPoints3D(const std::vector<UIPointFloat3>& points, int renderLevel) : _renderLevel(renderLevel) {
+UIPoints3D::UIPoints3D(const std::vector<UIVector3F>& points, int renderLevel) : _renderLevel(renderLevel) {
 	_points.reserve(points.size());
 	for (const auto& point : points) {
 		_points.emplace_back(point._x, point._y, point._z);
@@ -321,7 +321,7 @@ void UIPoints3D::operator()(const UIColor& color, UICameraBase3D* pCamera) {
 }
 
 // UILine3D implementation
-UILine3D::UILine3D(UIPointFloat3 start, UIPointFloat3 end, float width, int renderLevel) 
+UILine3D::UILine3D(UIVector3F start, UIVector3F end, float width, int renderLevel) 
 	: _start(start._x, start._y, start._z), _end(end._x, end._y, end._z), _width(width), _renderLevel(renderLevel) {}
 
 void UILine3D::operator()(const UIColor& colorS, const UIColor& colorE, UICameraBase3D* pCamera) {
@@ -333,7 +333,7 @@ void UILine3D::operator()(const UIColor& color, UICameraBase3D* pCamera) {
 }
 
 // UICircle3D implementation
-UICircle3D::UICircle3D(UIPointFloat3 center, float radius, int renderLevel) 
+UICircle3D::UICircle3D(UIVector3F center, float radius, int renderLevel) 
 	: _center(center._x, center._y, center._z), _radius(radius), _renderLevel(renderLevel) {}
 
 void UICircle3D::operator()(const UIColor& color, UICameraBase3D* pCamera) {
@@ -341,7 +341,7 @@ void UICircle3D::operator()(const UIColor& color, UICameraBase3D* pCamera) {
 }
 
 // UITriangle3D implementation
-UITriangle3D::UITriangle3D(UIPointFloat3 p1, UIPointFloat3 p2, UIPointFloat3 p3, int renderLevel) 
+UITriangle3D::UITriangle3D(UIVector3F p1, UIVector3F p2, UIVector3F p3, int renderLevel) 
 	: _p1(p1._x, p1._y, p1._z), _p2(p2._x, p2._y, p2._z), _p3(p3._x, p3._y, p3._z), _renderLevel(renderLevel) {}
 
 void UITriangle3D::operator()(const UIColor& color1, const UIColor& color2, const UIColor& color3, UCHAR alpha, UICameraBase3D* pCamera) {
@@ -355,7 +355,7 @@ void UITriangle3D::operator()(const UIColor& color, UCHAR alpha, UICameraBase3D*
 // UIFont3D implementation
 UIFont3D::UIFont3D(float fontSize, int renderLevel) : _fontSize(fontSize), _renderLevel(renderLevel) {}
 
-void UIFont3D::operator()(std::wstring text, const UIPointFloat3& position, const UIColor& color, UICameraBase3D* pCamera) {
+void UIFont3D::operator()(std::wstring text, const UIVector3F& position, const UIColor& color, UICameraBase3D* pCamera) {
 	// Use UIGraphicsSystem's 3D world text rendering directly
 	UIGraphicsSystem::GetSingletonInstance()->Draw3DWorldTextFT(text, {position._x, position._y, position._z}, color, _fontSize, _renderLevel, pCamera);
 }

@@ -1,7 +1,7 @@
 #include "Common.h"
 using namespace std;
 
-#if _WIN32
+#if USE_WIN32
 void StringPasteFromClipboard::operator()(wstring& strBuf, HWND dstHwnd) {
 	if (OpenClipboard(dstHwnd) == FALSE) {
 		return;
